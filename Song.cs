@@ -13,7 +13,7 @@ public class Song{
 		title = t?.Trim() ?? "Untitled song";
 		save();
 		
-		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(Array.Empty<int>()));
+		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
 	}
 	
 	public void setAuthors(int[] auth){

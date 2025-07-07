@@ -5,7 +5,7 @@ using System.Diagnostics;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.0.0";
+	public const string version = "1.1.0";
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
@@ -14,11 +14,20 @@ public static class Radio{
 	public static Screens sc;
 	
 	public static void Main(string[] args){
-		init();
+		try{
+			File.Delete("error.log");
+		}catch{}
 		
-		//debug();
-		
-		sc.play();
+		try{
+			init();
+			
+			//debug();
+			
+			sc.play();
+		}catch(Exception e){
+			Console.WriteLine(e);
+			File.AppendAllText("error.log", e.ToString());
+		}
 	}
 	
 	static void debug(){
@@ -66,7 +75,13 @@ public static class Radio{
 		
 		AppDomain.CurrentDomain.ProcessExit += onExit;
 		
-		importAll(new string[0], out string a); //If app closed while songs where importing, import them
+		string[] dirs = Directory.GetDirectories(dep.path + "/import").Select(dir => Path.GetFileName(dir)).ToArray();
+		
+		foreach(string d in dirs){
+			importAll(d, new string[0], out string a2); //If app closed while songs where importing, import them
+		}
+		
+		importAll("", new string[0], out string a);
 	}
 	
 	static void initConfig(){
@@ -161,7 +176,7 @@ public static class Radio{
 			onErr?.Invoke(ex.Message);
 		}
 		
-		List<int> s = importAll(authors, out string err2);
+		List<int> s = importAll("", authors, out string err2);
 		onErr?.Invoke(err2);
 		if(s.Count > 0){
 			return s[0];
@@ -198,7 +213,9 @@ public static class Radio{
 	}
 	
 	public static async Task<bool> importFromPlaylist(string url, string[] authors, Action<string> onErr){
-		string path = dep.path + "/import/%(title)s.%(ext)s";
+		int rid = new Random().Next();
+		Directory.CreateDirectory(dep.path + "/import/" + rid);
+		string path = dep.path + "/import/" + rid + "/%(title)s.%(ext)s";
 		
 		var psi = new ProcessStartInfo{
 			FileName = geYtDlpPath(),
@@ -231,7 +248,7 @@ public static class Radio{
 			onErr?.Invoke(ex.Message);
 		}
 		
-		List<int> s = importAll(authors, out string err2);
+		List<int> s = importAll(rid.ToString(), authors, out string err2);
 		onErr?.Invoke(err2);
 		if(s.Count > 0){
 			return true;
@@ -282,7 +299,9 @@ public static class Radio{
 	}
 	
 	public static async Task<int> importYtPlaylist(string url, string title, string[] authors, Action<string> onErr){
-		string path = dep.path + "/import/%(title)s.%(ext)s";
+		int rid = new Random().Next();
+		Directory.CreateDirectory(dep.path + "/import/" + rid);
+		string path = dep.path + "/import/" + rid + "/%(title)s.%(ext)s";
 		
 		if(string.IsNullOrEmpty(title.Trim())){
 			title = "Untitled playlist";
@@ -319,7 +338,7 @@ public static class Radio{
 			onErr?.Invoke(ex.Message);
 		}
 		
-		List<int> s = importAll(authors, out string err2);
+		List<int> s = importAll(rid.ToString(), authors, out string err2);
 		onErr?.Invoke(err2);
 		if(s.Count > 0){
 			Playlist p = Playlist.load(Playlist.create(title));
@@ -334,8 +353,8 @@ public static class Radio{
 		return -1;
 	}
 	
-	static List<int> importAll(string[] authors, out string err2){
-		string[] files = Directory.GetFiles(dep.path + "/import", "*.mp3");
+	static List<int> importAll(string path, string[] authors, out string err2){
+		string[] files = Directory.GetFiles(dep.path + "/import" + (string.IsNullOrEmpty(path) ? "" : "/") + path, "*.mp3");
 		
 		int[] aus = Author.getAuthors(authors);
 		
@@ -354,6 +373,10 @@ public static class Radio{
 			}catch(Exception e){
 				err2 += e.Message + "\n";
 			}
+		}
+		
+		if(!string.IsNullOrEmpty(path)){
+			Directory.Delete(dep.path + "/import/" + path);
 		}
 		
 		return s;

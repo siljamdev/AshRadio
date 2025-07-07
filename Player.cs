@@ -1,13 +1,10 @@
 using System.IO;
-using CSCore;
-using CSCore.Codecs;
-using CSCore.CoreAudioAPI;
-using CSCore.SoundOut;
-using CSCore.Streams;
+using NAudio.Wave;
+using NAudio.CoreAudioApi;
 
 public class Player : IDisposable{
-	ISoundOut soundOut = new WasapiOut();
-	IWaveSource waveSource;
+	IWavePlayer soundOut;
+    AudioFileReader reader;
 	
 	public int volume{get; private set;} //0 to 100
 	
@@ -16,27 +13,24 @@ public class Player : IDisposable{
 	public int playingSong{get; private set;}
 	
 	public float duration{get{
-		return (float) (waveSource?.GetLength().TotalSeconds ?? 0d);
+		return (float) (reader?.TotalTime.TotalSeconds ?? 0d);
 	}}
 	
 	public float elapsed{get{ //In seconds
-		return (float) (waveSource?.GetPosition().TotalSeconds ?? 0d);
+		return (float) (reader?.CurrentTime.TotalSeconds ?? 0d);
 	}
 	set{
-		if(isPaused){
-			resume();
+		if(reader == null){
+			return;
 		}
-		if(value > duration){
-			waveSource?.SetPosition(TimeSpan.FromSeconds(duration));
-		}else if(value < 0f){
-			waveSource?.SetPosition(TimeSpan.FromSeconds(0f));
-		}else{
-			waveSource?.SetPosition(TimeSpan.FromSeconds(value));
+		if(value >= duration){
+			onFinish(null, null);
 		}
+		reader.CurrentTime = TimeSpan.FromSeconds(Math.Clamp(value, 0, duration));
 	}}
 	
 	public bool isPaused{get{
-		return soundOut?.PlaybackState != PlaybackState.Playing;
+		return soundOut.PlaybackState != PlaybackState.Playing;
 	}}
 	
 	public MMDevice currentDevice;
@@ -49,18 +43,20 @@ public class Player : IDisposable{
 		volume = vol;
 		volumeExponent = volxp;
 		playingSong = song + 1; //Cheap trick so it loads...
+		
+		currentDevice = new MMDeviceEnumerator().GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+		soundOut = new WasapiOut(currentDevice, AudioClientShareMode.Shared, false, 100);
+		
 		loadSong(song);
 		elapsed = el;
 		
-		currentDevice = new MMDeviceEnumerator().GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-		
-		soundOut.Stopped += onFinish; //Only once!!!
+		soundOut.PlaybackStopped += onFinish; //Only once!!!
 	}
 	
 	public void loadSong(int song){
-		if(song == playingSong){ //No reloading
-			return;
-		}
+		//if(song == playingSong){ //No reloading
+		//	return;
+		//}
 		
 		stop();
 		
@@ -81,11 +77,16 @@ public class Player : IDisposable{
 			return;
 		}
 		
-		waveSource?.Dispose();
-		waveSource = CodecFactory.Instance.GetCodec(path);
-
-		soundOut.Initialize(waveSource);
-		soundOut.Volume = (float) Math.Pow((float) volume / 100f, volumeExponent);
+		reader?.Dispose();
+		
+		reader = new AudioFileReader(path);
+		setVolume(volume);
+		
+		soundOut?.Dispose();
+		soundOut = new WasapiOut(currentDevice, AudioClientShareMode.Shared, false, 100);
+		soundOut.PlaybackStopped += onFinish;
+		
+		soundOut.Init(reader);
 		
 		onSongLoad?.Invoke(this, EventArgs.Empty);
 	}
@@ -104,7 +105,7 @@ public class Player : IDisposable{
 			return;
 		}
 		
-		if(soundOut?.PlaybackState == PlaybackState.Playing){
+		if(soundOut.PlaybackState == PlaybackState.Playing){
 			soundOut.Pause();
 			onChangePlaystate?.Invoke(this, EventArgs.Empty);
 		}
@@ -115,17 +116,13 @@ public class Player : IDisposable{
 			return;
 		}
 		
-		if(soundOut?.PlaybackState != PlaybackState.Playing){
+		if(soundOut.PlaybackState != PlaybackState.Playing){
 			soundOut.Play();
 			onChangePlaystate?.Invoke(this, EventArgs.Empty);
 		}
 	}
 	
 	public void togglePause(){
-		if(soundOut == null){
-			return;
-		}
-		
 		if(isPaused){
 			resume();
 		}else{
@@ -158,19 +155,19 @@ public class Player : IDisposable{
 		Radio.config.SetCamp("player.volume", volume);
 		Radio.config.Save();
 		
-		if(playingSong < 0){
-			return;
+		if(reader != null){
+			reader.Volume = (float) Math.Pow((float) volume / 100f, volumeExponent);
 		}
-		
-		soundOut.Volume = (float) Math.Pow((float) volume / 100f, volumeExponent);
 	}
 	
-	void onFinish(object sender, PlaybackStoppedEventArgs a){
-		//File.AppendAllText("log.log", "Finished " + playingSong + "\n");
+	void onFinish(object sender, StoppedEventArgs a){
+		//Console.WriteLine("Hi");
+		//Console.ReadLine();
+		
 		if(a?.Exception != null){
 			Console.WriteLine("The audio stopped because of an error:");
 			Console.WriteLine(a.Exception);
-			//Console.ReadLine();
+			File.AppendAllText("error.log", a.Exception.ToString());
 		}
 		
 		Session.addPrevPlayed(playingSong);
@@ -183,17 +180,17 @@ public class Player : IDisposable{
 	
 	void stop(){
 		if(soundOut.PlaybackState != PlaybackState.Stopped){
-			soundOut.Stopped -= onFinish;
+			soundOut.PlaybackStopped -= onFinish;
 			soundOut.Stop();
 		}
 		
-		waveSource?.Dispose();
-		waveSource = null;
+		reader?.Dispose();
+		reader = null;
 	}
 	
 	public void Dispose(){
 		stop();
-		soundOut?.Dispose();
+		soundOut.Dispose();
 	}
 	
 	public MMDevice getCurrentDevice(){
@@ -202,19 +199,17 @@ public class Player : IDisposable{
 	
 	public void setDevice(MMDevice dev){
 		pause();
-		soundOut.Stopped -= onFinish;
+		soundOut.PlaybackStopped -= onFinish;
 		soundOut.Stop();
 		soundOut.Dispose();
 		
 		currentDevice = dev;
 		
-		//There is no need to regenerate wavesource. tested it.
-		
-		soundOut = new WasapiOut(){Device = dev}; //Everything should be right!
-		soundOut.Stopped += onFinish;
-		if(waveSource != null){
-			soundOut.Initialize(waveSource);
-			soundOut.Volume = (float) Math.Pow((float) volume / 100f, volumeExponent);
+		soundOut = new WasapiOut(currentDevice, AudioClientShareMode.Shared, false, 100);
+		soundOut.PlaybackStopped += onFinish;
+		if(reader != null){
+			soundOut.Init(reader);
+			setVolume(volume);
 		}
 		
 		onChangeDevice?.Invoke(this, EventArgs.Empty);
@@ -222,7 +217,7 @@ public class Player : IDisposable{
 	
 	public static Dictionary<string, MMDevice> getDeviceList(){
 		using var enumerator = new MMDeviceEnumerator();
-		var devices = enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active);
+		var devices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
 		
 		return devices.ToDictionary(n => n.FriendlyName, n => n);
 	}

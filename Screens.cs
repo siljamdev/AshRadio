@@ -6,7 +6,7 @@ using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
-using CSCore.CoreAudioAPI;
+using NAudio.CoreAudioApi;
 
 public class Screens{
 	MultipleTuiScreenInteractive master = null!;
@@ -22,7 +22,7 @@ public class Screens{
 	Stopwatch timer;
 	double lastTime;
 	
-	const int maxFps = 60;
+	int maxFps = 48;
 	
 	public Screens(){
 		setupPlaying();
@@ -163,7 +163,9 @@ public class Screens{
 	
 	public void setupPlaying(){
 		Song temp = Song.load(Radio.py.playingSong);
-		TuiTwoLabels song = new TuiTwoLabels("Playing: ", temp?.title ?? "", Placement.TopLeft, 2, 1, null, Palette.song);
+		TuiButton song = new TuiButton(temp?.title ?? "", Placement.TopLeft, 11, 1, Palette.song, Palette.user).SetAction((s, ck) => {
+			setSongDetails(temp.id);
+		});
 		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? "Unknown author" : (temp.authors.Length == 1 ? (Author.load(temp.authors[0])?.name ?? "Unknown author") : string.Join(", ", temp.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))), Placement.BottomLeft, 2, 1, null, Palette.author);
 		
 		TuiProgressBar progress = new TuiProgressBar(70, '█', '░', Placement.Center, 0, 0, Palette.main, Palette.main);
@@ -210,14 +212,16 @@ public class Screens{
 		});
 		
 		playing = new TuiScreenInteractive(100, 5, new TuiSelectable[,]{{
-			back, prev, play, next, advance
+			song, back, prev, play, next, advance
 		}, {
-			volume, volume, volume, volume, volume
-		}}, 2, 0, Placement.BottomCenter, 0, 0, null,
+			volume, volume, volume, volume, volume, volume
+		}}, 3, 0, Placement.BottomCenter, 0, 0, null,
+			new TuiLabel("Playing:", Placement.TopLeft, 2, 1),
+			new TuiLabel("Authors:", Placement.BottomLeft, 2, 1),
 			new TuiLabel("v" + Radio.version, Placement.BottomRight, 0, 0, Palette.delimiter),
 			new TuiLabel("Volume", Placement.Center, -2, 2),
 			new TuiLabel("Ctrl+Space", Placement.TopRight, 0, 0, Palette.hint),
-			song, authors,
+			authors,
 			progress, elapsedTime, totalTime
 		);
 		
@@ -227,10 +231,16 @@ public class Screens{
 		};
 		
 		playing.FinishPlayCycleEvent = s => {
-			progress.Percentage = (int) (Radio.py.elapsed / Radio.py.duration * 100);
+			int n = (int) (Radio.py.elapsed / Radio.py.duration * 100);
+			if(n != progress.Percentage){
+				progress.Percentage = n;
+			}
 			
 			int sec = (int) Radio.py.elapsed;
-			elapsedTime.Text =	(sec / 60) + ":" + (sec % 60).ToString("D2");
+			string s2 = (sec / 60) + ":" + (sec % 60).ToString("D2");
+			if(s2 != elapsedTime.Text){
+				elapsedTime.Text = s2;
+			}
 		};
 		
 		prepareScreen(playing);
@@ -238,7 +248,7 @@ public class Screens{
 		Radio.py.onSongLoad += (se, e) => {
 			Song s = Song.load(Radio.py.playingSong);
 			
-			song.RightText = s?.title ?? "";
+			song.Text = s?.title ?? "";
 			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? "Unknown author" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author")))));
 			
 			int sec = (int) Radio.py.duration;
@@ -260,6 +270,7 @@ public class Screens{
 			
 			for(int i = 0; i < devs.Count; i++){
 				MMDevice d = devs[i].Value;
+				int j = i;
 				buttons[i, 0] = new TuiButton(devs[i].Key, Placement.TopCenter, 0, 6 + i, null, Palette.user).SetAction((s, cki) => {
 					Radio.py.setDevice(d);
 					closeMiddleScreen();
@@ -280,18 +291,20 @@ public class Screens{
 				name = "Library";
 				break;
 			case SourceType.Author:
-				name = "Author: ";
+				name = "Author";
 				name2 = Author.load(Session.sourceIdentifier)?.name ?? "Unknown author";
 				f = Palette.author;
 				break;
 			case SourceType.Playlist:
-				name = "Playlist: ";
+				name = "Playlist";
 				name2 = Playlist.load(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 				f = Palette.playlist;
 				break;
 		}
 		
-		TuiTwoLabels source = new TuiTwoLabels(name, name2, Placement.TopLeft, 3, 3, null, f);
+		TuiTwoLabels sourceType = new TuiTwoLabels("Source: ", name, Placement.TopLeft, 1, 2, null, Palette.info);
+		
+		TuiLabel source = new TuiLabel(name2, Placement.TopLeft, 3, 3, f);
 		
 		Session.onSourceChange += (s, a) => {
 			string nam = "";
@@ -304,23 +317,23 @@ public class Screens{
 					nam = "Library";
 					break;
 				case SourceType.Author:
-					nam = "Author: ";
+					nam = "Author";
 					nam2 = Author.load(Session.sourceIdentifier)?.name ?? "Unknown author";
 					f2 = Palette.author;
 					break;
 				case SourceType.Playlist:
-					nam = "Playlist: ";
+					nam = "Playlist";
 					nam2 = Playlist.load(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 					f2 = Palette.playlist;
 					break;
 			}
 			
-			source.LeftText = nam;
-			source.RightText = nam2;
-			source.RightFormat = f2;
+			sourceType.RightText = nam;
+			source.Text = nam2;
+			source.Format = f2;
 		};
 		
-		TuiOptionPicker mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 3, 6, null, Palette.user);
+		TuiOptionPicker mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 3, 6, Palette.info, Palette.user);
 		
 		mode.DeleteAllKeyEvents();
 		mode.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
@@ -366,7 +379,7 @@ public class Screens{
 			devices
 		}}, 0, 0, Placement.TopRight, 0, 0, null,
 			device, source,
-			new TuiLabel("Source:", Placement.TopLeft, 1, 2),
+			sourceType,
 			new TuiLabel("Mode:", Placement.TopLeft, 1, 5),
 			new TuiLabel("Queue:", Placement.TopLeft, 1, 8),
 			new TuiLabel("Queue empties:", Placement.BottomLeft, 3, 4),
@@ -576,6 +589,10 @@ public class Screens{
 			}
 		});
 		
+		title.OnParentResize = s => {
+			title.BoxXsize = (uint) Math.Clamp((int) s.Xsize - 32, 16, 38);
+		};
+		
 		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox(s == null || s.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))),
 			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.user, Palette.user);
 		
@@ -589,6 +606,10 @@ public class Screens{
 				setSongDetails(s);
 			}
 		});
+		
+		authors.OnParentResize = s => {
+			authors.BoxXsize = (uint) Math.Clamp((int) s.Xsize - 32, 16, 38);
+		};
 		
 		TuiButton addPlaylist = new TuiButton("Add to playlist", Placement.TopRight, 7, 15, null, Palette.user).SetAction((s2, ck) => {
 			selectPlaylistToAddTo(s.id);
@@ -608,9 +629,15 @@ public class Screens{
 		if(s != null){
 			for(int i = 0; i < s.authors.Length; i++){
 				int tt3 = s.authors[i];
-				temp[i + 1, 0] = new TuiButton(Author.load(s.authors[i])?.name ?? "Unknown author", Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
+				TuiButton ar = new TuiButton(Author.load(tt3)?.name ?? "Unknown author", Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
 					setAuthorDetails(tt3);
 				});
+				
+				ar.SubKeyEvent(ConsoleKey.S, (s, ck) => {
+					Session.setSource(SourceType.Author, tt3);
+				});
+				
+				temp[i + 1, 0] = ar;
 			}
 		}
 		
@@ -680,7 +707,7 @@ public class Screens{
 		setMiddleScreen(c);
 	}
 	
-	void setLibrary(){
+	void setLibrary(uint? inex = null){
 		List<int> lib = Song.getLibrary();
 		
 		TuiButton import = new TuiButton("Import songs", Placement.TopRight, 3, 5, null, Palette.user);
@@ -718,6 +745,7 @@ public class Screens{
 		TuiScreenInteractive l = getMiddle(t);
 		
 		l.MatrixPointerX = (uint) ((lib?.Count > 0) ? 0 : 1);
+		l.MatrixPointerY = inex ?? 0;
 		
 		l.Elements.Add(new TuiLabel("Library", Placement.TopCenter, 0, 1, Palette.main));
 		
@@ -743,6 +771,14 @@ public class Screens{
 					b.Text = "";
 				}
 				j++;
+			}
+		}
+		
+		int toChange = Math.Max(0, (l.Selected?.OffsetY ?? 0) - (int) l.Ysize + 4);
+		
+		foreach(TuiElement e in l){
+			if(e is TuiButton && e != import){
+				e.OffsetY -= toChange;	
 			}
 		}
 		
@@ -813,7 +849,7 @@ public class Screens{
 				closeMiddleScreen();
 				if(tempMid.Peek() == l){
 					tempMid.Pop();
-					setLibrary();
+					setLibrary(l.MatrixPointerY);
 					while(tempMid.Count > 0){
 						setMiddleScreen(tempMid.Pop());
 					}
@@ -834,7 +870,7 @@ public class Screens{
 	}
 	
 	void setSearchScreen(){
-		TuiFramedScrollingTextBox input = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 4, null, null, null, Palette.user, Palette.user);
+		TuiMultiLineScrollingFramedTextBox input = new TuiMultiLineScrollingFramedTextBox("", 256, 34, 3, Placement.TopCenter, 0, 4, null, null, null, Palette.user, Palette.user);
 		
 		input.OnParentResize = s => {
 			input.BoxXsize = (uint) Math.Max(0, (int) s.Xsize - 4);
@@ -973,7 +1009,7 @@ public class Screens{
 		setAuthorDetails(s);
 	}
 	
-	void setAuthorDetails(Author s){
+	void setAuthorDetails(Author s, uint? inex = null){
 		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? "Unknown author", 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.user, Palette.user);
 		
 		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
@@ -981,6 +1017,10 @@ public class Screens{
 				s.setName(name.Text);
 			}
 		});
+		
+		name.OnParentResize = s => {
+			name.BoxXsize = (uint) Math.Clamp((int) s.Xsize - 32, 16, 38);
+		};
 		
 		TuiButton del = new TuiButton("Delete author", Placement.TopRight, 7, 9, null, Palette.user).SetAction((s2, ck) => {
 			closeMiddleScreen();
@@ -1023,6 +1063,7 @@ public class Screens{
 		TuiScreenInteractive c = getMiddle(temp);
 		
 		c.MatrixPointerX = (uint) ((songs?.Count > 0) ? 0 : 1);
+		c.MatrixPointerY = inex ?? 0;
 		
 		c.Elements.Add(new TuiLabel(s?.name ?? "Unknown author", Placement.TopLeft, 2, 2, Palette.author));
 		c.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 4, 3));
@@ -1053,6 +1094,14 @@ public class Screens{
 						b.Text = "";
 					}
 					j++;
+				}
+			}
+			
+			int toChange = Math.Max(0, (c.Selected?.OffsetY ?? 0) - (int) c.Ysize + 4);
+			
+			foreach(TuiElement e in c){
+				if(e is TuiButton){
+					e.OffsetY -= toChange;	
 				}
 			}
 			
@@ -1126,7 +1175,7 @@ public class Screens{
 				closeMiddleScreen();
 				if(tempMid.Peek() == c){
 					tempMid.Pop();
-					setAuthorDetails(s);
+					setAuthorDetails(s, c.MatrixPointerY);
 					while(tempMid.Count > 0){
 						setMiddleScreen(tempMid.Pop());
 					}
@@ -1156,7 +1205,7 @@ public class Screens{
 				if(tempMid.Peek() == c){
 					tempMid.Pop();
 					if(Author.exists(s.id)){
-						setAuthorDetails(s);
+						setAuthorDetails(s, c.MatrixPointerY);
 					}
 					while(tempMid.Count > 0){
 						setMiddleScreen(tempMid.Pop());
@@ -1298,6 +1347,10 @@ public class Screens{
 				s.setTitle(title.Text);
 			}
 		});
+		
+		title.OnParentResize = s => {
+			title.BoxXsize = (uint) Math.Clamp((int) s.Xsize - 32, 16, 38);
+		};
 		
 		TuiButton add = new TuiButton("Add song", Placement.TopRight, 7, 9, null, Palette.user).SetAction((s2, ck) => {
 			selectSongToAdd(s);
@@ -1450,6 +1503,35 @@ public class Screens{
 		c.SubKeyEvent(ConsoleKey.S, (s2, ck) => {
 			Session.setSource(SourceType.Playlist, s.id);
 		});
+		
+		void onLibChange(object sender, LibraryEventArgs a){
+			if(!middle.Contains(c)){
+				Song.onLibraryUpdate -= onLibChange;
+				return;
+			}
+			
+			Stack<TuiScreenInteractive> tempMid = new();
+			while(middle.Count > 0){
+				tempMid.Push(middle.Peek());
+				closeMiddleScreen();
+				if(tempMid.Peek() == c){
+					tempMid.Pop();
+					setPlaylistDetails(s, c.MatrixPointerY);
+					while(tempMid.Count > 0){
+						setMiddleScreen(tempMid.Pop());
+					}
+					
+					Song.onLibraryUpdate -= onLibChange;
+					return;
+				}
+			}
+			
+			while(tempMid.Count > 0){
+				setMiddleScreen(tempMid.Pop());
+			}
+		}
+		
+		Song.onLibraryUpdate += onLibChange;
 		
 		void onPlaylistChange(object sender, PlaylistEventArgs a){
 			if(!middle.Contains(c)){
@@ -1717,7 +1799,7 @@ public class Screens{
 	}
 	
 	void setSearchPlaylist(Playlist p){
-		TuiFramedScrollingTextBox input = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 4, null, null, null, Palette.user, Palette.user);
+		TuiMultiLineScrollingFramedTextBox input = new TuiMultiLineScrollingFramedTextBox("", 256, 34, 3, Placement.TopCenter, 0, 4, null, null, null, Palette.user, Palette.user);
 		
 		input.OnParentResize = s => {
 			input.BoxXsize = (uint) Math.Max(0, (int) s.Xsize - 4);
@@ -2052,7 +2134,7 @@ public class Screens{
 			Task<int> task = Task.Run(() => Radio.importSingleVideo(path.Text, title.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(t.Result > -1){
+				if(middle.Peek() == l && t.Result > -1){
 					closeMiddleScreen();
 					setSongDetails(t.Result);
 				}
@@ -2184,7 +2266,7 @@ public class Screens{
 			Task<bool> task = Task.Run(() => Radio.importFromPlaylist(path.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(t.Result){
+				if(middle.Peek() == l && t.Result){
 					closeMiddleScreen();
 				}
 				b = false;
@@ -2318,7 +2400,7 @@ public class Screens{
 			Task<int> task = Task.Run(() => Radio.importYtPlaylist(path.Text, title.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(t.Result > -1){
+				if(middle.Peek() == l && t.Result > -1){
 					closeMiddleScreen();
 					setPlaylistDetails(t.Result);
 				}

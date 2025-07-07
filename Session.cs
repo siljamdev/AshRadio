@@ -158,6 +158,10 @@ public static class Session{
 		sourceIdentifier = id;
 		update();
 		
+		if(Radio.py.playingSong < 0){
+			Radio.py.askForSong();
+		}
+		
 		onSourceChange?.Invoke(null, EventArgs.Empty);
 	}
 	
