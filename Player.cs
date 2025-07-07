@@ -39,6 +39,8 @@ public class Player : IDisposable{
 	public event EventHandler onChangePlaystate;
 	public event EventHandler onChangeDevice;
 	
+	bool isStoping;
+	
 	public Player(int song = -1, int vol = 100, float volxp = 2f, float el = 0f){
 		volume = vol;
 		volumeExponent = volxp;
@@ -54,11 +56,8 @@ public class Player : IDisposable{
 	}
 	
 	public void loadSong(int song){
-		//if(song == playingSong){ //No reloading
-		//	return;
-		//}
-		
 		stop();
+		soundOut.Dispose();
 		
 		playingSong = song;
 		
@@ -82,7 +81,7 @@ public class Player : IDisposable{
 		reader = new AudioFileReader(path);
 		setVolume(volume);
 		
-		soundOut?.Dispose();
+		isStoping = false;
 		soundOut = new WasapiOut(currentDevice, AudioClientShareMode.Shared, false, 100);
 		soundOut.PlaybackStopped += onFinish;
 		
@@ -161,13 +160,14 @@ public class Player : IDisposable{
 	}
 	
 	void onFinish(object sender, StoppedEventArgs a){
-		//Console.WriteLine("Hi");
-		//Console.ReadLine();
-		
 		if(a?.Exception != null){
 			Console.WriteLine("The audio stopped because of an error:");
 			Console.WriteLine(a.Exception);
 			File.AppendAllText("error.log", a.Exception.ToString());
+		}
+		
+		if(isStoping){
+			return;
 		}
 		
 		Session.addPrevPlayed(playingSong);
@@ -180,6 +180,7 @@ public class Player : IDisposable{
 	
 	void stop(){
 		if(soundOut.PlaybackState != PlaybackState.Stopped){
+			isStoping = true;
 			soundOut.PlaybackStopped -= onFinish;
 			soundOut.Stop();
 		}
