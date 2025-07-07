@@ -23,8 +23,13 @@ public class Player : IDisposable{
 		return (float) (waveSource?.GetPosition().TotalSeconds ?? 0d);
 	}
 	set{
+		if(isPaused){
+			resume();
+		}
 		if(value > duration){
 			waveSource?.SetPosition(TimeSpan.FromSeconds(duration));
+		}else if(value < 0f){
+			waveSource?.SetPosition(TimeSpan.FromSeconds(0f));
 		}else{
 			waveSource?.SetPosition(TimeSpan.FromSeconds(value));
 		}
@@ -161,9 +166,11 @@ public class Player : IDisposable{
 	}
 	
 	void onFinish(object sender, PlaybackStoppedEventArgs a){
-		if(a.Exception != null){
+		//File.AppendAllText("log.log", "Finished " + playingSong + "\n");
+		if(a?.Exception != null){
 			Console.WriteLine("The audio stopped because of an error:");
 			Console.WriteLine(a.Exception);
+			//Console.ReadLine();
 		}
 		
 		Session.addPrevPlayed(playingSong);

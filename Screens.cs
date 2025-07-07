@@ -2611,7 +2611,7 @@ public class Screens{
 		});
 		
 		TuiButton auto = new TuiButton("Auto download yt-dlp", Placement.BottomCenter, 0, 5, null, Palette.user).SetAction((s, ck) => {
-			downloadFile("https://objects.githubusercontent.com/github-production-release-asset-2e65be/307260205/9576d339-3be0-4a7e-82ac-0f5a59792c9d?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20250705%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250705T140915Z&X-Amz-Expires=1800&X-Amz-Signature=f9e51ac69549b996dd87972989c853a2476598aab68d92254e056ab814e465f5&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dyt-dlp.exe&response-content-type=application%2Foctet-stream",
+			downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
 			Radio.dep.path + "/yt-dlp.exe", () => {
 				ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
 				Radio.config.SetCamp("ytdlpPath", removeQuotesSingle(ytdlp.Text));
