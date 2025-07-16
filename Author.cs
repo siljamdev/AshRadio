@@ -45,7 +45,7 @@ public class Author{
 	}
 	
 	void save(){
-		authorsFile.SetCamp(id.ToString(), name);
+		authorsFile.Set(id.ToString(), name);
 		authorsFile.Save();
 		
 		onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
@@ -72,7 +72,7 @@ public class Author{
 		if(id < 0){
 			return false;
 		}
-		return authorsFile.CanGetCamp(id.ToString(), out string n);
+		return authorsFile.TryGetValue(id.ToString(), out string n);
 	}
 	
 	public static bool exists(string nam){
@@ -94,7 +94,7 @@ public class Author{
 	}
 	
 	public static Author load(int id2){
-		if(authorsFile.CanGetCamp(id2.ToString(), out string n)){
+		if(authorsFile.TryGetValue(id2.ToString(), out string n)){
 			return new Author(){
 				name = n,
 				id = id2
@@ -108,7 +108,7 @@ public class Author{
 			return;
 		}
 		
-		authorsFile.DeleteCamp(id.ToString());
+		authorsFile.Remove(id.ToString());
 		authorsFile.Save();
 		
 		onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
@@ -126,7 +126,7 @@ public class Author{
 			Author d = au.FirstOrDefault(t => string.Equals(t.name, a[i].Trim(), StringComparison.OrdinalIgnoreCase));
 			if(d == null){ //Not found, create it
 				latestId++;
-				authorsFile.SetCamp(latestId.ToString(), a[i].Trim());
+				authorsFile.Set(latestId.ToString(), a[i].Trim());
 				authorsFile.Save();
 				
 				saveAll();
@@ -143,7 +143,7 @@ public class Author{
 	}
 	
 	public static List<int> getAllIds(){
-		List<int> a = new(authorsFile.numberOfcamps);
+		List<int> a = new(authorsFile.Count);
 		
 		foreach(var kvp in authorsFile){
 			if(kvp.Value is string && int.TryParse(kvp.Key, out int i) && i > -1){
@@ -155,7 +155,7 @@ public class Author{
 	}
 	
 	public static List<Author> getAllAuthors(){
-		List<Author> a = new(authorsFile.numberOfcamps);
+		List<Author> a = new(authorsFile.Count);
 		
 		foreach(var kvp in authorsFile){
 			if(kvp.Value is string && int.TryParse(kvp.Key, out int i) && i > -1){
@@ -167,7 +167,7 @@ public class Author{
 	}
 	
 	static void saveAll(){
-		Radio.config.SetCamp("authors.latestId", latestId);
+		Radio.config.Set("authors.latestId", latestId);
 		Radio.config.Save();
 	}
 }

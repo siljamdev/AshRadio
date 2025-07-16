@@ -34,8 +34,8 @@ public class Playlist{
 	}
 	
 	void save(){
-		playlistsFile.SetCamp(id.ToString() + ".t", title);
-		playlistsFile.SetCamp(id.ToString() + ".s", songs.ToArray());
+		playlistsFile.Set(id.ToString() + ".t", title);
+		playlistsFile.Set(id.ToString() + ".s", songs.ToArray());
 		playlistsFile.Save();
 		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
@@ -59,11 +59,11 @@ public class Playlist{
 		if(id < 0){
 			return false;
 		}
-		return playlistsFile.CanGetCamp(id.ToString() + ".t", out string t) && playlistsFile.CanGetCamp(id.ToString() + ".s", out int[] s);
+		return playlistsFile.TryGetValue(id.ToString() + ".t", out string t) && playlistsFile.TryGetValue(id.ToString() + ".s", out int[] s);
 	}
 	
 	public static Playlist load(int id2){
-		if(playlistsFile.CanGetCamp(id2.ToString() + ".t", out string t) && playlistsFile.CanGetCamp(id2.ToString() + ".s", out int[] s)){
+		if(playlistsFile.TryGetValue(id2.ToString() + ".t", out string t) && playlistsFile.TryGetValue(id2.ToString() + ".s", out int[] s)){
 			return new Playlist(){
 				title = t,
 				songs = s.ToList(),
@@ -76,8 +76,8 @@ public class Playlist{
 	public static int create(string title){
 		latestId++;
 		
-		playlistsFile.SetCamp(latestId.ToString() + ".t", title);
-		playlistsFile.SetCamp(latestId.ToString() + ".s", Array.Empty<int>());
+		playlistsFile.Set(latestId.ToString() + ".t", title);
+		playlistsFile.Set(latestId.ToString() + ".s", Array.Empty<int>());
 		playlistsFile.Save();
 		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(latestId));
@@ -92,19 +92,19 @@ public class Playlist{
 			return;
 		}
 		
-		playlistsFile.DeleteCamp(id.ToString() + ".t");
-		playlistsFile.DeleteCamp(id.ToString() + ".s");
+		playlistsFile.Remove(id.ToString() + ".t");
+		playlistsFile.Remove(id.ToString() + ".s");
 		playlistsFile.Save();
 		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
 	}
 	
 	public static List<int> getAllIds(){
-		List<int> a = new(playlistsFile.numberOfcamps / 2);
+		List<int> a = new(playlistsFile.Count / 2);
 		
 		foreach(var kvp in playlistsFile){
 			string[] div = kvp.Key.Split(".");
-			if(kvp.Value is string && div.Length == 2 && div[1] == "t" && int.TryParse(div[0], out int i) && i > -1 && playlistsFile.CanGetCamp(i.ToString() + ".s", out int[] s)){
+			if(kvp.Value is string && div.Length == 2 && div[1] == "t" && int.TryParse(div[0], out int i) && i > -1 && playlistsFile.TryGetValue(i.ToString() + ".s", out int[] s)){
 				a.Add(i);
 			}
 		}
@@ -113,7 +113,7 @@ public class Playlist{
 	}
 	
 	static void saveAll(){
-		Radio.config.SetCamp("playlists.latestId", latestId);
+		Radio.config.Set("playlists.latestId", latestId);
 		Radio.config.Save();
 	}
 }

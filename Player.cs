@@ -151,7 +151,7 @@ public class Player : IDisposable{
 	public void setVolume(int v){
 		volume = Math.Clamp(v, 0, 100);
 		
-		Radio.config.SetCamp("player.volume", volume);
+		Radio.config.Set("player.volume", volume);
 		Radio.config.Save();
 		
 		if(reader != null){

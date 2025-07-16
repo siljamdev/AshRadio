@@ -213,10 +213,10 @@ public static class Session{
 	}
 	
 	static void save(){
-		Radio.config.SetCamp("session.mode", (int) mode);
-		Radio.config.SetCamp("session.sourceType", (int) sourceType);
-		Radio.config.SetCamp("session.sourceIdentifier", sourceIdentifier);
-		Radio.config.SetCamp("session.sourceSeen", sourceSeen.ToArray());
+		Radio.config.Set("session.mode", (int) mode);
+		Radio.config.Set("session.sourceType", (int) sourceType);
+		Radio.config.Set("session.sourceIdentifier", sourceIdentifier);
+		Radio.config.Set("session.sourceSeen", sourceSeen.ToArray());
 		
 		Radio.config.Save();
 	}

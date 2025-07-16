@@ -2,10 +2,11 @@ global using System;
 global using AshLib;
 global using AshLib.AshFiles;
 using System.Diagnostics;
+using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.1.0";
+	public const string version = "1.2.0";
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
@@ -63,12 +64,12 @@ public static class Radio{
 		
 		initConfig();
 		
-		Song.init(config.GetCamp<int>("songs.latestId"));
-		Author.init(config.GetCamp<int>("authors.latestId"));
-		Playlist.init(config.GetCamp<int>("playlists.latestId"));
-		Session.init((SessionMode) config.GetCamp<int>("session.mode"), (SourceType) config.GetCamp<int>("session.sourceType"), config.GetCamp<int>("session.sourceIdentifier"), config.GetCamp<int[]>("session.sourceSeen"));
+		Song.init(config.GetValue<int>("songs.latestId"));
+		Author.init(config.GetValue<int>("authors.latestId"));
+		Playlist.init(config.GetValue<int>("playlists.latestId"));
+		Session.init((SessionMode) config.GetValue<int>("session.mode"), (SourceType) config.GetValue<int>("session.sourceType"), config.GetValue<int>("session.sourceIdentifier"), config.GetValue<int[]>("session.sourceSeen"));
 		
-		py = new Player(config.GetCamp<int>("player.song"), config.GetCamp<int>("player.volume"), config.GetCamp<float>("player.volumeExponent"), config.GetCamp<float>("player.elapsed"));
+		py = new Player(config.GetValue<int>("player.song"), config.GetValue<int>("player.volume"), config.GetValue<float>("player.volumeExponent"), config.GetValue<float>("player.elapsed"));
 		
 		Palette.init();
 		sc = new Screens();
@@ -103,29 +104,50 @@ public static class Radio{
 			
 			new ModelInstance(ModelInstanceOperation.Type, "ffmpegPath", "ffmpeg"),
 			new ModelInstance(ModelInstanceOperation.Type, "ytdlpPath", "yt-dlp"),
+			new ModelInstance(ModelInstanceOperation.Type, "init", false),
 			
-			new ModelInstance(ModelInstanceOperation.Type, "ui.useColors", true),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.user", Color3.Yellow),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.song", new Color3("3295FF")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.author", Color3.Green),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.playlist", new Color3("FFA811")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.main", new Color3("E7484B")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.delimiter", new Color3("5B2D72")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.hint", new Color3("9F60C1")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.info", new Color3("849DD6")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.background", new Color3("101010")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.error", new Color3("D83F3C"))
+			new ModelInstance(ModelInstanceOperation.Type, "ui.useColors", true)
 		);
+		
+		m.Merge(Palette.getPaletteModel());
 		
 		m.deleteNotMentioned = true;
 		
 		config *= m;
 		
 		//Set current version and path. Might be needed by someone (maybe)
-		config.SetCamp("version", version);
+		config.Set("version", version);
 		try{ //Might not work on linux
-			config.SetCamp("path", System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+			config.Set("path", System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
 		}catch{}
+		
+		if(OperatingSystem.IsWindows()){
+			if(!config.TryGetValue("init", out bool b) || !b){
+				downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
+				dep.path + "/yt-dlp.exe", async () => {
+					config.Set("ytdlpPath", dep.path + "/yt-dlp.exe");
+					config.Save();
+				});
+				
+				downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
+				dep.path + "/temp.zip", async () => {
+					try{
+						ZipFile.ExtractToDirectory(dep.path + "/temp.zip", dep.path + "/temp", true);
+						
+						string p = Directory.GetFiles(dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+						File.Copy(p, dep.path + "/ffmpeg.exe");
+						
+						Directory.Delete(dep.path + "/temp", true);
+						File.Delete(dep.path + "/temp.zip");
+					}catch(Exception e){
+						File.AppendAllText("error.log", e.ToString());
+					}
+					config.Set("init", true);
+					config.Set("ffmpegPath", dep.path + "/ffmpeg.exe");
+					config.Save();
+				});
+			}
+		}
 		
 		config.Save();
 	}
@@ -382,10 +404,25 @@ public static class Radio{
 		return s;
 	}
 	
+	public static async Task downloadFile(string url, string outputPath, Func<Task> onComplete){
+		using HttpClient client = new HttpClient();
+		using HttpResponseMessage response = await client.GetAsync(url);
+		response.EnsureSuccessStatusCode();
+		
+		Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+		
+		await using (FileStream fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true)){
+			await response.Content.CopyToAsync(fs);
+			await fs.FlushAsync();
+		}
+		
+		await onComplete(); // Lambda executed after file is saved
+	}
+	
 	//Save on exit the current song and time left
 	static void onExit(object sender, EventArgs e){
-		config.SetCamp("player.song", py.playingSong);
-		config.SetCamp("player.elapsed", py.elapsed);
+		config.Set("player.song", py.playingSong);
+		config.Set("player.elapsed", py.elapsed);
 		
 		py.Dispose();
 		
@@ -393,6 +430,6 @@ public static class Radio{
 	}
 	
 	static string geYtDlpPath(){
-		return Radio.config.GetCamp<string>("ytdlpPath");
+		return Radio.config.GetValue<string>("ytdlpPath");
 	}
 }

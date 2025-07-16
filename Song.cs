@@ -27,8 +27,8 @@ public class Song{
 	
 	void save(){
 		AshFile s2 = new AshFile();
-		s2.SetCamp("t", title);
-		s2.SetCamp("a", authors);
+		s2.Set("t", title);
+		s2.Set("a", authors);
 		s2.Save(getDataPath(id));
 	}
 	
@@ -69,8 +69,8 @@ public class Song{
 		f *= songModel;
 		
 		return new Song(){
-			title = f.GetCamp<string>("t"),
-			authors = f.GetCamp<int[]>("a"),
+			title = f.GetValue<string>("t"),
+			authors = f.GetValue<int[]>("a"),
 			id = s
 		};
 	}
@@ -127,8 +127,8 @@ public class Song{
 			}
 			
 			AshFile s2 = new AshFile();
-			s2.SetCamp("t", title);
-			s2.SetCamp("a", authors);
+			s2.Set("t", title);
+			s2.Set("a", authors);
 			s2.Save(getDataPath(latestId));
 			
 			saveAll();
@@ -150,8 +150,8 @@ public class Song{
 		}
 		
 		AshFile s = new AshFile();
-		s.SetCamp("t", title);
-		s.SetCamp("a", authors);
+		s.Set("t", title);
+		s.Set("a", authors);
 		s.Save(getDataPath(latestId));
 		
 		saveAll();
@@ -207,12 +207,12 @@ public class Song{
 	}
 	
 	static void saveAll(){
-		Radio.config.SetCamp("songs.latestId", latestId);
+		Radio.config.Set("songs.latestId", latestId);
 		Radio.config.Save();
 	}
 	
 	static string getFfmpegPath(){
-		return Radio.config.GetCamp<string>("ffmpegPath");
+		return Radio.config.GetValue<string>("ffmpegPath");
 	}
 }
 
