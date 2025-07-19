@@ -15,13 +15,13 @@ public partial class Screens{
 	TuiNumberPicker volume = null!;
 	
 	TuiScreenInteractive session = null!;
+	TuiOptionPicker mode = null!;
 	TuiScreenInteractive navigation = null!;
 	TuiScrollingScreenInteractive queueScreen = null!;
 	
 	Stack<TuiScreenInteractive> middle = new();
 	
-	Stopwatch timer;
-	double lastTime;
+	DeltaHelper dh = new DeltaHelper();
 	
 	int maxFps = 48;
 	
@@ -144,24 +144,54 @@ public partial class Screens{
 			setHelp();
 		});
 		
-		double wantedDeltaTime = 1000d/(double)maxFps; //In ms
+		master.SubKeyEvent(ConsoleKey.L, ConsoleModifiers.Control, (s, cki) => {
+			setLibrary();
+		});
+		
+		master.SubKeyEvent(ConsoleKey.P, ConsoleModifiers.Control, (s, cki) => {
+			setPlaylists();
+		});
+		
+		master.SubKeyEvent(ConsoleKey.U, ConsoleModifiers.Control, (s, cki) => {
+			setAuthors();
+		});
+		
+		master.SubKeyEvent(ConsoleKey.M, ConsoleModifiers.Shift, (s, cki) => {
+			if(mode.SelectedOptionIndex == 2){
+				mode.SelectedOptionIndex = 0;
+			}else{
+				mode.SelectedOptionIndex++;
+			}
+			Session.setMode((SessionMode) mode.SelectedOptionIndex);
+		});
+		
+		master.SubKeyEvent(ConsoleKey.S, ConsoleModifiers.Shift, (s, cki) => {
+			switch(Session.sourceType){
+				case SourceType.Library:
+					setLibrary();
+					break;
+				
+				case SourceType.Author:
+					setAuthorDetails(Session.sourceIdentifier);
+					break;
+				
+				case SourceType.Playlist:
+					setPlaylistDetails(Session.sourceIdentifier);
+					break;
+			}
+		});
 		
 		master.FinishPlayCycleEvent = s => { //Wait some time to avoid enourmus cpu usage
-			double realDeltaTime = (timer.Elapsed.TotalMilliseconds - lastTime); //In ms
-			double waitTime = wantedDeltaTime - realDeltaTime;
+			dh.TargetLazy(maxFps);
 			
-			if(waitTime > 0){
-				Thread.Sleep((int) waitTime); //Not precise but at least it aint busywait
-			}
-			
-			lastTime = timer.Elapsed.TotalMilliseconds;
+			dh.Frame();
 		};
 		
 		setSelectedScreen(navigation);
 	}
 	
 	public void play(){
-		timer = Stopwatch.StartNew();
+		dh.Start();
 		
 		master.Play();
 	}
@@ -339,7 +369,7 @@ public partial class Screens{
 			source.Format = f2;
 		};
 		
-		TuiOptionPicker mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 3, 6, Palette.info, Palette.user);
+		mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 3, 6, Palette.info, Palette.user);
 		
 		mode.DeleteAllKeyEvents();
 		mode.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
@@ -583,12 +613,27 @@ public partial class Screens{
 	
 	void setImportSingleFile(){
 		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
 		
 		TuiScreenInteractive l = null;
+		
+		TuiButton search = new TuiButton("Search file", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			Thread thread = new Thread(() => {
+			using(OpenFileDialog openFileDialog = new OpenFileDialog()){
+				openFileDialog.Title = "Select a file";
+				openFileDialog.Filter = "Audio Files|*.*";
+				
+				if(openFileDialog.ShowDialog() == DialogResult.OK){
+					path.Text = openFileDialog.FileName;
+				}
+			}});
+			
+			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+			thread.Start();
+		});
 		
 		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
 			int s2 = Radio.importSingleFile(removeQuotesSingle(path.Text), title.Text, authors.Text.Split(','), out string err);
@@ -625,7 +670,17 @@ public partial class Screens{
 			authors.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
+		TuiSelectable[,] t = OperatingSystem.IsWindows() ? new TuiSelectable[,]{{
+			path
+		},{
+			search
+		},{
+			title
+		},{
+			authors
+		},{
+			import
+		}} : new TuiSelectable[,]{{
 			path
 		},{
 			title
@@ -639,8 +694,8 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Import song from file", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
+		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 9));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
 		
 		setMiddleScreen(l);
 	}
@@ -725,9 +780,24 @@ public partial class Screens{
 	
 	void setImportFolder(){
 		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
+		
+		TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			Thread thread = new Thread(() => {
+			using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
+				openFileDialog.Description = "Select a folder";
+				openFileDialog.ShowNewFolderButton  = true;
+				
+				if(openFileDialog.ShowDialog() == DialogResult.OK){
+					path.Text = openFileDialog.SelectedPath;
+				}
+			}});
+			
+			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+			thread.Start();
+		});
 		
 		TuiScreenInteractive l = null;
 		
@@ -761,7 +831,15 @@ public partial class Screens{
 			authors.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
+		TuiSelectable[,] t = OperatingSystem.IsWindows() ? new TuiSelectable[,]{{
+			path
+		},{
+			search
+		},{
+			authors
+		},{
+			import
+		}} : new TuiSelectable[,]{{
 			path
 		},{
 			authors
@@ -773,7 +851,7 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Import songs from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 8));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 9));
 		
 		setMiddleScreen(l);
 	}
@@ -849,10 +927,25 @@ public partial class Screens{
 	
 	void setImportFolderPlaylist(){
 		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
+		
+		TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			Thread thread = new Thread(() => {
+			using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
+				openFileDialog.Description = "Select a folder";
+				openFileDialog.ShowNewFolderButton  = true;
+				
+				if(openFileDialog.ShowDialog() == DialogResult.OK){
+					path.Text = openFileDialog.SelectedPath;
+				}
+			}});
+			
+			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+			thread.Start();
+		});
 		
 		TuiScreenInteractive l = null;
 		
@@ -891,7 +984,17 @@ public partial class Screens{
 			authors.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
+		TuiSelectable[,] t = OperatingSystem.IsWindows() ? new TuiSelectable[,]{{
+			path
+		},{
+			search
+		},{
+			title
+		},{
+			authors
+		},{
+			import
+		}} : new TuiSelectable[,]{{
 			path
 		},{
 			title
@@ -905,8 +1008,8 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Import playlist from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
+		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 9));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
 		
 		setMiddleScreen(l);
 	}
@@ -1001,6 +1104,10 @@ public partial class Screens{
 		},{
 			new TuiButton("Paths", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
 				setPathConfig();
+			})
+		},{
+			new TuiButton("Miscellaneous", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
+				setMiscConfig();
 			})
 		}};
 		
@@ -1313,8 +1420,60 @@ public partial class Screens{
 		setMiddleScreen(l);
 	}
 	
+	void setMiscConfig(){
+		TuiFramedCheckBox usercp = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrcp", out bool b) || b, Placement.TopCenter, 8, 4, null, null, null, Palette.user, Palette.user);
+		
+		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
+			Radio.config.Set("dcrcp", true);
+			Radio.config.Save();
+			
+			usercp.Checked = true;
+		});
+		
+		bool save(){
+			Radio.config.Set("dcrcp", usercp.Checked);
+			Radio.config.Save();
+			
+			if(usercp.Checked){
+				if(Radio.dcrcp == null){
+					Radio.dcrcp = new DiscordPresence();
+				}
+			}else{
+				Radio.dcrcp?.Dispose();
+				Radio.dcrcp = null;
+			}
+			
+			return true;
+		}
+		
+		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+			save();
+		});
+		
+		TuiSelectable[,] t = new TuiSelectable[,]{{
+			usercp
+		},{
+			reset
+		},{
+			done
+		}};
+		
+		TuiScreenInteractive l = getMiddle(t);
+		
+		l.Elements.Add(new TuiLabel("Miscellaneous config", Placement.TopCenter, 0, 1, Palette.main));
+		l.Elements.Add(new TuiLabel("Use Discord RCP:", Placement.TopCenter, -12, 5));
+		
+		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
+			if(save()){
+				closeMiddleScreen();
+			}
+		});
+		
+		setMiddleScreen(l);
+	}
+	
 	void setHelp(int page = 0){
-		const int maxPage = 5;
+		const int maxPage = 6;
 		TuiScreenInteractive l = getMiddle(null);
 		
 		l.Elements.Add(new TuiLabel("Help - Page " + (page + 1), Placement.TopCenter, 0, 1, Palette.main));
@@ -1386,6 +1545,16 @@ public partial class Screens{
 				l.Elements.Add(new TuiTwoLabels("M", " next song", Placement.TopLeft, 4, 12, Palette.info, null));
 				break;
 			case 4:
+				l.Elements.Add(new TuiLabel("Keybinds", Placement.TopLeft, 2, 4, Palette.info));
+				l.Elements.Add(new TuiLabel("Navigation (available everywhere):", Placement.TopLeft, 3, 5));
+				l.Elements.Add(new TuiTwoLabels("Ctrl + L", " see Library", Placement.TopLeft, 4, 6, Palette.info, null));
+				l.Elements.Add(new TuiTwoLabels("Ctrl + P", " see Playlists", Placement.TopLeft, 4, 7, Palette.info, null));
+				l.Elements.Add(new TuiTwoLabels("Ctrl + U", " see Authors", Placement.TopLeft, 4, 8, Palette.info, null));
+				l.Elements.Add(new TuiLabel("Session (available everywhere)", Placement.TopLeft, 3, 9));
+				l.Elements.Add(new TuiTwoLabels("Shift + M", " change mode", Placement.TopLeft, 4, 10, Palette.info, null));
+				l.Elements.Add(new TuiTwoLabels("Shift + S", " see source", Placement.TopLeft, 4, 11, Palette.info, null));
+				break;
+			case 5:
 				l.Elements.Add(new TuiLabel("Internal operation", Placement.TopLeft, 2, 4, Palette.info));
 				l.Elements.Add(new TuiLabel("AshRadio uses numerical ids for songs, authors and", Placement.TopLeft, 3, 5));
 				l.Elements.Add(new TuiLabel("playlists.", Placement.TopLeft, 3, 6));
@@ -1397,7 +1566,7 @@ public partial class Screens{
 				l.Elements.Add(new TuiLabel("The UI in the console is made using AshConsoleGraphics.", Placement.TopLeft, 3, 12));
 				l.Elements.Add(new TuiLabel(".net library also made by me.", Placement.TopLeft, 3, 13));
 				break;
-			case 5:
+			case 6:
 				l.Elements.Add(new TuiLabel("About the app", Placement.TopLeft, 2, 4, Palette.info));
 				l.Elements.Add(new TuiLabel("AshRadio v" + Radio.version, Placement.TopLeft, 3, 5));
 				l.Elements.Add(new TuiLabel("Made by Siljam", Placement.TopLeft, 3, 6));

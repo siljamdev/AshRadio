@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>siljam</Authors>
     <Company>AshProject</Company>
     <PackageDescription>Music player in your terminal</PackageDescription>
@@ -17,10 +17,16 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
   </PropertyGroup>
+  
+  <PropertyGroup Condition="('$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT') or '$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86' or '$(RuntimeIdentifier)' == 'win-arm64'">
+	<UseWindowsForms>true</UseWindowsForms>
+	<TargetFramework>net9.0-windows</TargetFramework>
+  </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ashConsoleGraphics" Version="2.2.0" />
+    <PackageReference Include="ashConsoleGraphics" Version="2.2.1" />
     <PackageReference Include="AshLib" Version="3.4.0" />
+    <PackageReference Include="DiscordRichPresence" Version="1.3.0.28" />
     <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
   

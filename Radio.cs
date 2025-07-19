@@ -6,13 +6,15 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.2.0";
+	public const string version = "1.3.0";
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
 	
 	public static Player py;
 	public static Screens sc;
+	
+	public static DiscordPresence dcrcp;
 	
 	public static void Main(string[] args){
 		try{
@@ -32,6 +34,7 @@ public static class Radio{
 	}
 	
 	static void debug(){
+		
 		//importSingleVideo("https://www.youtube.com/watch?v=lT57yUqdKSk", "", new string[0], null);
 		
 		//Playlist.create("test");
@@ -76,6 +79,10 @@ public static class Radio{
 		
 		AppDomain.CurrentDomain.ProcessExit += onExit;
 		
+		if(!config.TryGetValue("dcrcp", out bool b) || b){
+			dcrcp = new DiscordPresence();
+		}
+		
 		string[] dirs = Directory.GetDirectories(dep.path + "/import").Select(dir => Path.GetFileName(dir)).ToArray();
 		
 		foreach(string d in dirs){
@@ -104,7 +111,10 @@ public static class Radio{
 			
 			new ModelInstance(ModelInstanceOperation.Type, "ffmpegPath", "ffmpeg"),
 			new ModelInstance(ModelInstanceOperation.Type, "ytdlpPath", "yt-dlp"),
+			
 			new ModelInstance(ModelInstanceOperation.Type, "init", false),
+			
+			new ModelInstance(ModelInstanceOperation.Type, "dcrcp", true),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "ui.useColors", true)
 		);
@@ -425,6 +435,8 @@ public static class Radio{
 		config.Set("player.elapsed", py.elapsed);
 		
 		py.Dispose();
+		
+		dcrcp?.Dispose();
 		
 		config.Save();
 	}
