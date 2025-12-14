@@ -7,7 +7,6 @@ using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
-using NAudio.CoreAudioApi;
 
 public partial class Screens{
 	MultipleTuiScreenInteractive master = null!;
@@ -266,7 +265,7 @@ public partial class Screens{
 			playing.Ysize = Math.Min(a.Y, 5);
 		};
 		
-		playing.FinishPlayCycleEvent = s => {
+		playing.OnFinishPlayCycle += (s, a) => {
 			int n = (int) (Radio.py.elapsed / Radio.py.duration * 100);
 			if(n != progress.Percentage){
 				progress.Percentage = n;
@@ -297,7 +296,7 @@ public partial class Screens{
 	}
 	
 	public void setupSession(){
-		TuiLabel device = new TuiLabel(Radio.py.getCurrentDevice().FriendlyName, Placement.BottomLeft, 1, 2, Palette.info);
+		TuiLabel device = new TuiLabel(Radio.py.getCurrentDevice().Name ?? "", Placement.BottomLeft, 1, 2, Palette.info);
 		
 		TuiButton devices = new TuiButton("Change device", Placement.BottomCenter, 0, 1, null, Palette.user).SetAction((s, cki) => {
 			var devs = Player.getDeviceList().ToList();
@@ -305,10 +304,9 @@ public partial class Screens{
 			TuiSelectable[,] buttons = new TuiSelectable[devs.Count, 1];
 			
 			for(int i = 0; i < devs.Count; i++){
-				MMDevice d = devs[i].Value;
-				int j = i;
+				int j = devs[i].Value;
 				buttons[i, 0] = new TuiButton(devs[i].Key, Placement.TopCenter, 0, 6 + i, null, Palette.user).SetAction((s, cki) => {
-					Radio.py.setDevice(d);
+					Radio.py.setDevice(j);
 					closeMiddleScreen();
 				});
 			}
@@ -520,7 +518,7 @@ public partial class Screens{
 		prepareScreen(session);
 		
 		Radio.py.onChangeDevice += (s, a) => {
-			device.Text = Radio.py.getCurrentDevice().FriendlyName;
+			device.Text = Radio.py.getCurrentDevice().Name;
 		};
 	}
 	
@@ -620,20 +618,24 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = null;
 		
-		TuiButton search = new TuiButton("Search file", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-			Thread thread = new Thread(() => {
-			using(OpenFileDialog openFileDialog = new OpenFileDialog()){
-				openFileDialog.Title = "Select a file";
-				openFileDialog.Filter = "Audio Files|*.*";
+		#if WINDOWS
+			TuiButton search = new TuiButton("Search file", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				Thread thread = new Thread(() => {
+				using(OpenFileDialog openFileDialog = new OpenFileDialog()){
+					openFileDialog.Title = "Select a file";
+					openFileDialog.Filter = "Audio Files|*.*";
+					
+					if(openFileDialog.ShowDialog() == DialogResult.OK){
+						path.Text = openFileDialog.FileName;
+					}
+				}});
 				
-				if(openFileDialog.ShowDialog() == DialogResult.OK){
-					path.Text = openFileDialog.FileName;
-				}
-			}});
-			
-			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
-			thread.Start();
-		});
+				thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+				thread.Start();
+			});
+		#else
+			TuiButton search = null;
+		#endif
 		
 		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
 			int s2 = Radio.importSingleFile(removeQuotesSingle(path.Text), title.Text, authors.Text.Split(','), out string err);
@@ -784,20 +786,24 @@ public partial class Screens{
 		
 		List<TuiLabel> error = new();
 		
-		TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-			Thread thread = new Thread(() => {
-			using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
-				openFileDialog.Description = "Select a folder";
-				openFileDialog.ShowNewFolderButton  = true;
+		#if WINDOWS
+			TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				Thread thread = new Thread(() => {
+				using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
+					openFileDialog.Description = "Select a folder";
+					openFileDialog.ShowNewFolderButton  = true;
+					
+					if(openFileDialog.ShowDialog() == DialogResult.OK){
+						path.Text = openFileDialog.SelectedPath;
+					}
+				}});
 				
-				if(openFileDialog.ShowDialog() == DialogResult.OK){
-					path.Text = openFileDialog.SelectedPath;
-				}
-			}});
-			
-			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
-			thread.Start();
-		});
+				thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+				thread.Start();
+			});
+		#else
+			TuiButton search = null;
+		#endif
 		
 		TuiScreenInteractive l = null;
 		
@@ -932,20 +938,24 @@ public partial class Screens{
 		
 		List<TuiLabel> error = new();
 		
-		TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-			Thread thread = new Thread(() => {
-			using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
-				openFileDialog.Description = "Select a folder";
-				openFileDialog.ShowNewFolderButton  = true;
+		#if WINDOWS
+			TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				Thread thread = new Thread(() => {
+				using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
+					openFileDialog.Description = "Select a folder";
+					openFileDialog.ShowNewFolderButton  = true;
+					
+					if(openFileDialog.ShowDialog() == DialogResult.OK){
+						path.Text = openFileDialog.SelectedPath;
+					}
+				}});
 				
-				if(openFileDialog.ShowDialog() == DialogResult.OK){
-					path.Text = openFileDialog.SelectedPath;
-				}
-			}});
-			
-			thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
-			thread.Start();
-		});
+				thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+				thread.Start();
+			});
+		#else
+			TuiButton search = null;
+		#endif
 		
 		TuiScreenInteractive l = null;
 		
@@ -1539,7 +1549,7 @@ public partial class Screens{
 				l.Elements.Add(new TuiTwoLabels("Space", " play/pause music", Placement.TopLeft, 4, 6, Palette.info, null));
 				l.Elements.Add(new TuiTwoLabels("K", " play/pause music", Placement.TopLeft, 4, 7, Palette.info, null));
 				l.Elements.Add(new TuiTwoLabels("Shift + J", " restart song", Placement.TopLeft, 4, 8, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("J", " go back X seconds (adavance time)", Placement.TopLeft, 4, 9, Palette.info, null));
+				l.Elements.Add(new TuiTwoLabels("J", " go back X seconds (advance time)", Placement.TopLeft, 4, 9, Palette.info, null));
 				l.Elements.Add(new TuiTwoLabels("L", " go forward X seconds (adavance time)", Placement.TopLeft, 4, 10, Palette.info, null));
 				l.Elements.Add(new TuiTwoLabels("N", " previous song", Placement.TopLeft, 4, 11, Palette.info, null));
 				l.Elements.Add(new TuiTwoLabels("M", " next song", Placement.TopLeft, 4, 12, Palette.info, null));

@@ -6,7 +6,6 @@ using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
-using NAudio.CoreAudioApi;
 
 public partial class Screens{
 	void setSongDetails(int sindex){

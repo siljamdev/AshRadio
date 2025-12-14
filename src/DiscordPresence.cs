@@ -1,19 +1,19 @@
-using DiscordRPC;
+//using DiscordRPC;
 
 public class DiscordPresence : IDisposable{
-	DiscordRpcClient client;
+	DiscordRPC.DiscordRpcClient client;
 	
 	public DiscordPresence(){
-		client = new DiscordRpcClient("1396153880420548720");
+		client = new DiscordRPC.DiscordRpcClient("1396153880420548720");
 		
 		client.Initialize();
 		
 		Song s = Song.load(Radio.py.playingSong);
 		
-		client.SetPresence(new RichPresence(){
+		client.SetPresence(new DiscordRPC.RichPresence(){
 			Details = s?.title ?? "Nothing playing yet",
             State = s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))),
-            Assets = new Assets(){
+            Assets = new DiscordRPC.Assets(){
                 LargeImageKey = "icon", // uploaded image name from Dev Portal
                 LargeImageText = "AshRadio"
             },
@@ -23,7 +23,7 @@ public class DiscordPresence : IDisposable{
 					Url = "https://github.com/siljamdev/AshRadio"
 				}
 			},
-			Type = ActivityType.Listening
+			Type = DiscordRPC.ActivityType.Listening
         });
 		
 		Radio.py.onSongLoad += (se, e) => {

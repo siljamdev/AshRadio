@@ -6,7 +6,7 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.3.0";
+	public const string version = "1.4.0";
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
