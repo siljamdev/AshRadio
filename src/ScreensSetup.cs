@@ -20,10 +20,6 @@ public partial class Screens{
 	
 	Stack<TuiScreenInteractive> middle = new();
 	
-	DeltaHelper dh = new DeltaHelper();
-	
-	int maxFps = 48;
-	
 	public Screens(){
 		setupPlaying();
 		setupSession();
@@ -180,18 +176,32 @@ public partial class Screens{
 			}
 		});
 		
-		master.FinishPlayCycleEvent = s => { //Wait some time to avoid enourmus cpu usage
-			dh.TargetLazy(maxFps);
-			
-			dh.Frame();
+		Stopwatch timer = Stopwatch.StartNew();
+		
+		int maxFps = 48;
+		double dt = 1000d / maxFps;
+		
+		master.OnFinishPlayCycle += (s, a) => { //Wait some time to avoid enourmus cpu usage
+			double st = timer.Elapsed.TotalMilliseconds;
+			while(true){
+				if(Console.KeyAvailable){
+					ConsoleKeyInfo k = Console.ReadKey(true);
+					master.HandleKey(k);
+					break;
+				}
+				
+				if(timer.Elapsed.TotalMilliseconds - st >= dt){
+					break;
+				}
+				
+				Thread.Sleep(1);
+			}
 		};
 		
 		setSelectedScreen(navigation);
 	}
 	
 	public void play(){
-		dh.Start();
-		
 		master.Play();
 	}
 	
