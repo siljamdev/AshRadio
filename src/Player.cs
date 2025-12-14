@@ -84,6 +84,10 @@ public class Player : IDisposable{
 		
 		attachFinish();
 		
+		//Save song
+		Radio.config.Set("player.song", playingSong);
+		Radio.config.Save();
+		
 		onSongLoad?.Invoke(this, EventArgs.Empty);
 	}
 	
