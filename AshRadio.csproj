@@ -16,6 +16,7 @@
 	
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
+	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
   
   <PropertyGroup Condition="('$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT') or '$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86' or '$(RuntimeIdentifier)' == 'win-arm64'">
