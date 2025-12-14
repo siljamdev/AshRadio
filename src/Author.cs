@@ -11,37 +11,13 @@ public class Author{
 	}
 	
 	public List<Song> getSongs(){
-		List<int> lib = Song.getLibrary();
+		List<Song> lib = Song.getLibrary();
 		
-		List<Song> a = new();
-		foreach(int s in lib){
-			Song g = Song.load(s);
-			if(g == null){
-				continue;
-			}
-			if(g.authors.Contains(id)){
-				a.Add(g);
-			}
-		}
-		
-		return a;
+		return lib.Where(h => h.authors.Contains(id)).ToList();
 	}
 	
 	public List<int> getSongsIds(){
-		List<int> lib = Song.getLibrary();
-		
-		List<int> a = new();
-		foreach(int s in lib){
-			Song g = Song.load(s);
-			if(g == null){
-				continue;
-			}
-			if(g.authors.Contains(id)){
-				a.Add(s);
-			}
-		}
-		
-		return a;
+		return getSongs().Select(h => h.id).ToList();
 	}
 	
 	void save(){
@@ -60,40 +36,27 @@ public class Author{
 	
 	static int latestId;
 	
+	static List<Author> authors;
+	
 	public static event EventHandler onAuthorsUpdate;
 	
 	public static void init(int li){
 		latestId = Math.Max(li, -1);
 		authorsFile = new AshFile(Radio.dep.path + "/authors.ash");
 		saveAll();
+		
+		loadAuthors();
 	}
 	
-	public static bool exists(int id){
-		if(id < 0){
-			return false;
+	static void loadAuthors(){
+		authors = new List<Author>(authorsFile.Count);
+		
+		for(int i = 0; i <= latestId; i++){
+			authors.Add(load(i));
 		}
-		return authorsFile.TryGetValue(id.ToString(), out string n);
 	}
 	
-	public static bool exists(string nam){
-		foreach(var kvp in authorsFile){
-			if(kvp.Value is string s && string.Equals(s, nam, StringComparison.OrdinalIgnoreCase) && int.TryParse(kvp.Key, out int i) && i > -1){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public static int getId(string nam){
-		foreach(var kvp in authorsFile){
-			if(kvp.Value is string s && string.Equals(s, nam, StringComparison.OrdinalIgnoreCase) && int.TryParse(kvp.Key, out int i) && i > -1){
-				return i;
-			}
-		}
-		return -1;
-	}
-	
-	public static Author load(int id2){
+	static Author load(int id2){
 		if(authorsFile.TryGetValue(id2.ToString(), out string n)){
 			return new Author(){
 				name = n,
@@ -101,6 +64,34 @@ public class Author{
 			};
 		}
 		return null;
+	}
+	
+	public static bool exists(int id){
+		if(id < 0 || id >= authors.Count){
+			return false;
+		}
+		return authors[id] != null;
+	}
+	
+	public static bool exists(string nam){
+		return authors.Any(h => string.Equals(h.name, nam, StringComparison.OrdinalIgnoreCase));
+	}
+	
+	public static int getId(string nam){
+		Author a = authors.FirstOrDefault(h => string.Equals(h.name, nam, StringComparison.OrdinalIgnoreCase));
+		return a == null ? -1 : a.id;
+	}
+	
+	public static Author get(int id){
+		if(exists(id)){
+			return authors[id];
+		}else{
+			return null;
+		}
+	}
+	
+	public static Author get(string nam){
+		return authors.FirstOrDefault(h => string.Equals(h.name, nam, StringComparison.OrdinalIgnoreCase));
 	}
 	
 	public static void delete(int id){
@@ -111,23 +102,33 @@ public class Author{
 		authorsFile.Remove(id.ToString());
 		authorsFile.Save();
 		
+		authors[id] = null;
+		
 		onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
 	}
 	
+	//List of names to list of authors
 	public static int[] getAuthors(string[] a){
 		List<int> r = new List<int>(a.Length);
 		
 		List<Author> au = getAllAuthors();
 		
 		for(int i = 0; i < a.Length; i++){
-			if(a[i].Trim() == ""){
+			string name = a[i].Trim();
+			if(string.IsNullOrEmpty(name)){
 				continue;
 			}
-			Author d = au.FirstOrDefault(t => string.Equals(t.name, a[i].Trim(), StringComparison.OrdinalIgnoreCase));
+			
+			Author d = get(name);
 			if(d == null){ //Not found, create it
 				latestId++;
-				authorsFile.Set(latestId.ToString(), a[i].Trim());
+				authorsFile.Set(latestId.ToString(), name);
 				authorsFile.Save();
+				
+				authors.Add(new Author(){
+					name = name,
+					id = latestId
+				});
 				
 				saveAll();
 				
@@ -143,27 +144,11 @@ public class Author{
 	}
 	
 	public static List<int> getAllIds(){
-		List<int> a = new(authorsFile.Count);
-		
-		foreach(var kvp in authorsFile){
-			if(kvp.Value is string && int.TryParse(kvp.Key, out int i) && i > -1){
-				a.Add(i);
-			}
-		}
-		
-		return a;
+		return getAllAuthors().Select(h => h.id).ToList();
 	}
 	
 	public static List<Author> getAllAuthors(){
-		List<Author> a = new(authorsFile.Count);
-		
-		foreach(var kvp in authorsFile){
-			if(kvp.Value is string && int.TryParse(kvp.Key, out int i) && i > -1){
-				a.Add(load(i));
-			}
-		}
-		
-		return a;
+		return authors.Where(h => h != null).ToList();
 	}
 	
 	static void saveAll(){

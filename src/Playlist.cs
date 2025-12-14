@@ -16,6 +16,10 @@ public class Playlist{
 		return new List<int>(songs);
 	}
 	
+	public List<Song> getSongs(){
+		return songs.Select(h => Song.get(h)).ToList();
+	}
+	
 	public void addSong(int s){
 		songs.Add(s);
 		save();
@@ -47,22 +51,27 @@ public class Playlist{
 	
 	static int latestId;
 	
+	static List<Playlist> playlists;
+	
 	public static event EventHandler<PlaylistEventArgs> onPlaylistUpdate;
 	
 	public static void init(int li){
 		latestId = Math.Max(li, -1);
 		playlistsFile = new AshFile(Radio.dep.path + "/playlists.ash");
 		saveAll();
+		
+		loadPlaylists();
 	}
 	
-	public static bool exists(int id){
-		if(id < 0){
-			return false;
+	static void loadPlaylists(){
+		playlists = new List<Playlist>(playlistsFile.Count / 2);
+		
+		for(int i = 0; i <= latestId; i++){
+			playlists.Add(load(i));
 		}
-		return playlistsFile.TryGetValue(id.ToString() + ".t", out string t) && playlistsFile.TryGetValue(id.ToString() + ".s", out int[] s);
 	}
 	
-	public static Playlist load(int id2){
+	static Playlist load(int id2){
 		if(playlistsFile.TryGetValue(id2.ToString() + ".t", out string t) && playlistsFile.TryGetValue(id2.ToString() + ".s", out int[] s)){
 			return new Playlist(){
 				title = t,
@@ -73,6 +82,21 @@ public class Playlist{
 		return null;
 	}
 	
+	public static bool exists(int id){
+		if(id < 0 || id >= playlists.Count){
+			return false;
+		}
+		return playlists[id] != null;
+	}
+	
+	public static Playlist get(int id){
+		if(exists(id)){
+			return playlists[id];
+		}else{
+			return null;
+		}
+	}
+	
 	public static int create(string title){
 		latestId++;
 		
@@ -80,9 +104,15 @@ public class Playlist{
 		playlistsFile.Set(latestId.ToString() + ".s", Array.Empty<int>());
 		playlistsFile.Save();
 		
-		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(latestId));
+		playlists.Add(new Playlist(){
+			title = title,
+			songs = Array.Empty<int>().ToList(),
+			id = latestId
+		});
 		
 		saveAll();
+		
+		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(latestId));
 		
 		return latestId;
 	}
@@ -96,20 +126,17 @@ public class Playlist{
 		playlistsFile.Remove(id.ToString() + ".s");
 		playlistsFile.Save();
 		
+		playlists[id] = null;
+		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
 	}
 	
+	public static List<Playlist> getAllPlaylists(){
+		return playlists.Where(h => h != null).ToList();
+	}
+	
 	public static List<int> getAllIds(){
-		List<int> a = new(playlistsFile.Count / 2);
-		
-		foreach(var kvp in playlistsFile){
-			string[] div = kvp.Key.Split(".");
-			if(kvp.Value is string && div.Length == 2 && div[1] == "t" && int.TryParse(div[0], out int i) && i > -1 && playlistsFile.TryGetValue(i.ToString() + ".s", out int[] s)){
-				a.Add(i);
-			}
-		}
-		
-		return a;
+		return getAllPlaylists().Select(h => h.id).ToList();
 	}
 	
 	static void saveAll(){

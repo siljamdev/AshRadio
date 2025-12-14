@@ -317,7 +317,7 @@ public static class Radio{
 				}
 			}
 			
-			Playlist p = Playlist.load(Playlist.create(title));
+			Playlist p = Playlist.get(Playlist.create(title));
 			
 			foreach(int s in added){
 				p?.addSong(s);
@@ -373,7 +373,7 @@ public static class Radio{
 		List<int> s = importAll(rid.ToString(), authors, out string err2);
 		onErr?.Invoke(err2);
 		if(s.Count > 0){
-			Playlist p = Playlist.load(Playlist.create(title));
+			Playlist p = Playlist.get(Playlist.create(title));
 			
 			foreach(int s2 in s){
 				p?.addSong(s2);

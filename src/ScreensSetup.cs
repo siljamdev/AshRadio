@@ -196,12 +196,12 @@ public partial class Screens{
 	}
 	
 	public void setupPlaying(){
-		Song temp = Song.load(Radio.py.playingSong);
+		Song temp = Song.get(Radio.py.playingSong);
 		TuiButton song = new TuiButton(crop(temp?.title ?? "", 38), Placement.TopLeft, 11, 1, Palette.song, Palette.user).SetAction((s, ck) => {
 			setSongDetails(Radio.py.playingSong);
 		});
 		
-		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? "Unknown author" : (temp.authors.Length == 1 ? (Author.load(temp.authors[0])?.name ?? "Unknown author") : string.Join(", ", temp.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))), Placement.BottomLeft, 2, 1, null, Palette.author);
+		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? "Unknown author" : (temp.authors.Length == 1 ? (Author.get(temp.authors[0])?.name ?? "Unknown author") : string.Join(", ", temp.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))), Placement.BottomLeft, 2, 1, null, Palette.author);
 		
 		TuiProgressBar progress = new TuiProgressBar(70, '█', '░', Placement.Center, 0, 0, Palette.main, Palette.main);
 		
@@ -281,10 +281,10 @@ public partial class Screens{
 		prepareScreen(playing);
 		
 		Radio.py.onSongLoad += (se, e) => {
-			Song s = Song.load(Radio.py.playingSong);
+			Song s = Song.get(Radio.py.playingSong);
 			
 			song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
-			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? "Unknown author" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author")))));
+			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? "Unknown author" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
 			
 			int sec = (int) Radio.py.duration;
 			totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
@@ -326,12 +326,12 @@ public partial class Screens{
 				break;
 			case SourceType.Author:
 				name = "Author";
-				name2 = Author.load(Session.sourceIdentifier)?.name ?? "Unknown author";
+				name2 = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
 				f = Palette.author;
 				break;
 			case SourceType.Playlist:
 				name = "Playlist";
-				name2 = Playlist.load(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+				name2 = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 				f = Palette.playlist;
 				break;
 		}
@@ -352,12 +352,12 @@ public partial class Screens{
 					break;
 				case SourceType.Author:
 					nam = "Author";
-					nam2 = Author.load(Session.sourceIdentifier)?.name ?? "Unknown author";
+					nam2 = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
 					f2 = Palette.author;
 					break;
 				case SourceType.Playlist:
 					nam = "Playlist";
-					nam2 = Playlist.load(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+					nam2 = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 					f2 = Palette.playlist;
 					break;
 			}
@@ -437,7 +437,7 @@ public partial class Screens{
 				temp = new TuiSelectable[queue.Count, 1];
 				
 				for(int i = 0; i < queue.Count; i++){
-					Song s = Song.load(queue[i]);
+					Song s = Song.get(queue[i]);
 					TuiButton t2 = new TuiButton(s?.title ?? "Untitled song", Placement.TopLeft, 0, i, Palette.song, Palette.user);
 					
 					t2.SetAction((s, cl) => {

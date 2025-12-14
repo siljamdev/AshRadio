@@ -9,7 +9,7 @@ using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
 	void setSongDetails(int sindex){
-		Song s = Song.load(sindex);
+		Song s = Song.get(sindex);
 		setSongDetails(s);
 	}
 	
@@ -29,7 +29,7 @@ public partial class Screens{
 			title.BoxXsize = Math.Clamp(a.X - 32, 16, 38);
 		};
 		
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox(s == null || s.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))),
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox(s == null || s.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))),
 			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.user, Palette.user);
 		
 		authors.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
@@ -65,7 +65,7 @@ public partial class Screens{
 		if(s != null){
 			for(int i = 0; i < s.authors.Length; i++){
 				int tt3 = s.authors[i];
-				TuiButton ar = new TuiButton(Author.load(tt3)?.name ?? "Unknown author", Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
+				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? "Unknown author", Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
 					setAuthorDetails(tt3);
 				});
 				
@@ -144,7 +144,7 @@ public partial class Screens{
 	}
 	
 	void setLibrary(uint? inex = null){
-		List<int> lib = Song.getLibrary();
+		List<Song> lib = Song.getLibrary();
 		
 		TuiButton import = new TuiButton("Import songs", Placement.TopRight, 3, 5, null, Palette.user);
 		
@@ -159,7 +159,7 @@ public partial class Screens{
 		string[] titles = new string[lib.Count];
 		
 		for(int i = 0; i < lib.Count; i++){
-			Song s = Song.load(lib[i]);
+			Song s = lib[i];
 			titles[i] = s?.title ?? "Untitled song";
 			TuiButton b = new TuiButton("", Placement.TopLeft, 2, i + 4, Palette.song, Palette.user);
 			
@@ -329,7 +329,7 @@ public partial class Screens{
 	}
 	
 	void setLibrarySearch(string query){
-		List<Song> lib = Song.getLibrary().Select(n => Song.load(n)).Where(n => n != null && n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+		List<Song> lib = Song.getLibrary().Where(n => n != null && n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 		TuiSelectable[,] t = new TuiSelectable[lib.Count, 1];
 		
 		string[] titles = new string[lib.Count];
@@ -441,7 +441,7 @@ public partial class Screens{
 	}
 	
 	void setAuthorDetails(int sindex){
-		Author s = Author.load(sindex);
+		Author s = Author.get(sindex);
 		setAuthorDetails(s);
 	}
 	
@@ -669,7 +669,7 @@ public partial class Screens{
 		string[] titles = new string[lib.Count];
 		
 		for(int i = 0; i < lib.Count; i++){
-			Author s = Author.load(lib[i]);
+			Author s = Author.get(lib[i]);
 			titles[i] = s?.name ?? "Unknown author";
 			TuiButton b = new TuiButton("", Placement.TopLeft, 2, i + 4, Palette.author, Palette.user);
 			
@@ -771,7 +771,7 @@ public partial class Screens{
 	}
 	
 	void setPlaylistDetails(int s){
-		Playlist p = Playlist.load(s);
+		Playlist p = Playlist.get(s);
 		setPlaylistDetails(p);
 	}
 	
@@ -796,7 +796,7 @@ public partial class Screens{
 			confirmDeletePlaylist(s.id);
 		});
 		
-		List<Song> songs = s?.getSongsIds().Select(n => Song.load(n)).Where(n => n != null).ToList();
+		List<Song> songs = s?.getSongs().Where(n => n != null).ToList();
 		
 		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 3), 2];
 		
@@ -1042,7 +1042,7 @@ public partial class Screens{
 		string[] titles = new string[lib.Count];
 		
 		for(int i = 0; i < lib.Count; i++){
-			Playlist s = Playlist.load(lib[i]);
+			Playlist s = Playlist.get(lib[i]);
 			titles[i] = s?.title ?? "Untitled playlist";
 			TuiButton b = new TuiButton("", Placement.TopLeft, 2, i + 4, Palette.playlist, Palette.user);
 			
@@ -1165,13 +1165,13 @@ public partial class Screens{
 	}
 	
 	void selectSongToAdd(Playlist p){
-		List<int> lib = Song.getLibrary();
+		List<Song> lib = Song.getLibrary();
 		TuiSelectable[,] t = new TuiSelectable[lib.Count, 1];
 		
 		string[] titles = new string[lib.Count];
 		
 		for(int i = 0; i < lib.Count; i++){
-			Song s = Song.load(lib[i]);
+			Song s = lib[i];
 			titles[i] = s?.title ?? "Untitled song";
 			TuiButton b = new TuiButton("", Placement.TopLeft, 2, i + 4, Palette.song, Palette.user);
 			
@@ -1266,7 +1266,7 @@ public partial class Screens{
 	}
 	
 	void setAddPlaylistSearch(string query, Playlist p){
-		List<Song> lib = Song.getLibrary().Select(n => Song.load(n)).Where(n => n != null && n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+		List<Song> lib = Song.getLibrary().Where(n => n != null && n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 		TuiSelectable[,] t = new TuiSelectable[lib.Count, 1];
 		
 		string[] titles = new string[lib.Count];
@@ -1374,7 +1374,7 @@ public partial class Screens{
 		string[] titles = new string[lib.Count];
 		
 		for(int i = 0; i < lib.Count; i++){
-			Playlist s = Playlist.load(lib[i]);
+			Playlist s = Playlist.get(lib[i]);
 			titles[i] = s?.title ?? "Untitled playlist";
 			TuiButton b = new TuiButton("", Placement.TopLeft, 2, i + 4, Palette.playlist, Palette.user);
 			
@@ -1388,7 +1388,7 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = getMiddle(t);
 		
-		l.Elements.Add(new TuiTwoLabels("Select playlist where to add ", Song.load(sindex)?.title ?? "Untitled song", Placement.TopCenter, 0, 1, null, Palette.song));
+		l.Elements.Add(new TuiTwoLabels("Select playlist where to add ", Song.get(sindex)?.title ?? "Untitled song", Placement.TopCenter, 0, 1, null, Palette.song));
 		
 		l.DeleteAllKeyEvents();
 		

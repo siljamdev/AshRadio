@@ -179,10 +179,10 @@ public static class Session{
 				pool = new List<int>();
 				break;
 			case SourceType.Library:
-				pool = Song.getLibrary();
+				pool = Song.getLibrary().Select(h => h.id).ToList();
 				break;
 			case SourceType.Author:
-				Author a = Author.load(sourceIdentifier);
+				Author a = Author.get(sourceIdentifier);
 				if(a == null){
 					pool = new List<int>();
 					sourceSeen = new List<int>();
@@ -191,7 +191,7 @@ public static class Session{
 				pool = a.getSongsIds();
 				break;
 			case SourceType.Playlist:
-				Playlist l = Playlist.load(sourceIdentifier);
+				Playlist l = Playlist.get(sourceIdentifier);
 				if(l == null){
 					pool = new List<int>();
 					sourceSeen = new List<int>();

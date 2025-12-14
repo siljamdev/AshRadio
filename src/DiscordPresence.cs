@@ -8,11 +8,11 @@ public class DiscordPresence : IDisposable{
 		
 		client.Initialize();
 		
-		Song s = Song.load(Radio.py.playingSong);
+		Song s = Song.get(Radio.py.playingSong);
 		
 		client.SetPresence(new DiscordRPC.RichPresence(){
 			Details = s?.title ?? "Nothing playing yet",
-            State = s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))),
+            State = s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))),
             Assets = new DiscordRPC.Assets(){
                 LargeImageKey = "icon", // uploaded image name from Dev Portal
                 LargeImageText = "AshRadio"
@@ -27,10 +27,10 @@ public class DiscordPresence : IDisposable{
         });
 		
 		Radio.py.onSongLoad += (se, e) => {
-			Song s = Song.load(Radio.py.playingSong);
+			Song s = Song.get(Radio.py.playingSong);
 			
 			client.UpdateDetails(s?.title ?? "Nothing playing yet");
-			client.UpdateState(s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.load(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.load(n)?.name ?? "Unknown author"))))));
+			client.UpdateState(s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))));
 		};
 	}
 	

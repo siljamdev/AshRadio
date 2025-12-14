@@ -33,7 +33,9 @@ public class Song{
 	}
 	
 	public override string ToString(){
-		return title + " | Id: " + id.ToString() + " | " + (authors.Length == 0 ? "Unknown author" : (authors.Length == 1 ? "Author: " + (Author.load(authors[0])?.name ?? "Unknown author") : "Authors: " + string.Join(", ", authors.Select(n => (Author.load(n)?.name ?? "Unknown author")))));
+		return title + " | Id: " + id.ToString() + " | " +
+			(authors.Length == 0 ? "Unknown author" :
+			(authors.Length == 1 ? "Author: " + (Author.get(authors[0])?.name ?? "Unknown author") : "Authors: " + string.Join(", ", authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
 	}
 	
 	//STATIC
@@ -41,6 +43,8 @@ public class Song{
 	static int latestId;
 	
 	public static event EventHandler<LibraryEventArgs> onLibraryUpdate;
+	
+	static List<Song> library;
 	
 	static AshFileModel songModel = new AshFileModel(
 		new ModelInstance(ModelInstanceOperation.Type, "t", "Untitled song"), //title
@@ -51,17 +55,27 @@ public class Song{
 		latestId = Math.Max(li, -1);
 		songModel.deleteNotMentioned = true;
 		saveAll();
+		
+		loadLibrary();
 	}
 	
-	public static bool exists(int s){
+	static void loadLibrary(){
+		library = new List<Song>(latestId + 1);
+		
+		for(int i = 0; i <= latestId; i++){
+			library.Add(loadFile(i));
+		}
+	}
+	
+	static bool existsFile(int s){
 		if(s < 0){
 			return false;
 		}
 		return File.Exists(getAudioPath(s)) && File.Exists(getDataPath(s));
 	}
 	
-	public static Song load(int s){
-		if(!exists(s)){
+	static Song loadFile(int s){
+		if(!existsFile(s)){
 			return null;
 		}
 		
@@ -75,14 +89,32 @@ public class Song{
 		};
 	}
 	
+	public static bool exists(int s){
+		if(s < 0 || s >= library.Count){
+			return false;
+		}
+		return library[s] != null;
+	}
+	
+	public static Song get(int s){
+		if(exists(s)){
+			return library[s];
+		}else{
+			return null;
+		}
+	}
+	
 	public static void delete(int id){
-		if(!exists(id)){
+		Song s = get(id);
+		
+		if(s == null){
 			return;
 		}
 		
-		Song s = load(id);
 		File.Delete(getAudioPath(id));
 		File.Delete(getDataPath(id));
+		
+		library[id] = null;
 		
 		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(s.authors));
 	}
@@ -95,7 +127,7 @@ public class Song{
 		return Radio.dep.path + "/songs/files/" + s.ToString() + ".mp3";
 	}
 	
-	public static string getDataPath(int s){
+	static string getDataPath(int s){
 		if(s < 0){
 			return null;
 		}
@@ -131,6 +163,12 @@ public class Song{
 			s2.Set("a", authors);
 			s2.Save(getDataPath(latestId));
 			
+			library.Add(new Song(){
+				title = title,
+				authors = authors,
+				id = latestId
+			});
+			
 			saveAll();
 			
 			onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
@@ -154,6 +192,12 @@ public class Song{
 		s.Set("a", authors);
 		s.Save(getDataPath(latestId));
 		
+		library.Add(new Song(){
+			title = title,
+			authors = authors,
+			id = latestId
+		});
+		
 		saveAll();
 		
 		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
@@ -161,7 +205,7 @@ public class Song{
 		return latestId;
 	}
 	
-	public static bool tryConvertToMp3(string inputFile, string outputFile, out string err){
+	static bool tryConvertToMp3(string inputFile, string outputFile, out string err){
 		err = null;
 		try{
 			var startInfo = new ProcessStartInfo{
@@ -192,18 +236,19 @@ public class Song{
 		}
 	}
 	
-	public static List<int> getLibrary(){
-		string[] mp3Files = Directory.GetFiles(Radio.dep.path + "/songs/files", "*.mp3");
-		mp3Files = mp3Files.Select(f => Path.GetFileNameWithoutExtension(f)).ToArray();
-		
-		List<int> f = new(mp3Files.Length);
-		foreach(string s in mp3Files){
-			if(int.TryParse(s, out int i) && File.Exists(getDataPath(i))){
-				f.Add(i);
-			}
-		}
-		f.Sort();
-		return f;
+	public static List<Song> getLibrary(){
+		return library.Where(h => h != null).ToList();
+		//string[] mp3Files = Directory.GetFiles(Radio.dep.path + "/songs/files", "*.mp3");
+		//mp3Files = mp3Files.Select(f => Path.GetFileNameWithoutExtension(f)).ToArray();
+		//
+		//List<int> f = new(mp3Files.Length);
+		//foreach(string s in mp3Files){
+		//	if(int.TryParse(s, out int i) && File.Exists(getDataPath(i))){
+		//		f.Add(i);
+		//	}
+		//}
+		//f.Sort();
+		//return f;
 	}
 	
 	static void saveAll(){
