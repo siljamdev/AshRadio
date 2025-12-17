@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 public static class Session{
 	public static SessionMode mode{get; private set;}
 	
@@ -5,12 +7,12 @@ public static class Session{
 	public static int sourceIdentifier{get; private set;} //WHAT playlist, WHICH author...
 	public static List<int> sourceSeen{get; private set;} //Already seen songs
 	
-	static List<int> pool;
+	public static List<int> pool;
 	
 	static List<int> queue;
 	public static bool queueEmpties = true;
 	
-	static List<int> prevPlayed = new();
+	public static List<int> prevPlayed = new();
 	
 	static Random rand;
 	
@@ -25,6 +27,26 @@ public static class Session{
 		
 		queue = new List<int>();
 		rand = new Random();
+		
+		Radio.py.onBeforeSongLoad += (s, a) => {
+			addPrevPlayed(Radio.py.playingSong);
+		};
+		
+		Radio.py.onSongLoad += (s, a) => {
+			if(!sourceSeen.Contains(Radio.py.playingSong)){
+				sourceSeen.Add(Radio.py.playingSong);
+			}
+			
+			if(pool != null){
+				pool.RemoveAll(n => n == Radio.py.playingSong);
+			}
+			
+			Radio.config.Set("session.sourceSeen", sourceSeen.ToArray());
+		};
+		
+		Radio.py.onSongFinish += (s, a) => {
+			Radio.py.play(serveNext());
+		};
 		
 		Song.onLibraryUpdate += (s, a) => {
 			if(sourceType == SourceType.Library || (sourceType == SourceType.Author && a.auth.Contains(sourceIdentifier))){
@@ -42,7 +64,7 @@ public static class Session{
 	}
 	
 	public static List<int> getQueue(){
-		return queue;
+		return queue.ToList();
 	}
 	
 	public static void addToQueue(int s){
@@ -92,7 +114,6 @@ public static class Session{
 				}
 				choice = pool[0];
 				pool.RemoveAt(0);
-				sourceSeen.Add(choice);
 				break;
 			case SessionMode.Shuffle:
 				if(pool.Count <= 0){
@@ -116,11 +137,8 @@ public static class Session{
 				int c = rand.Next(pool.Count);
 				choice = pool[c];
 				pool.RemoveAt(c);
-				sourceSeen.Add(choice);
 				break;
 		}
-
-		save();
 		
 		return choice;
 	}
@@ -130,7 +148,11 @@ public static class Session{
 			return;
 		}
 		
-		prevPlayed.Insert(0, s);
+		if(prevPlayed.Count > 0 && prevPlayed[prevPlayed.Count - 1] == s){
+			return;
+		}
+		
+		prevPlayed.Add(s);
 	}
 	
 	public static int getPrevious(int c){
@@ -138,8 +160,8 @@ public static class Session{
 			return -1;
 		}
 		
-		int s = prevPlayed[0];
-		prevPlayed.RemoveAt(0);
+		int s = prevPlayed[prevPlayed.Count - 1];
+		prevPlayed.RemoveAt(prevPlayed.Count - 1);
 		if(c > -1){
 			pool.Insert(0, c);
 			sourceSeen.RemoveAll(n => n == c);
@@ -159,7 +181,7 @@ public static class Session{
 		update();
 		
 		if(Radio.py.playingSong < 0){
-			Radio.py.askForSong();
+			Radio.py.play(Session.serveNext());
 		}
 		
 		onSourceChange?.Invoke(null, EventArgs.Empty);
@@ -168,9 +190,11 @@ public static class Session{
 	public static void setMode(SessionMode m){
 		mode = m;
 		
-		save();
+		Radio.config.Set("session.mode", (int) mode);
+		Radio.config.Save();
 	}
 	
+	//Update pool
 	static void update(){
 		switch(sourceType){
 			default:
@@ -178,9 +202,11 @@ public static class Session{
 				sourceSeen = new List<int>();
 				pool = new List<int>();
 				break;
+				
 			case SourceType.Library:
 				pool = Song.getLibrary().Select(h => h.id).ToList();
 				break;
+				
 			case SourceType.Author:
 				Author a = Author.get(sourceIdentifier);
 				if(a == null){
@@ -190,6 +216,7 @@ public static class Session{
 				}
 				pool = a.getSongsIds();
 				break;
+				
 			case SourceType.Playlist:
 				Playlist l = Playlist.get(sourceIdentifier);
 				if(l == null){
@@ -209,15 +236,9 @@ public static class Session{
 			pool.RemoveAll(n => n == s);
 		}
 		
-		save();
-	}
-	
-	static void save(){
-		Radio.config.Set("session.mode", (int) mode);
 		Radio.config.Set("session.sourceType", (int) sourceType);
 		Radio.config.Set("session.sourceIdentifier", sourceIdentifier);
 		Radio.config.Set("session.sourceSeen", sourceSeen.ToArray());
-		
 		Radio.config.Save();
 	}
 	

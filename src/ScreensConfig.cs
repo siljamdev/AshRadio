@@ -252,12 +252,17 @@ public partial class Screens{
 					ZipFile.ExtractToDirectory(Radio.dep.path + "/temp.zip", Radio.dep.path + "/temp", true);
 					
 					string p = Directory.GetFiles(Radio.dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+					
+					if(File.Exists(Radio.dep.path + "/ffmpeg.exe")){
+						File.Delete(Radio.dep.path + "/ffmpeg.exe");
+					}
+					
 					File.Copy(p, Radio.dep.path + "/ffmpeg.exe");
 					
 					Directory.Delete(Radio.dep.path + "/temp", true);
 					File.Delete(Radio.dep.path + "/temp.zip");
 				}catch(Exception e){
-					File.AppendAllText("error.log", e.ToString());
+					File.AppendAllText(Radio.errorFilePath, e.ToString() + "\n");
 				}
 				ffmpeg.Text = Radio.dep.path + "/ffmpeg.exe";
 				Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));

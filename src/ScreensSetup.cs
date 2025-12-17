@@ -105,7 +105,11 @@ public partial class Screens{
 		});
 		
 		master.SubKeyEvent(ConsoleKey.N, ConsoleModifiers.None, (s, cki) => {
-			Radio.py.prev();
+			int j = Session.getPrevious(Radio.py.playingSong);
+			if(j < 0){
+				return;
+			}
+			Radio.py.play(j);
 		});
 		
 		master.SubKeyEvent(ConsoleKey.M, ConsoleModifiers.None, (s, cki) => {
@@ -175,6 +179,29 @@ public partial class Screens{
 			}
 		});
 		
+		#region DEBUG
+		master.SubKeyEvent(ConsoleKey.A, ConsoleModifiers.None, (s, cki) => {
+			Console.Clear();
+			
+			Console.WriteLine("Pool");
+			foreach(int s2 in Session.pool){
+				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
+			}
+			
+			Console.WriteLine("Seen");
+			foreach(int s2 in Session.sourceSeen){
+				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
+			}
+			
+			Console.WriteLine("Prev");
+			foreach(int s2 in Session.prevPlayed){
+				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
+			}
+			
+			Console.ReadKey();
+		});
+		#endregion
+		
 		Stopwatch timer = Stopwatch.StartNew();
 		
 		int maxFps = 32;
@@ -237,7 +264,13 @@ public partial class Screens{
 			Radio.py.togglePause();
 		});
 		
-		TuiButton prev = new TuiButton("≤", Placement.TopCenter, -6, 1, null, Palette.user).SetAction((s, cki) => Radio.py.prev());
+		TuiButton prev = new TuiButton("≤", Placement.TopCenter, -6, 1, null, Palette.user).SetAction((s, cki) => {
+			int j = Session.getPrevious(Radio.py.playingSong);
+			if(j < 0){
+				return;
+			}
+			Radio.py.play(j);
+		});
 		TuiButton next = new TuiButton("≥", Placement.TopCenter, 6, 1, null, Palette.user).SetAction((s, cki) => Radio.py.skip());
 		
 		TuiButton back = new TuiButton("▼", Placement.TopCenter, -12, 1, null, Palette.user).SetAction((s, cki) => Radio.py.elapsed -= Radio.config.GetValue<float>("player.advanceTime"));
@@ -307,7 +340,7 @@ public partial class Screens{
 	}
 	
 	public void setupSession(){
-		TuiLabel device = new TuiLabel(Radio.py.getCurrentDevice().Name ?? "", Placement.BottomLeft, 1, 2, Palette.info);
+		TuiLabel device = new TuiLabel(Radio.py.currentDevice.Name ?? "", Placement.BottomLeft, 1, 2, Palette.info);
 		
 		TuiButton devices = new TuiButton("Change device", Placement.BottomCenter, 0, 1, null, Palette.user).SetAction((s, cki) => {
 			var devs = Player.getDeviceList().ToList();
@@ -334,22 +367,19 @@ public partial class Screens{
 				break;
 			case SourceType.Library:
 				name = "Library";
+				f = Palette.info;
 				break;
 			case SourceType.Author:
-				name = "Author";
-				name2 = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
+				name = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
 				f = Palette.author;
 				break;
 			case SourceType.Playlist:
-				name = "Playlist";
-				name2 = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+				name = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 				f = Palette.playlist;
 				break;
 		}
 		
-		TuiTwoLabels sourceType = new TuiTwoLabels("Source: ", name, Placement.TopLeft, 1, 3, null, Palette.info);
-		
-		TuiLabel source = new TuiLabel(name2, Placement.TopLeft, 3, 3, f);
+		TuiTwoLabels sourceType = new TuiTwoLabels("Source: ", name, Placement.TopLeft, 1, 3, null, f);
 		
 		Session.onSourceChange += (s, a) => {
 			string nam = "";
@@ -360,22 +390,20 @@ public partial class Screens{
 					break;
 				case SourceType.Library:
 					nam = "Library";
+					f2 = Palette.info;
 					break;
 				case SourceType.Author:
-					nam = "Author";
-					nam2 = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
+					nam = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
 					f2 = Palette.author;
 					break;
 				case SourceType.Playlist:
-					nam = "Playlist";
-					nam2 = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+					nam = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
 					f2 = Palette.playlist;
 					break;
 			}
 			
 			sourceType.RightText = nam;
-			source.Text = nam2;
-			source.Format = f2;
+			sourceType.RightFormat = f2;
 		};
 		
 		mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 7, 5, Palette.info, Palette.user);
@@ -423,7 +451,7 @@ public partial class Screens{
 		},{
 			devices
 		}}, 0, 0, Placement.TopRight, 0, 0, null,
-			device, source,
+			device,
 			sourceType,
 			new TuiLabel("Mode:", Placement.TopLeft, 1, 5),
 			new TuiLabel("Queue:", Placement.TopLeft, 1, 7),
@@ -522,7 +550,7 @@ public partial class Screens{
 		prepareScreen(session);
 		
 		Radio.py.onChangeDevice += (s, a) => {
-			device.Text = Radio.py.getCurrentDevice().Name;
+			device.Text = Radio.py.currentDevice.Name;
 		};
 	}
 	

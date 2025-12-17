@@ -16,10 +16,14 @@ public static class Radio{
 	
 	public static DiscordPresence dcrcp;
 	
+	public static string errorFilePath = null;
+	
 	public static void Main(string[] args){
-		try{
-			File.Delete("error.log");
-		}catch{}
+		
+		string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+		dep = new Dependencies(appDataPath + "/ashproject/ashradio", true, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
+		
+		errorFilePath = dep.path + "/error" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".log";
 		
 		try{
 			init();
@@ -28,8 +32,9 @@ public static class Radio{
 			
 			sc.play();
 		}catch(Exception e){
-			Console.WriteLine(e);
-			File.AppendAllText("error.log", e.ToString());
+			Console.Error.WriteLine("An error occured! Details saved to: " + errorFilePath);
+			Console.Error.WriteLine(e);
+			File.AppendAllText(errorFilePath, e.ToString() + "\n");
 		}
 	}
 	
@@ -61,8 +66,6 @@ public static class Radio{
 	
 	//Complete init logic
 	static void init(){
-		string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-		dep = new Dependencies(appDataPath + "/ashproject/ashradio", true, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
 		config = dep.config;
 		
 		initConfig();
@@ -70,9 +73,10 @@ public static class Radio{
 		Song.init(config.GetValue<int>("songs.latestId"));
 		Author.init(config.GetValue<int>("authors.latestId"));
 		Playlist.init(config.GetValue<int>("playlists.latestId"));
-		Session.init((SessionMode) config.GetValue<int>("session.mode"), (SourceType) config.GetValue<int>("session.sourceType"), config.GetValue<int>("session.sourceIdentifier"), config.GetValue<int[]>("session.sourceSeen"));
 		
-		py = new Player(config.GetValue<int>("player.song"), config.GetValue<int>("player.volume"), config.GetValue<float>("player.volumeExponent"), config.GetValue<float>("player.elapsed"));
+		py = new Player(config.GetValue<int>("player.volume"), config.GetValue<float>("player.volumeExponent"));
+		Session.init((SessionMode) config.GetValue<int>("session.mode"), (SourceType) config.GetValue<int>("session.sourceType"), config.GetValue<int>("session.sourceIdentifier"), config.GetValue<int[]>("session.sourceSeen"));
+		py.init(config.GetValue<int>("player.song"), config.GetValue<float>("player.elapsed"));
 		
 		Palette.init();
 		sc = new Screens();
@@ -150,7 +154,7 @@ public static class Radio{
 						Directory.Delete(dep.path + "/temp", true);
 						File.Delete(dep.path + "/temp.zip");
 					}catch(Exception e){
-						File.AppendAllText("error.log", e.ToString());
+						File.AppendAllText(errorFilePath, e.ToString() + "\n");
 					}
 					config.Set("init", true);
 					config.Set("ffmpegPath", dep.path + "/ffmpeg.exe");
@@ -421,7 +425,7 @@ public static class Radio{
 		
 		Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 		
-		await using (FileStream fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true)){
+		await using(FileStream fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true)){
 			await response.Content.CopyToAsync(fs);
 			await fs.FlushAsync();
 		}
@@ -431,7 +435,6 @@ public static class Radio{
 	
 	//Save on exit the current song and time left
 	static void onExit(object sender, EventArgs e){
-		config.Set("player.song", py.playingSong);
 		config.Set("player.elapsed", py.elapsed);
 		
 		py.Dispose();

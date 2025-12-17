@@ -5,8 +5,7 @@ public class Player : IDisposable{
 	int stream;
 	int finishSync;
 	
-	int currentDeviceIndex;
-	public DeviceInfo currentDevice;
+	public DeviceInfo currentDevice{get; private set;}
 	
 	public int volume{get; private set;} //0 to 100
 	
@@ -35,30 +34,38 @@ public class Player : IDisposable{
 		return Bass.ChannelIsActive(stream) != PlaybackState.Playing;
 	}}
 	
+	public event EventHandler onBeforeSongLoad;
 	public event EventHandler onSongLoad;
+	public event EventHandler onSongFinish;
+	
 	public event EventHandler onChangePlaystate;
 	public event EventHandler onChangeDevice;
 	
 	bool isStoping;
 	
-	public Player(int song = -1, int vol = 100, float volxp = 2f, float el = 0f){
+	public Player(int vol = 100, float volxp = 2f){
 		volume = vol;
 		volumeExponent = volxp;
-		playingSong = song + 1; //Cheap trick so it loads...
+		
+		playingSong = -1;
 		
 		if(!Bass.Init()){
 			throw new Exception("Bass failed to initialize");
 		}
 		
-		currentDeviceIndex = Bass.CurrentDevice;
-		currentDevice = new DeviceInfo();
-		Bass.GetDeviceInfo(currentDeviceIndex, out currentDevice);
-		
+		DeviceInfo t1 = new DeviceInfo();
+		Bass.GetDeviceInfo(Bass.CurrentDevice, out t1);
+		currentDevice = t1;
+	}
+	
+	public void init(int song = -1, float el = 0f){
 		loadSong(song);
 		elapsed = el;
 	}
 	
 	public void loadSong(int song){
+		onBeforeSongLoad?.Invoke(this, EventArgs.Empty);
+		
 		stop();
 		
 		playingSong = song;
@@ -67,6 +74,8 @@ public class Player : IDisposable{
 			playingSong = -1;
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
+			Radio.config.Set("player.song", playingSong);
+			Radio.config.Save();
 			return;
 		}
 		
@@ -75,6 +84,8 @@ public class Player : IDisposable{
 			playingSong = -1;
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
+			Radio.config.Set("player.song", playingSong);
+			Radio.config.Save();
 			return;
 		}
 		
@@ -84,20 +95,14 @@ public class Player : IDisposable{
 		
 		attachFinish();
 		
-		//Save song
+		onSongLoad?.Invoke(this, EventArgs.Empty);
 		Radio.config.Set("player.song", playingSong);
 		Radio.config.Save();
-		
-		onSongLoad?.Invoke(this, EventArgs.Empty);
 	}
 	
 	public void play(int song){
 		loadSong(song);
 		resume();
-	}
-	
-	public void askForSong(){
-		play(Session.serveNext());
 	}
 	
 	public void pause(){
@@ -121,20 +126,20 @@ public class Player : IDisposable{
 	}
 	
 	public void skip(){
-		Session.addPrevPlayed(playingSong);
-		
 		//Console.WriteLine("Song ended");
 		
-		play(Session.serveNext());
+		//play(Session.serveNext());
+		
+		onSongFinish?.Invoke(this, EventArgs.Empty);
 	}
 	
-	public void prev(){
+	/* public void prev(){
 		int j = Session.getPrevious(playingSong);
 		if(j < 0){
 			return;
 		}
 		play(j);
-	}
+	} */
 	
 	public void setVolume(int v){
 		v = Math.Clamp(v, 0, 100);
@@ -148,10 +153,10 @@ public class Player : IDisposable{
 	}
 	
 	void attachFinish(){
-		finishSync = Bass.ChannelSetSync(stream, SyncFlags.End, 0, onFinish);
+		finishSync = Bass.ChannelSetSync(stream, SyncFlags.End, 0, handleSongEnd);
 	}
 	
-	void onFinish(int handle, int channel, int data, IntPtr user){		
+	void handleSongEnd(int handle, int channel, int data, IntPtr user){
 		if(isStoping){
 			return;
 		}
@@ -160,8 +165,7 @@ public class Player : IDisposable{
 		//Console.ReadKey();
 		
 		Task.Run(() => {
-			play(Session.serveNext());
-			Session.addPrevPlayed(playingSong);
+			onSongFinish?.Invoke(this, EventArgs.Empty);
 		});
 	}
 	
@@ -178,11 +182,11 @@ public class Player : IDisposable{
 		Bass.Free();
 	}
 	
-	public DeviceInfo getCurrentDevice(){
-		return currentDevice;
-	}
-	
-	public void setDevice(int deviceIndex){		
+	public void setDevice(int deviceIndex){
+		if(deviceIndex == Bass.CurrentDevice){
+			return;
+		}
+		
 		float el = elapsed;
 		
 		Dispose();
@@ -190,6 +194,10 @@ public class Player : IDisposable{
 		if(!Bass.Init(deviceIndex, 44100, DeviceInitFlags.Default, IntPtr.Zero)){
 			throw new Exception("Bass failed to initialize with device: " + Bass.LastError);
 		}
+		
+		DeviceInfo t1 = new DeviceInfo();
+		Bass.GetDeviceInfo(Bass.CurrentDevice, out t1);
+		currentDevice = t1;
 		
 		loadSong(playingSong);
 		elapsed = el;
