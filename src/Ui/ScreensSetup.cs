@@ -1,8 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
@@ -16,8 +13,6 @@ public partial class Screens{
 	TuiOptionPicker mode = null!;
 	TuiScreenInteractive navigation = null!;
 	TuiScrollingScreenInteractive queueScreen = null!;
-	
-	Stack<TuiScreenInteractive> middle = new();
 	
 	public Screens(){
 		setupPlaying();
@@ -60,13 +55,15 @@ public partial class Screens{
 			})
 		}};
 		
-		TuiScreenInteractive mid = getMiddle(temp);
+		//Initial empty screen
+		MiddleScreen mid = generateMiddle(temp);
 		
-		mid.Elements.Add(new TuiTwoLabels("Welcome to ", "AshRadio", Placement.Center, 0, -5, null, Palette.main));
+		mid.interactive.Elements.Add(new TuiTwoLabels("Welcome to ", "AshRadio", Placement.Center, 0, -5, null, Palette.main));
 		
-		middle.Push(mid); //Initial empty middle screen
+		middle.Add(mid);
 		
-		master = new MultipleTuiScreenInteractive(100, 20, new TuiScreenInteractive[]{playing, session, navigation, mid}, null, delimiters);
+		//Creating master
+		master = new MultipleTuiScreenInteractive(100, 20, new TuiScreenInteractive[]{playing, session, navigation, mid.interactive}, null, delimiters);
 		
 		master.ScreenList.Add(queueScreen);
 		
@@ -89,7 +86,7 @@ public partial class Screens{
 		});
 		
 		master.SubKeyEvent(ConsoleKey.G, ConsoleModifiers.Control, (s, cki) => {
-			setSelectedScreen(middle.Peek());
+			setSelectedScreen(currentMiddleScreen);
 		});
 		
 		master.SubKeyEvent(ConsoleKey.Escape, (s, cki) => { //Close middle
@@ -227,6 +224,7 @@ public partial class Screens{
 		setSelectedScreen(navigation);
 	}
 	
+	//Method to start it all
 	public void play(){
 		master.Play();
 	}
@@ -355,7 +353,7 @@ public partial class Screens{
 				});
 			}
 			
-			TuiScreenInteractive changeDevice = getMiddle(buttons);
+			MiddleScreen changeDevice = generateMiddle(buttons);
 			setMiddleScreen(changeDevice);
 		});
 		
@@ -511,6 +509,8 @@ public partial class Screens{
 			
 			queueScreen = new TuiScrollingScreenInteractive(Math.Max(0, session.Xsize - 4), Math.Max(0, session.Ysize - 15), temp, 0, (uint) n, Placement.TopLeft, 2, 8, null);
 			
+			prepareScreen(queueScreen);
+			
 			if(queue.Count == 0){
 				queueScreen.Elements.Add(new TuiLabel("Empty", Placement.TopCenter, 0, 0, Palette.info));
 			}
@@ -604,73 +604,12 @@ public partial class Screens{
 		prepareScreen(navigation);
 	}
 	
-	void setImport(){
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			new TuiButton("Import song", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-				setImportSingleFile();
-			})
-		},{
-			new TuiButton("Import all songs from folder", Placement.TopCenter, 0, 7, null, Palette.user).SetAction((s, ck) => {
-				setImportFolder();
-			})
-		},{
-			new TuiButton("Import folder as playlist", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-				setImportFolderPlaylist();
-			})
-		},{
-			new TuiButton("Import song", Placement.TopCenter, 0, 13, null, Palette.user).SetAction((s, ck) => {
-				setImportSingleVideo();
-			})
-		},{
-			new TuiButton("Import songs from yt playlist", Placement.TopCenter, 0, 14, null, Palette.user).SetAction((s, ck) => {
-				setImportFromPlaylist();
-			})
-		},{
-			new TuiButton("Import playlist from yt playlist", Placement.TopCenter, 0, 15, null, Palette.user).SetAction((s, ck) => {
-				setImportPlaylist();
-			})
-		}};
-		
-		TuiScreenInteractive l = getMiddle(t);
-		
-		l.Elements.Add(new TuiLabel("Import songs", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("From file", Placement.TopCenter, 0, 4, Palette.info));
-		l.Elements.Add(new TuiLabel("From YouTube", Placement.TopCenter, 0, 10, Palette.info));
-		l.Elements.Add(new TuiLabel("Importing from yt might take a while", Placement.TopCenter, 0, 11, Palette.info));
-		
-		setMiddleScreen(l);
-	}
-	
-	void setConfig(){
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			new TuiButton("Palette", Placement.TopCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
-				setPaletteConfig();
-			})
-		},{
-			new TuiButton("Player", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-				setPlayerConfig();
-			})
-		},{
-			new TuiButton("Paths", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-				setPathConfig();
-			})
-		},{
-			new TuiButton("Miscellaneous", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
-				setMiscConfig();
-			})
-		}};
-		
-		TuiScreenInteractive l = getMiddle(t);
-		
-		l.Elements.Add(new TuiLabel("Config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiTwoLabels("AshRadio v" + Radio.version, " made by siljam", Placement.BottomRight, 0, 0, Palette.hint, null));
-		
-		setMiddleScreen(l);
-	}
-	
 	void setHelp(int page = 0){
 		const int maxPage = 6;
-		TuiScreenInteractive l = getMiddle(null);
+		MiddleScreen l3 = generateMiddle(null);
+		
+		//Juto to avoid rewriting a lot of code
+		TuiScreenInteractive l = l3.interactive;
 		
 		l.Elements.Add(new TuiLabel("Help - Page " + (page + 1), Placement.TopCenter, 0, 1, Palette.main));
 		
@@ -684,15 +623,15 @@ public partial class Screens{
 		
 		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
 			if(page != 0){
-				closeMiddleScreen();
 				setHelp(page - 1);
+				removeMiddleScreen(l3);
 			}
 		});
 		
 		l.SubKeyEvent(ConsoleKey.M, (s, ck) => {
 			if(page != maxPage){
-				closeMiddleScreen();
 				setHelp(page + 1);
+				removeMiddleScreen(l3);
 			}
 		});
 		
@@ -770,36 +709,7 @@ public partial class Screens{
 				break;
 		}
 		
-		setMiddleScreen(l);
-	}
-	
-	void setMiddleScreen(TuiScreenInteractive m){
-		TuiScreenInteractive previous = middle.Peek();
-		middle.Push(m);
-		master.ScreenList.Remove(previous);
-		master.ScreenList.Add(m);
-		setSelectedScreen(m);
-		master.Elements.Remove(previous);
-		master.Elements.Add(m);
-	}
-	
-	void closeMiddleScreen(){
-		if(middle.Count < 2){ //Comfirmation to close app
-			confirmExit();
-			
-			return;
-		}
-		
-		TuiScreenInteractive toDel = middle.Pop();
-		master.ScreenList.Remove(toDel);
-		master.ScreenList.Add(middle.Peek());
-		
-		master.Elements.Remove(toDel);
-		master.Elements.Add(middle.Peek());
-		
-		master.Xsize = master.Xsize; //Triggers a resize to make sure the middle screen is the correct size
-		
-		setSelectedScreen(middle.Peek());
+		setMiddleScreen(l3);
 	}
 	
 	void confirmExit(){
@@ -811,99 +721,15 @@ public partial class Screens{
 			new TuiButton("Cancel", Placement.Center, 4, 1, null, Palette.user).SetAction((s, ck) => closeMiddleScreen())
 		}};
 		
-		TuiScreenInteractive t = getMiddle(buttons);
-		t.Elements.Add(new TuiLabel("Do you want to exit?", Placement.Center, 0, -1));
-		t.Elements.Add(new TuiFrame(24, 7, Placement.Center, 0, 0, Palette.user));
+		MiddleScreen t = generateMiddle(buttons);
+		t.interactive.Elements.Add(new TuiLabel("Do you want to exit?", Placement.Center, 0, -1));
+		t.interactive.Elements.Add(new TuiFrame(24, 7, Placement.Center, 0, 0, Palette.user));
 		
-		t.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
+		t.interactive.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
 			MultipleTuiScreenInteractive.StopPlaying(master, default);
 			Environment.Exit(0);
 		}); //Escape + escape will close
 		
 		setMiddleScreen(t);
-	}
-	
-	void prepareScreen(TuiScreenInteractive t){
-		t.DeleteAllKeyEvents();
-		
-		t.SubKeyEvent(ConsoleKey.UpArrow, TuiScreenInteractive.MoveUp);
-		t.SubKeyEvent(ConsoleKey.DownArrow, TuiScreenInteractive.MoveDown);
-		t.SubKeyEvent(ConsoleKey.LeftArrow, TuiScreenInteractive.MoveLeft);
-		t.SubKeyEvent(ConsoleKey.RightArrow, TuiScreenInteractive.MoveRight);
-	}
-	
-	void setSelectedScreen(TuiScreenInteractive s){
-		if(master == null){
-			return;
-		}
-		
-		if(master.SelectedScreen != null){
-			master.SelectedScreen.DefFormat = null;
-		}
-		
-		master.SelectedScreen = s;
-		
-		if(master.SelectedScreen != null){
-			master.SelectedScreen.DefFormat = Palette.background;
-		}
-	}
-	
-	TuiScreenInteractive getMiddle(TuiSelectable[,] b){
-		TuiScreenInteractive te = new TuiScreenInteractive(Math.Max((master?.Xsize ?? 100) - 62, 0),
-			Math.Max((master?.Ysize ?? 20) - 6, 0),
-			b, 0, 0, Placement.TopCenter, 0, 0, null,
-			new TuiLabel("Ctrl+G", Placement.BottomLeft, 0, 0, Palette.hint));
-		
-		te.OnParentResize += (s, a) => {
-			te.Xsize = Math.Max(a.X - 62, 0);
-			te.Ysize = Math.Max(a.Y - 6, 0);
-		};
-		
-		prepareScreen(te);
-		
-		return te;
-	}
-	
-	//remove surrounding quotes
-	static string removeQuotesSingle(string p){
-		p = p.Trim();
-		
-		if(p.Length < 1){
-			return p;
-		}
-		char[] c = p.ToCharArray();
-		if(c[0] == '\"' && c[c.Length - 1] == '\"'){
-			if(c.Length < 2){
-				return "";
-			}
-			return p.Substring(1, p.Length - 2);
-		}
-		return p;
-	}
-	
-	static void openUrl(string url){
-		try{
-			if(OperatingSystem.IsWindows()){
-				Process.Start(new ProcessStartInfo{
-					FileName = url,
-					UseShellExecute = true
-				});
-			}
-			else if(OperatingSystem.IsLinux()){
-				Process.Start("xdg-open", url);
-			}
-			else if(OperatingSystem.IsMacOS()){
-				Process.Start("open", url);
-			}
-		}
-		catch(Exception e){}
-	}
-	
-	//Crop length of string
-	static string crop(string s, int len){
-		if(s.Length > len){
-			return s.Substring(0, len - 1) + "…";
-		}
-		return s;
 	}
 }

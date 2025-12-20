@@ -26,7 +26,8 @@ public static class Radio{
 		errorFilePath = dep.path + "/error" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".log";
 		
 		try{
-			init();
+			initCore();
+			initScreens();
 			
 			//debug();
 			
@@ -65,7 +66,7 @@ public static class Radio{
 	}
 	
 	//Complete init logic
-	static void init(){
+	static void initCore(){
 		config = dep.config;
 		
 		initConfig();
@@ -78,14 +79,7 @@ public static class Radio{
 		Session.init((SessionMode) config.GetValue<int>("session.mode"), (SourceType) config.GetValue<int>("session.sourceType"), config.GetValue<int>("session.sourceIdentifier"), config.GetValue<int[]>("session.sourceSeen"));
 		py.init(config.GetValue<int>("player.song"), config.GetValue<float>("player.elapsed"));
 		
-		Palette.init();
-		sc = new Screens();
-		
 		AppDomain.CurrentDomain.ProcessExit += onExit;
-		
-		if(!config.TryGetValue("dcrcp", out bool b) || b){
-			dcrcp = new DiscordPresence();
-		}
 		
 		string[] dirs = Directory.GetDirectories(dep.path + "/import").Select(dir => Path.GetFileName(dir)).ToArray();
 		
@@ -94,6 +88,15 @@ public static class Radio{
 		}
 		
 		importAll("", new string[0], out string a);
+	}
+	
+	static void initScreens(){
+		Palette.init();
+		sc = new Screens();
+		
+		if(!config.TryGetValue("dcrcp", out bool b) || b){
+			dcrcp = new DiscordPresence();
+		}
 	}
 	
 	static void initConfig(){

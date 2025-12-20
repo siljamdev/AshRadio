@@ -9,6 +9,33 @@ using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
+	void setConfig(){
+		TuiSelectable[,] t = new TuiSelectable[,]{{
+			new TuiButton("Palette", Placement.TopCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
+				setPaletteConfig();
+			})
+		},{
+			new TuiButton("Player", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
+				setPlayerConfig();
+			})
+		},{
+			new TuiButton("Paths", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				setPathConfig();
+			})
+		},{
+			new TuiButton("Miscellaneous", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
+				setMiscConfig();
+			})
+		}};
+		
+		MiddleScreen l = generateMiddle(t);
+		
+		l.interactive.Elements.Add(new TuiLabel("Config", Placement.TopCenter, 0, 1, Palette.main));
+		l.interactive.Elements.Add(new TuiTwoLabels("AshRadio v" + Radio.version, " made by siljam", Placement.BottomRight, 0, 0, Palette.hint, null));
+		
+		setMiddleScreen(l);
+	}
+	
 	void setPaletteConfig(){
 		TuiFramedCheckBox useCols = new TuiFramedCheckBox(' ', 'X', Radio.config.GetValue<bool>("ui.useColors"), Placement.TopCenter, 4, 4, null, null, null, Palette.user, Palette.user);
 		
@@ -124,7 +151,7 @@ public partial class Screens{
 			done, done, done
 		}};
 		
-		TuiScreenInteractive l = getMiddle(t);
+		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Palette config", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Use colors:", Placement.TopCenter, -4, 5));
@@ -149,7 +176,7 @@ public partial class Screens{
 			}
 		});
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setPlayerConfig(){
@@ -200,7 +227,7 @@ public partial class Screens{
 			done
 		}};
 		
-		TuiScreenInteractive l = getMiddle(t);
+		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Player config", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Volume correction exponent:", Placement.TopCenter, -12, 5));
@@ -214,7 +241,7 @@ public partial class Screens{
 			}
 		});
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setPathConfig(){
@@ -301,7 +328,7 @@ public partial class Screens{
 			done, done
 		}};
 		
-		TuiScreenInteractive l = getMiddle(t);
+		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Paths config", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("FFMPEG path:", Placement.TopCenter, -10, 5));
@@ -312,7 +339,7 @@ public partial class Screens{
 			closeMiddleScreen();
 		});
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setMiscConfig(){
@@ -353,7 +380,7 @@ public partial class Screens{
 			done
 		}};
 		
-		TuiScreenInteractive l = getMiddle(t);
+		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Miscellaneous config", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Use Discord RCP:", Placement.TopCenter, -12, 5));
@@ -364,7 +391,7 @@ public partial class Screens{
 			}
 		});
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	//Prepare textbox

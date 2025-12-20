@@ -8,6 +8,43 @@ using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
+	void setImport(){
+		TuiSelectable[,] t = new TuiSelectable[,]{{
+			new TuiButton("Import song", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
+				setImportSingleFile();
+			})
+		},{
+			new TuiButton("Import all songs from folder", Placement.TopCenter, 0, 7, null, Palette.user).SetAction((s, ck) => {
+				setImportFolder();
+			})
+		},{
+			new TuiButton("Import folder as playlist", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				setImportFolderPlaylist();
+			})
+		},{
+			new TuiButton("Import song", Placement.TopCenter, 0, 13, null, Palette.user).SetAction((s, ck) => {
+				setImportSingleVideo();
+			})
+		},{
+			new TuiButton("Import songs from yt playlist", Placement.TopCenter, 0, 14, null, Palette.user).SetAction((s, ck) => {
+				setImportFromPlaylist();
+			})
+		},{
+			new TuiButton("Import playlist from yt playlist", Placement.TopCenter, 0, 15, null, Palette.user).SetAction((s, ck) => {
+				setImportPlaylist();
+			})
+		}};
+		
+		MiddleScreen l = generateMiddle(t);
+		
+		l.interactive.Elements.Add(new TuiLabel("Import songs", Placement.TopCenter, 0, 1, Palette.main));
+		l.interactive.Elements.Add(new TuiLabel("From file", Placement.TopCenter, 0, 4, Palette.info));
+		l.interactive.Elements.Add(new TuiLabel("From YouTube", Placement.TopCenter, 0, 10, Palette.info));
+		l.interactive.Elements.Add(new TuiLabel("Importing from yt might take a while", Placement.TopCenter, 0, 11, Palette.info));
+		
+		setMiddleScreen(l);
+	}
+	
 	void setImportSingleFile(){
 		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
 		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
@@ -91,14 +128,14 @@ public partial class Screens{
 			}};
 		#endif
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import song from file", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Path:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 9));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setImportSingleVideo(){
@@ -139,7 +176,7 @@ public partial class Screens{
 			Task<int> task = Task.Run(() => Radio.importSingleVideo(path.Text, title.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(middle.Peek() == l && t.Result > -1){
+				if(currentMiddleScreen.interactive == l && t.Result > -1){
 					closeMiddleScreen();
 					setSongDetails(t.Result);
 				}
@@ -169,14 +206,14 @@ public partial class Screens{
 			import
 		}};
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import song from youtube", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Url:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 8));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setImportFolder(){
@@ -252,13 +289,13 @@ public partial class Screens{
 			}};
 		#endif
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import songs from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 9));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setImportFromPlaylist(){
@@ -298,7 +335,7 @@ public partial class Screens{
 			Task<bool> task = Task.Run(() => Radio.importFromPlaylist(path.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(middle.Peek() == l && t.Result){
+				if(currentMiddleScreen.interactive == l && t.Result){
 					closeMiddleScreen();
 				}
 				b = false;
@@ -321,13 +358,13 @@ public partial class Screens{
 			import
 		}};
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import songs from youtube playlist", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Url:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 8));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setImportFolderPlaylist(){
@@ -413,14 +450,14 @@ public partial class Screens{
 			}};
 		#endif
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import playlist from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 9));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setImportPlaylist(){
@@ -461,7 +498,7 @@ public partial class Screens{
 			Task<int> task = Task.Run(() => Radio.importYtPlaylist(path.Text, title.Text, authors.Text.Split(','), r2d2));
 			
 			task.ContinueWith(t => {
-				if(middle.Peek() == l && t.Result > -1){
+				if(currentMiddleScreen.interactive == l && t.Result > -1){
 					closeMiddleScreen();
 					setPlaylistDetails(t.Result);
 				}
@@ -491,13 +528,13 @@ public partial class Screens{
 			import
 		}};
 		
-		l = getMiddle(t);
+		l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Import playlist from youtube playlist", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Yt playlist url:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 8));
 		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
 		
-		setMiddleScreen(l);
+		setMiddleScreen(new MiddleScreen(l));
 	}
 }

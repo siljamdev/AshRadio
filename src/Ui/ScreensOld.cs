@@ -1,8 +1,7 @@
-using System.Diagnostics;
+/* using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
@@ -110,7 +109,7 @@ public partial class Screens{
 		});
 		
 		void onLibChange(object sender, LibraryEventArgs a){
-			if(!middle.Contains(c)){
+			if(middle.Contains(c)){
 				Song.onLibraryUpdate -= onLibChange;
 				return;
 			}
@@ -1478,4 +1477,4 @@ public partial class Screens{
 		
 		return;
 	}
-}
+} */
