@@ -2,6 +2,7 @@ global using System;
 global using AshLib;
 global using AshLib.AshFiles;
 using System.Diagnostics;
+using System.Text;
 using System.IO.Compression;
 using AshLib.Folders;
 
@@ -97,7 +98,7 @@ public static class Radio{
 	}
 	
 	static void initScreens(){
-		//Trying to make it work on linux...
+		//Trying to make it work on linux... (didnt work)
 		Console.OutputEncoding = Encoding.UTF8;
 		try{
 			Environment.SetEnvironmentVariable("DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR", "1");

@@ -12,7 +12,7 @@ There is a very complete in-app Help menu.
 
 ## Installation
 You can install AshRadio for windows x64 or x86 with the portable executable.  
-Compatibility with Linux or Mac in unlikely, because the audio library used only supports windows.
+Compatibility with Linux or Mac is a **work in progress**, because the graphics are totally messed up for some reason.
 
 ## License
 This software is licensed under the [MIT License](https://github.com/siljamdev/AshRadio/blob/main/LICENSE).
