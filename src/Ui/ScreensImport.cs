@@ -68,7 +68,7 @@ public partial class Screens{
 				foreach(string e in r){
 					TuiLabel a = new TuiLabel(e, Placement.TopLeft, 3, j, Palette.error);
 					j++;
-					l.Elements.Add(a);
+					l.Elements.Insert(0, a);
 					error.Add(a);
 				}
 			}else{

@@ -17,7 +17,7 @@ public class Playlist{
 	}
 	
 	public List<Song> getSongs(){
-		return songs.Select(h => Song.get(h)).ToList();
+		return songs.Select(h => Song.get(h)).Where(h => h != null).ToList();
 	}
 	
 	public void addSong(int s){

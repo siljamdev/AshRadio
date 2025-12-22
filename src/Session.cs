@@ -7,17 +7,19 @@ public static class Session{
 	public static int sourceIdentifier{get; private set;} //WHAT playlist, WHICH author...
 	public static List<int> sourceSeen{get; private set;} //Already seen songs
 	
-	public static List<int> pool;
+	static List<int> pool;
 	
 	static List<int> queue;
 	public static bool queueEmpties = true;
 	
-	public static List<int> prevPlayed = new();
+	static List<int> prevPlayed = new();
 	
 	static Random rand;
 	
 	public static event EventHandler onSourceChange; //UI changes
 	public static event EventHandler onQueueChange; //UI changes
+	
+	public static bool addToPrevList = true; //Needed for going to the previous song without reading the current one
 	
 	public static void init(SessionMode m = SessionMode.Order, SourceType s = SourceType.None, int sx = -1, int[] si = null){
 		mode = m;
@@ -29,7 +31,9 @@ public static class Session{
 		rand = new Random();
 		
 		Radio.py.onBeforeSongLoad += (s, a) => {
-			addPrevPlayed(Radio.py.playingSong);
+			if(addToPrevList){
+				addPrevPlayed(Radio.py.playingSong);
+			}
 		};
 		
 		Radio.py.onSongLoad += (s, a) => {

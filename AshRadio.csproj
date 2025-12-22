@@ -34,13 +34,12 @@
   
   <ItemGroup Condition="('$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT') or '$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86' or '$(RuntimeIdentifier)' == 'win-arm64'">
 	<None Update="lib/windows/*.dll">
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		<Link>%(Filename)%(Extension)</Link>
-		<TargetPath>%(Filename)%(Extension)</TargetPath>
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  <Link>%(Filename)%(Extension)</Link>
+	  <TargetPath>%(Filename)%(Extension)</TargetPath>
 	</None>
   </ItemGroup>
   
-  <!-- Linux x86 -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x86'">
     <None Update="lib/linux/x86/*.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -49,7 +48,6 @@
     </None>
   </ItemGroup>
   
-  <!-- Linux x86_64 -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
     <None Update="lib/linux/x86_64/*.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -58,7 +56,6 @@
     </None>
   </ItemGroup>
   
-  <!-- Linux ARM (armhf) -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm'">
     <None Update="lib/linux/armhf/*.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -67,7 +64,6 @@
     </None>
   </ItemGroup>
   
-  <!-- Linux ARM64 (aarch64) -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">
     <None Update="lib/linux/aarch64/*.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

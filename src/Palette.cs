@@ -25,7 +25,7 @@ public static class Palette{
 			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.delimiter", new Color3("5B2D72")),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.hint", new Color3("9F60C1")),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.info", new Color3("849DD6")),
-			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.background", new Color3("101010")),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.background", new Color3("131313")),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.palette.error", new Color3("D83F3C"))
 		);
 	}
@@ -33,23 +33,9 @@ public static class Palette{
 	public static void init(){
 		if((!FormatString.usesColors) || (Radio.config.TryGetValue("ui.useColors", out bool b) && !b)){
 			AshConsoleGraphics.Buffer.NoFormat = true; //Its (no longer) broken :)
-			
-			user = null;
-			song = null;
-			author = null;
-			playlist = null;
-			main = null;
-			delimiter = null;
-			hint = null;
-			info = null;
-			background = null;
-			
-			error = null;
-			
-			return;
+		}else{
+			AshConsoleGraphics.Buffer.NoFormat = false;
 		}
-		
-		AshConsoleGraphics.Buffer.NoFormat = false;
 		
 		user = new CharFormat(Radio.config.GetValue<Color3>("ui.palette.user"));
 		song = new CharFormat(Radio.config.GetValue<Color3>("ui.palette.song"));
@@ -61,7 +47,7 @@ public static class Palette{
 		info = new CharFormat(Radio.config.GetValue<Color3>("ui.palette.info"));
 		background = new CharFormat(null, Radio.config.GetValue<Color3>("ui.palette.background"));
 		
-		error = new CharFormat(Radio.config.GetValue<Color3>("ui.palette.error"));;
+		error = new CharFormat(Radio.config.GetValue<Color3>("ui.palette.error"));
 	}
 	
 	public static void setAsh(){
@@ -73,7 +59,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.delimiter", new Color3("5B2D72"));
 		Radio.config.Set("ui.palette.hint", new Color3("9F60C1"));
 		Radio.config.Set("ui.palette.info", new Color3("849DD6"));
-		Radio.config.Set("ui.palette.background", new Color3("101010"));
+		Radio.config.Set("ui.palette.background", new Color3("131313"));
 		
 		Radio.config.Set("ui.palette.error", new Color3("D83F3C"));
 		
@@ -91,7 +77,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.delimiter", new Color3("848260"));
 		Radio.config.Set("ui.palette.hint", new Color3("918050"));
 		Radio.config.Set("ui.palette.info", new Color3("CC7651"));
-		Radio.config.Set("ui.palette.background", new Color3("101010"));
+		Radio.config.Set("ui.palette.background", new Color3("131313"));
 		
 		Radio.config.Set("ui.palette.error", new Color3("D83F3C"));
 		
@@ -109,7 +95,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.delimiter", new Color3("00FFAA"));    // Mint green
 		Radio.config.Set("ui.palette.hint", new Color3("FF66FF"));         // Light magenta
 		Radio.config.Set("ui.palette.info", new Color3("33CCFF"));         // Sky blue
-		Radio.config.Set("ui.palette.background", new Color3("0A0A0A"));   // Almost black
+		Radio.config.Set("ui.palette.background", new Color3("101010"));   // Almost black
 		
 		Radio.config.Set("ui.palette.error", new Color3("FF0033"));        // Bright red
 		

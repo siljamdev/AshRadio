@@ -104,6 +104,26 @@ public class Song{
 		}
 	}
 	
+	//True if succesful
+	public static bool export(int id, string dirPath, out string err){
+		if(!exists(id)){
+			err = null;
+			return false;
+		}
+		
+		try{
+			string path = dirPath + "/" + get(id)?.title + ".mp3";
+			File.Copy(getAudioPath(id), path);
+			File.SetLastWriteTime(path, DateTime.Now);
+			
+			err = null;
+			return true;
+		}catch(Exception e){
+			err = "Error exporting:\n" + e.ToString();
+			return false;
+		}
+	}
+	
 	public static void delete(int id){
 		Song s = get(id);
 		
@@ -111,8 +131,12 @@ public class Song{
 			return;
 		}
 		
-		File.Delete(getAudioPath(id));
-		File.Delete(getDataPath(id));
+		try{
+			File.Delete(getAudioPath(id));
+			File.Delete(getDataPath(id));
+		}catch(Exception e){
+			
+		}
 		
 		library[id] = null;
 		
@@ -150,7 +174,7 @@ public class Song{
 			try{
 				File.Copy(path, getAudioPath(latestId));
 			}catch(Exception e){
-				err = $"Error copying file:\n{e.ToString}";
+				err = "Error copying file:\n" + e.ToString();
 				if(File.Exists(getAudioPath(latestId))){
 					File.Delete(getAudioPath(latestId));
 				}
@@ -180,8 +204,12 @@ public class Song{
 		latestId++;
 		bool t = tryConvertToMp3(path, getAudioPath(latestId), out err);
 		if(!t){
-			if(File.Exists(getAudioPath(latestId))){
-				File.Delete(getAudioPath(latestId));
+			try{
+				if(File.Exists(getAudioPath(latestId))){
+					File.Delete(getAudioPath(latestId));
+				}
+			}catch(Exception e){
+				err = "Error deleting file:\n" + e.ToString();
 			}
 			latestId--;
 			return -1;

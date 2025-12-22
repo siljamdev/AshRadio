@@ -106,7 +106,9 @@ public partial class Screens{
 			if(j < 0){
 				return;
 			}
+			Session.addToPrevList = false;
 			Radio.py.play(j);
+			Session.addToPrevList = true;
 		});
 		
 		master.SubKeyEvent(ConsoleKey.M, ConsoleModifiers.None, (s, cki) => {
@@ -176,28 +178,11 @@ public partial class Screens{
 			}
 		});
 		
-		#region DEBUG
-		master.SubKeyEvent(ConsoleKey.A, ConsoleModifiers.None, (s, cki) => {
-			Console.Clear();
-			
-			Console.WriteLine("Pool");
-			foreach(int s2 in Session.pool){
-				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
+		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.Shift, (s, cki) => {
+			if(Radio.py.playingSong >= 0){
+				setSongDetails(Radio.py.playingSong);
 			}
-			
-			Console.WriteLine("Seen");
-			foreach(int s2 in Session.sourceSeen){
-				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
-			}
-			
-			Console.WriteLine("Prev");
-			foreach(int s2 in Session.prevPlayed){
-				Console.WriteLine("\t" + (Song.get(s2)?.title ?? "Untitled song"));
-			}
-			
-			Console.ReadKey();
 		});
-		#endregion
 		
 		Stopwatch timer = Stopwatch.StartNew();
 		
@@ -232,7 +217,9 @@ public partial class Screens{
 	public void setupPlaying(){
 		Song temp = Song.get(Radio.py.playingSong);
 		TuiButton song = new TuiButton(crop(temp?.title ?? "", 38), Placement.TopLeft, 11, 1, Palette.song, Palette.user).SetAction((s, ck) => {
-			setSongDetails(Radio.py.playingSong);
+			if(Radio.py.playingSong >= 0){
+				setSongDetails(Radio.py.playingSong);
+			}
 		});
 		
 		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? "Unknown author" : (temp.authors.Length == 1 ? (Author.get(temp.authors[0])?.name ?? "Unknown author") : string.Join(", ", temp.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))), Placement.BottomLeft, 2, 1, null, Palette.author);
@@ -254,7 +241,7 @@ public partial class Screens{
 			totalTime.OffsetX = (a.X - 30)/2 + 4;
 		};
 		
-		int sec = (int) Radio.py.duration;
+		int sec = Math.Max((int) Radio.py.duration, 0);
 		totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
 		
 		TuiButton play = new TuiButton("‖", Placement.TopCenter, 0, 1, null, Palette.user); //► or ‖
@@ -267,7 +254,9 @@ public partial class Screens{
 			if(j < 0){
 				return;
 			}
+			Session.addToPrevList = false;
 			Radio.py.play(j);
+			Session.addToPrevList = true;
 		});
 		TuiButton next = new TuiButton("≥", Placement.TopCenter, 6, 1, null, Palette.user).SetAction((s, cki) => Radio.py.skip());
 		
@@ -308,12 +297,12 @@ public partial class Screens{
 		};
 		
 		playing.OnFinishPlayCycle += (s, a) => {
-			int n = (int) (Radio.py.elapsed / Radio.py.duration * 100);
+			int n = (int) (Math.Max(Radio.py.elapsed, 0f) / Math.Max(Radio.py.duration, 0f) * 100);
 			if(n != progress.Percentage){
 				progress.Percentage = n;
 			}
 			
-			int sec = (int) Radio.py.elapsed;
+			int sec = Math.Max((int) Radio.py.elapsed, 0);
 			string s2 = (sec / 60) + ":" + (sec % 60).ToString("D2");
 			if(s2 != elapsedTime.Text){
 				elapsedTime.Text = s2;
@@ -328,7 +317,7 @@ public partial class Screens{
 			song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
 			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? "Unknown author" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
 			
-			int sec = (int) Radio.py.duration;
+			int sec = Math.Max((int) Radio.py.duration, 0);
 			totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
 		};
 		
@@ -407,6 +396,7 @@ public partial class Screens{
 		mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 7, 5, Palette.info, Palette.user);
 		
 		mode.DeleteAllKeyEvents();
+		
 		mode.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
 			if(mode.SelectedOptionIndex == 0){
 				mode.SelectedOptionIndex = 2;
@@ -416,6 +406,7 @@ public partial class Screens{
 			
 			Session.setMode((SessionMode) mode.SelectedOptionIndex);
 		});
+		
 		mode.SubKeyEvent(ConsoleKey.RightArrow, (s, cki) => {
 			if(mode.SelectedOptionIndex == 2){
 				mode.SelectedOptionIndex = 0;
@@ -547,6 +538,12 @@ public partial class Screens{
 			session.Ysize = Math.Max(a.Y - 6, 0);
 		};
 		
+		session.SubKeyEvent(ConsoleKey.Q, (s, ck) => {
+			if(Session.getQueue().Count > 0){
+				setSelectedScreen(queueScreen);
+			}
+		});
+		
 		prepareScreen(session);
 		
 		Radio.py.onChangeDevice += (s, a) => {
@@ -605,7 +602,7 @@ public partial class Screens{
 	}
 	
 	void setHelp(int page = 0){
-		const int maxPage = 6;
+		const int maxPage = 7;
 		MiddleScreen l3 = generateMiddle(null);
 		
 		//Juto to avoid rewriting a lot of code
@@ -635,81 +632,180 @@ public partial class Screens{
 			}
 		});
 		
-		switch(page){
-			case 0:
-				l.Elements.Add(new TuiLabel("Concepts", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiTwoLabels("Session", ": the current options for source, order and queue", Placement.TopLeft, 3, 5, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Source", ": the 'pool' from where the next song will be chosen", Placement.TopLeft, 3, 6, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Library", ": the whole collection of all songs", Placement.TopLeft, 3, 7, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Order", ": the order in which the next song will be chosen: order, shuffle, smart shuffle", Placement.TopLeft, 3, 8, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Queue", ": if not empty, next song will be chosen from here instead of source.", Placement.TopLeft, 3, 8, Palette.info, null));
-				l.Elements.Add(new TuiLabel("Additional option to not empty it (this allows repetition).", Placement.TopLeft, 10, 9));
-				break;
-			case 1:
-				l.Elements.Add(new TuiLabel("Importing", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("AshRadio uses ffmpeg to import non .mp3 files, transforming them.", Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiLabel("Therefore, you can import almost any audio format from files.", Placement.TopLeft, 3, 6));
-				l.Elements.Add(new TuiLabel("To import from youtube and other websites, AshRadio uses yt-dlp.", Placement.TopLeft, 3, 7));
-				l.Elements.Add(new TuiLabel("This program downloads audio files from multiple web pages,", Placement.TopLeft, 3, 7));
-				l.Elements.Add(new TuiLabel("allowing easier importing.", Placement.TopLeft, 3, 8));
-				l.Elements.Add(new TuiLabel("Go to the config to change these paths.", Placement.TopLeft, 3, 9));
-				break;
-			case 2:
-				l.Elements.Add(new TuiLabel("Keybinds", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("Wherever songs appear, you can use:", Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiTwoLabels("Q", " to add it to the queue", Placement.TopLeft, 4, 6, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("P", " to play it", Placement.TopLeft, 4, 7, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("R", " to delete it (in lists)", Placement.TopLeft, 4, 8, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("N", " to move it up (in lists)", Placement.TopLeft, 4, 9, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("M", " to move it down (in lists)", Placement.TopLeft, 4, 10, Palette.info, null));
-				l.Elements.Add(new TuiLabel("For authors or playlists:", Placement.TopLeft, 3, 11));
-				l.Elements.Add(new TuiTwoLabels("S", " to set it as source", Placement.TopLeft, 4, 12, Palette.info, null));
-				l.Elements.Add(new TuiLabel("Volume (available everywhere):", Placement.TopLeft, 3, 13));
-				l.Elements.Add(new TuiTwoLabels("-", " decrease by 2", Placement.TopLeft, 4, 14, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("+", " increase by 2", Placement.TopLeft, 4, 15, Palette.info, null));
-				break;
-			case 3:
-				l.Elements.Add(new TuiLabel("Keybinds", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("Player (available everywhere):", Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiTwoLabels("Space", " play/pause music", Placement.TopLeft, 4, 6, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("K", " play/pause music", Placement.TopLeft, 4, 7, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Shift + J", " restart song", Placement.TopLeft, 4, 8, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("J", " go back X seconds (advance time)", Placement.TopLeft, 4, 9, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("L", " go forward X seconds (adavance time)", Placement.TopLeft, 4, 10, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("N", " previous song", Placement.TopLeft, 4, 11, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("M", " next song", Placement.TopLeft, 4, 12, Palette.info, null));
-				break;
-			case 4:
-				l.Elements.Add(new TuiLabel("Keybinds", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("Navigation (available everywhere):", Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiTwoLabels("Ctrl + L", " see Library", Placement.TopLeft, 4, 6, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Ctrl + P", " see Playlists", Placement.TopLeft, 4, 7, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Ctrl + U", " see Authors", Placement.TopLeft, 4, 8, Palette.info, null));
-				l.Elements.Add(new TuiLabel("Session (available everywhere)", Placement.TopLeft, 3, 9));
-				l.Elements.Add(new TuiTwoLabels("Shift + M", " change mode", Placement.TopLeft, 4, 10, Palette.info, null));
-				l.Elements.Add(new TuiTwoLabels("Shift + S", " see source", Placement.TopLeft, 4, 11, Palette.info, null));
-				break;
-			case 5:
-				l.Elements.Add(new TuiLabel("Internal operation", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("AshRadio uses numerical ids for songs, authors and", Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiLabel("playlists.", Placement.TopLeft, 3, 6));
-				l.Elements.Add(new TuiLabel("2147483647 is the maximum id. Try not importing that many songs!", Placement.TopLeft, 3, 7));
-				l.Elements.Add(new TuiLabel("For the audio playing, NAudio is used. This .net library", Placement.TopLeft, 3, 8));
-				l.Elements.Add(new TuiLabel("makes it really easy to play audio files.", Placement.TopLeft, 3, 9));
-				l.Elements.Add(new TuiLabel("For data storage and many other tasks, AshLib is used.", Placement.TopLeft, 3, 10));
-				l.Elements.Add(new TuiLabel("This .net library (made by me!) handles AshFiles.", Placement.TopLeft, 3, 11));
-				l.Elements.Add(new TuiLabel("The UI in the console is made using AshConsoleGraphics.", Placement.TopLeft, 3, 12));
-				l.Elements.Add(new TuiLabel(".net library also made by me.", Placement.TopLeft, 3, 13));
-				break;
-			case 6:
-				l.Elements.Add(new TuiLabel("About the app", Placement.TopLeft, 2, 4, Palette.info));
-				l.Elements.Add(new TuiLabel("AshRadio v" + Radio.version, Placement.TopLeft, 3, 5));
-				l.Elements.Add(new TuiLabel("Made by Siljam", Placement.TopLeft, 3, 6));
-				l.Elements.Add(new TuiLabel("This software is under the MIT license.", Placement.TopLeft, 3, 8, Palette.hint));
-				break;
+		List<TuiElement> pageSpecific = new();
+		
+		void update(){
+			l.Elements.RemoveAll(h => pageSpecific.Contains(h));
+			
+			pageSpecific = page switch{
+				0 =>
+					generateHelpPageElements(
+						"Concepts",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("Session", Palette.info), (": the current options for source, order and queue", null)},
+							new (string, CharFormat?)[]{("Source", Palette.info), (": the 'pool' from where the next song will be chosen", null)},
+							new (string, CharFormat?)[]{("Library", Palette.info), (": the whole collection of songs", null)},
+							new (string, CharFormat?)[]{("Order", Palette.info), (": the order in which the next song will be chosen: order, shuffle, smart shuffle", null)},
+							new (string, CharFormat?)[]{("Queue", Palette.info), (": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows repetition).", null)},
+						},
+						l.Xsize
+					),
+				1 =>
+					generateHelpPageElements(
+						"Importing",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("AshRadio uses ffmpeg to import non .mp3 files, transforming them. Therefore, you can import almost any audio format from files.", null)},
+							new (string, CharFormat?)[]{("To download from youtube and other websites, AshRadio uses yt-dlp. This program downloads audio files from multiple web pages, allowing for easier importing.", null)},
+							new (string, CharFormat?)[]{("Go to the config to change the paths of these executables or auto-download them.", null)},
+						},
+						l.Xsize
+					),
+				2 =>
+					generateHelpPageElements(
+						"Keybinds",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("Wherever songs appear:", null)},
+							new (string, CharFormat?)[]{("Q", Palette.info), (" add song to the queue", null)},
+							new (string, CharFormat?)[]{("P", Palette.info), (" play song", null)},
+							new (string, CharFormat?)[]{("R", Palette.info), (" delete song (in lists)", null)},
+							new (string, CharFormat?)[]{("N", Palette.info), (" move song up (in lists)", null)},
+							new (string, CharFormat?)[]{("M", Palette.info), (" move song down (in lists)", null)},
+							new (string, CharFormat?)[]{},
+							new (string, CharFormat?)[]{("For authors or playlists:", null)},
+							new (string, CharFormat?)[]{("S", Palette.info), (" set as source", null)},
+							new (string, CharFormat?)[]{},
+							new (string, CharFormat?)[]{("Volume (available everywhere):", null)},
+							new (string, CharFormat?)[]{("-", Palette.info), (" decrease by 2", null)},
+							new (string, CharFormat?)[]{("+", Palette.info), (" increase by 2", null)},
+						},
+						l.Xsize
+					),
+				3 =>
+					generateHelpPageElements(
+						"Keybinds",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("Player (available everywhere):", null)},
+							new (string, CharFormat?)[]{("Space", Palette.info), (" play/pause music", null)},
+							new (string, CharFormat?)[]{("K", Palette.info), (" play/pause music", null)},
+							new (string, CharFormat?)[]{("Shift + J", Palette.info), (" restart song", null)},
+							new (string, CharFormat?)[]{("J", Palette.info), (" go back X seconds (advance time)", null)},
+							new (string, CharFormat?)[]{("L", Palette.info), (" go forward X seconds (advance time)", null)},
+							new (string, CharFormat?)[]{("N", Palette.info), (" previous song", null)},
+							new (string, CharFormat?)[]{("M", Palette.info), (" next song", null)},
+							new (string, CharFormat?)[]{("Shift + Space", Palette.info), (" see playing song", null)},
+						},
+						l.Xsize
+					),
+				4 =>
+					generateHelpPageElements(
+						"Keybinds",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("Navigation (available everywhere):", null)},
+							new (string, CharFormat?)[]{("Ctrl + L", Palette.info), (" see Library", null)},
+							new (string, CharFormat?)[]{("Ctrl + P", Palette.info), (" see Playlists", null)},
+							new (string, CharFormat?)[]{("Ctrl + U", Palette.info), (" see Authors", null)},
+							new (string, CharFormat?)[]{},
+							new (string, CharFormat?)[]{("Session (available everywhere):", null)},
+							new (string, CharFormat?)[]{("Shift + M", Palette.info), (" change mode", null)},
+							new (string, CharFormat?)[]{("Shift + S", Palette.info), (" see source", null)},
+						},
+						l.Xsize
+					),
+				5 =>
+					generateHelpPageElements(
+						"Exporting",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("You can export songs or whole playlists to folders.", null)},
+							new (string, CharFormat?)[]{("This allows you to have the mp3 files of your songs wherever you want, or share them.", null)},
+						},
+						l.Xsize
+					),
+				6 =>
+					generateHelpPageElements(
+						"Internal operation",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("AshRadio uses numerical ids for songs, authors and playlists.", null)},
+							new (string, CharFormat?)[]{("2147483647 is the maximum id. Try not importing that many songs!", null)},
+							new (string, CharFormat?)[]{("For the audio playing, ManagedBass is used. This .net wrapper of the c BASS library makes it really easy to play audio files.", null)},
+							new (string, CharFormat?)[]{("For data storage and many other tasks, AshLib is used. This .net library (made by me!) handles AshFiles.", null)},
+							new (string, CharFormat?)[]{("The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null)},
+						},
+						l.Xsize
+					),
+				7 =>
+					generateHelpPageElements(
+						"About the app",
+						new (string, CharFormat?)[][]{
+							new (string, CharFormat?)[]{("AshRadio v" + Radio.version, null)},
+							new (string, CharFormat?)[]{(Radio.versionDate, null)},
+							new (string, CharFormat?)[]{("Made by siljam", null)},
+							new (string, CharFormat?)[]{("This software is under the MIT license.", Palette.hint)},
+						},
+						l.Xsize
+					),	
+				_ =>
+					new List<TuiElement>()
+			};
+			
+			l.Elements.AddRange(pageSpecific);
 		}
 		
+		update();
+		
+		l.OnResize += (s, a) => {
+			update();
+		};
+		
 		setMiddleScreen(l3);
+	}
+	
+	List<TuiElement> generateHelpPageElements(string title, (string, CharFormat?)[][] parts, int xsize){
+		xsize -= 2; //Right margin
+		
+		if(xsize <= 0){
+			return new List<TuiElement>();
+		}
+		
+		int x = 3; //Left margin
+		int y = 5;
+		
+		List<TuiElement> elems = new();
+		
+		elems.Add(new TuiLabel(title, Placement.TopLeft, 2, 4, Palette.info));
+		
+		foreach((string, CharFormat?)[] line in parts){
+			foreach((string t, CharFormat? format) in line){
+				string text = t;
+				int size = text.Length;
+				
+				while(x + size > xsize){
+					int av = xsize - x;
+					if(av <= 0){
+						x = 3;
+						y++;
+						continue;
+					}
+					
+					elems.Add(new TuiLabel(text.Substring(0, xsize - x), Placement.TopLeft, x, y, format));
+					text = text.Substring(xsize - x);
+					size = text.Length;
+					
+					x = 3;
+					y++;
+				}
+				
+				if(text.Length > 0){
+					elems.Add(new TuiLabel(text, Placement.TopLeft, x, y, format));
+					
+					x += text.Length;
+				}
+			}
+			
+			y++;
+			x = 3;
+		}
+		
+		return elems;
 	}
 	
 	void confirmExit(){

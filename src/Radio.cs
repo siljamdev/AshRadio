@@ -7,6 +7,7 @@ using AshLib.Folders;
 
 public static class Radio{
 	public const string version = "1.4.0";
+	public const string versionDate = "December 2025";
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
@@ -24,6 +25,11 @@ public static class Radio{
 		dep = new Dependencies(appDataPath + "/ashproject/ashradio", true, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
 		
 		errorFilePath = dep.path + "/error" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".log";
+		
+		if(!(Environment.UserInteractive && !Console.IsInputRedirected && !Console.IsOutputRedirected)){
+			Console.Error.WriteLine("This application needs an interactive console to be run.");
+			return;
+		}
 		
 		try{
 			initCore();

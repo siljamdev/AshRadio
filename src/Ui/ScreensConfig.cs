@@ -39,17 +39,17 @@ public partial class Screens{
 	void setPaletteConfig(){
 		TuiFramedCheckBox useCols = new TuiFramedCheckBox(' ', 'X', Radio.config.GetValue<bool>("ui.useColors"), Placement.TopCenter, 4, 4, null, null, null, Palette.user, Palette.user);
 		
-		TuiFramedTextBox user = setColor3(new TuiFramedTextBox(Palette.user.foreground.ToString(), 7, Placement.TopLeft, 8, 7, null, Palette.user, Palette.user));
-		TuiFramedTextBox main = setColor3(new TuiFramedTextBox(Palette.main.foreground.ToString(), 7, Placement.TopCenter, 4, 7, null, Palette.main, Palette.user));
-		TuiFramedTextBox background = setColor3(new TuiFramedTextBox(Palette.background.background.ToString(), 7, Placement.TopRight, 1, 7, null, null, Palette.user));
+		TuiFramedTextBox user = setColor3(new TuiFramedTextBox(Palette.user?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 7, null, Palette.user, Palette.user));
+		TuiFramedTextBox main = setColor3(new TuiFramedTextBox(Palette.main?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 7, null, Palette.main, Palette.user));
+		TuiFramedTextBox background = setColor3(new TuiFramedTextBox(Palette.background?.background.ToString() ?? "", 7, Placement.TopRight, 1, 7, null, null, Palette.user));
 		
-		TuiFramedTextBox song = setColor3(new TuiFramedTextBox(Palette.song.foreground.ToString(), 7, Placement.TopLeft, 8, 10, null, Palette.song, Palette.user));
-		TuiFramedTextBox author = setColor3(new TuiFramedTextBox(Palette.author.foreground.ToString(), 7, Placement.TopCenter, 4, 10, null, Palette.author, Palette.user));
-		TuiFramedTextBox playlist = setColor3(new TuiFramedTextBox(Palette.playlist.foreground.ToString(), 7, Placement.TopRight, 1, 10, null, Palette.playlist, Palette.user));
+		TuiFramedTextBox song = setColor3(new TuiFramedTextBox(Palette.song?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 10, null, Palette.song, Palette.user));
+		TuiFramedTextBox author = setColor3(new TuiFramedTextBox(Palette.author?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 10, null, Palette.author, Palette.user));
+		TuiFramedTextBox playlist = setColor3(new TuiFramedTextBox(Palette.playlist?.foreground.ToString() ?? "", 7, Placement.TopRight, 1, 10, null, Palette.playlist, Palette.user));
 		
-		TuiFramedTextBox hint = setColor3(new TuiFramedTextBox(Palette.hint.foreground.ToString(), 7, Placement.TopLeft, 8, 13, null, Palette.hint, Palette.user));
-		TuiFramedTextBox info = setColor3(new TuiFramedTextBox(Palette.info.foreground.ToString(), 7, Placement.TopCenter, 4, 13, null, Palette.info, Palette.user));
-		TuiFramedTextBox delimiter = setColor3(new TuiFramedTextBox(Palette.delimiter.foreground.ToString(), 7, Placement.TopRight, 1, 13, null, Palette.delimiter, Palette.user));
+		TuiFramedTextBox hint = setColor3(new TuiFramedTextBox(Palette.hint?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 13, null, Palette.hint, Palette.user));
+		TuiFramedTextBox info = setColor3(new TuiFramedTextBox(Palette.info?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 13, null, Palette.info, Palette.user));
+		TuiFramedTextBox delimiter = setColor3(new TuiFramedTextBox(Palette.delimiter?.foreground.ToString() ?? "", 7, Placement.TopRight, 1, 13, null, Palette.delimiter, Palette.user));
 		
 		TuiLabel errorLabel = new TuiLabel("", Placement.BottomCenter, 0, 4, Palette.error);
 		
@@ -157,16 +157,16 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Use colors:", Placement.TopCenter, -4, 5));
 		
 		l.Elements.Add(new TuiLabel("User:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Main:", Placement.TopCenter, -5, 8));
-		l.Elements.Add(new TuiLabel("Background:", Placement.TopRight, 13, 8));
+		l.Elements.Add(new TuiLabel("Main:", Placement.TopCenter, -6, 8));
+		l.Elements.Add(new TuiLabel("Background:", Placement.TopRight, 11, 8));
 		
 		l.Elements.Add(new TuiLabel("Song:", Placement.TopLeft, 2, 11));
-		l.Elements.Add(new TuiLabel("Author:", Placement.TopCenter, -6, 11));
-		l.Elements.Add(new TuiLabel("Playlist:", Placement.TopRight, 13, 11));
+		l.Elements.Add(new TuiLabel("Author:", Placement.TopCenter, -7, 11));
+		l.Elements.Add(new TuiLabel("Playlist:", Placement.TopRight, 11, 11));
 		
 		l.Elements.Add(new TuiLabel("Hint:", Placement.TopLeft, 2, 14));
-		l.Elements.Add(new TuiLabel("Info:", Placement.TopCenter, -5, 14));
-		l.Elements.Add(new TuiLabel("Delimiter:", Placement.TopRight, 13, 14));
+		l.Elements.Add(new TuiLabel("Info:", Placement.TopCenter, -6, 14));
+		l.Elements.Add(new TuiLabel("Delimiter:", Placement.TopRight, 11, 14));
 		
 		l.Elements.Add(errorLabel);
 		
@@ -245,8 +245,16 @@ public partial class Screens{
 	}
 	
 	void setPathConfig(){
-		TuiFramedScrollingTextBox ffmpeg = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffmpegPath"), 256, 16, Placement.TopCenter, 7, 4, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox ytdlp = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ytdlpPath"), 256, 16, Placement.TopCenter, 7, 7, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox ffmpeg = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffmpegPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox ytdlp = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ytdlpPath"), 256, 16, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		
+		ffmpeg.OnParentResize += (s, a) => {
+			ffmpeg.BoxXsize = Math.Max(0, a.X - 4);
+		};
+		
+		ytdlp.OnParentResize += (s, a) => {
+			ytdlp.BoxXsize = Math.Max(0, a.X - 4);
+		};
 		
 		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
 			Radio.config.Set("ffmpegPath", "ffmpeg");
@@ -331,8 +339,8 @@ public partial class Screens{
 		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Paths config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("FFMPEG path:", Placement.TopCenter, -10, 5));
-		l.Elements.Add(new TuiLabel("YT-DLP path:", Placement.TopCenter, -10, 8));
+		l.Elements.Add(new TuiLabel("FFMPEG path:", Placement.TopLeft, 2, 4));
+		l.Elements.Add(new TuiLabel("YT-DLP path:", Placement.TopLeft, 2, 9));
 		
 		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
 			save();
@@ -343,7 +351,11 @@ public partial class Screens{
 	}
 	
 	void setMiscConfig(){
-		TuiFramedCheckBox usercp = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrcp", out bool b) || b, Placement.TopCenter, 8, 4, null, null, null, Palette.user, Palette.user);
+		TuiFramedCheckBox usercp = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrcp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
+		
+		TuiButton openAppdata = new TuiButton("Open appdata folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			openFolder(Radio.dep.path);
+		});
 		
 		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
 			Radio.config.Set("dcrcp", true);
@@ -375,6 +387,8 @@ public partial class Screens{
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			usercp
 		},{
+			openAppdata
+		},{
 			reset
 		},{
 			done
@@ -383,7 +397,7 @@ public partial class Screens{
 		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Miscellaneous config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("Use Discord RCP:", Placement.TopCenter, -12, 5));
+		l.Elements.Add(new TuiLabel("Use Discord RCP:", Placement.TopCenter, -4, 5));
 		
 		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
 			if(save()){

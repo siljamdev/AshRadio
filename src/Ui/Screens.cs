@@ -58,7 +58,7 @@ public partial class Screens{
 		t.SubKeyEvent(ConsoleKey.RightArrow, TuiScreenInteractive.MoveRight);
 	}
 	
-	//Utils
+	//Generic screens
 	
 	void setSearchScreen(string question, Action<string> onEnter){
 		MiddleScreen sc = null!;
@@ -138,6 +138,24 @@ public partial class Screens{
 			}
 			else if(OperatingSystem.IsMacOS()){
 				Process.Start("open", url);
+			}
+		}
+		catch(Exception e){}
+	}
+	
+	static void openFolder(string path){
+		try{
+			if(OperatingSystem.IsWindows()){
+				Process.Start(new ProcessStartInfo{
+					FileName = path,
+					UseShellExecute = true
+				});
+			}
+			else if(OperatingSystem.IsLinux()){
+				Process.Start("xdg-open", path);
+			}
+			else if(OperatingSystem.IsMacOS()){
+				Process.Start("open", path);
 			}
 		}
 		catch(Exception e){}
