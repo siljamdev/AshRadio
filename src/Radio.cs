@@ -97,6 +97,15 @@ public static class Radio{
 	}
 	
 	static void initScreens(){
+		//Trying to make it work on linux...
+		Console.OutputEncoding = Encoding.UTF8;
+		try{
+			Environment.SetEnvironmentVariable("DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR", "1");
+			Environment.SetEnvironmentVariable("TERM", "xterm-256color");
+		}catch(Exception e){
+			
+		}
+		
 		Palette.init();
 		sc = new Screens();
 		
