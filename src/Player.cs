@@ -75,6 +75,7 @@ public class Player : IDisposable{
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
 			Radio.config.Set("player.song", playingSong);
+			Radio.config.Set("player.elapsed", 0f);
 			Radio.config.Save();
 			return;
 		}
@@ -85,6 +86,7 @@ public class Player : IDisposable{
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
 			Radio.config.Set("player.song", playingSong);
+			Radio.config.Set("player.elapsed", 0f);
 			Radio.config.Save();
 			return;
 		}
@@ -97,6 +99,7 @@ public class Player : IDisposable{
 		
 		onSongLoad?.Invoke(this, EventArgs.Empty);
 		Radio.config.Set("player.song", playingSong);
+		Radio.config.Set("player.elapsed", 0f);
 		Radio.config.Save();
 	}
 	

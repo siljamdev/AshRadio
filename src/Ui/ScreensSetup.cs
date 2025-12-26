@@ -608,6 +608,15 @@ public partial class Screens{
 		//Juto to avoid rewriting a lot of code
 		TuiScreenInteractive l = l3.interactive;
 		
+		TuiFormatLog content = new TuiFormatLog(l.Xsize - 4, l.Ysize - 7, Placement.TopLeft, 2, 5);
+		
+		content.OnParentResize += (s, a) => {
+			content.Xsize = l.Xsize - 4;
+			content.Ysize = l.Ysize - 7;
+		};
+		
+		l.Elements.Add(content);
+		
 		l.Elements.Add(new TuiLabel("Help - Page " + (page + 1), Placement.TopCenter, 0, 1, Palette.main));
 		
 		if(page > 0){
@@ -632,129 +641,115 @@ public partial class Screens{
 			}
 		});
 		
-		List<TuiElement> pageSpecific = new();
-		
-		void update(){
-			l.Elements.RemoveAll(h => pageSpecific.Contains(h));
-			
-			pageSpecific = page switch{
-				0 =>
-					generateHelpPageElements(
-						"Concepts",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("Session", Palette.info), (": the current options for source, order and queue", null)},
-							new (string, CharFormat?)[]{("Source", Palette.info), (": the 'pool' from where the next song will be chosen", null)},
-							new (string, CharFormat?)[]{("Library", Palette.info), (": the whole collection of songs", null)},
-							new (string, CharFormat?)[]{("Order", Palette.info), (": the order in which the next song will be chosen: order, shuffle, smart shuffle", null)},
-							new (string, CharFormat?)[]{("Queue", Palette.info), (": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows repetition).", null)},
-						},
-						l.Xsize
-					),
-				1 =>
-					generateHelpPageElements(
-						"Importing",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("AshRadio uses ffmpeg to import non .mp3 files, transforming them. Therefore, you can import almost any audio format from files.", null)},
-							new (string, CharFormat?)[]{("To download from youtube and other websites, AshRadio uses yt-dlp. This program downloads audio files from multiple web pages, allowing for easier importing.", null)},
-							new (string, CharFormat?)[]{("Go to the config to change the paths of these executables or auto-download them.", null)},
-						},
-						l.Xsize
-					),
-				2 =>
-					generateHelpPageElements(
-						"Keybinds",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("Wherever songs appear:", null)},
-							new (string, CharFormat?)[]{("Q", Palette.info), (" add song to the queue", null)},
-							new (string, CharFormat?)[]{("P", Palette.info), (" play song", null)},
-							new (string, CharFormat?)[]{("R", Palette.info), (" delete song (in lists)", null)},
-							new (string, CharFormat?)[]{("N", Palette.info), (" move song up (in lists)", null)},
-							new (string, CharFormat?)[]{("M", Palette.info), (" move song down (in lists)", null)},
-							new (string, CharFormat?)[]{},
-							new (string, CharFormat?)[]{("For authors or playlists:", null)},
-							new (string, CharFormat?)[]{("S", Palette.info), (" set as source", null)},
-							new (string, CharFormat?)[]{},
-							new (string, CharFormat?)[]{("Volume (available everywhere):", null)},
-							new (string, CharFormat?)[]{("-", Palette.info), (" decrease by 2", null)},
-							new (string, CharFormat?)[]{("+", Palette.info), (" increase by 2", null)},
-						},
-						l.Xsize
-					),
-				3 =>
-					generateHelpPageElements(
-						"Keybinds",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("Player (available everywhere):", null)},
-							new (string, CharFormat?)[]{("Space", Palette.info), (" play/pause music", null)},
-							new (string, CharFormat?)[]{("K", Palette.info), (" play/pause music", null)},
-							new (string, CharFormat?)[]{("Shift + J", Palette.info), (" restart song", null)},
-							new (string, CharFormat?)[]{("J", Palette.info), (" go back X seconds (advance time)", null)},
-							new (string, CharFormat?)[]{("L", Palette.info), (" go forward X seconds (advance time)", null)},
-							new (string, CharFormat?)[]{("N", Palette.info), (" previous song", null)},
-							new (string, CharFormat?)[]{("M", Palette.info), (" next song", null)},
-							new (string, CharFormat?)[]{("Shift + Space", Palette.info), (" see playing song", null)},
-						},
-						l.Xsize
-					),
-				4 =>
-					generateHelpPageElements(
-						"Keybinds",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("Navigation (available everywhere):", null)},
-							new (string, CharFormat?)[]{("Ctrl + L", Palette.info), (" see Library", null)},
-							new (string, CharFormat?)[]{("Ctrl + P", Palette.info), (" see Playlists", null)},
-							new (string, CharFormat?)[]{("Ctrl + U", Palette.info), (" see Authors", null)},
-							new (string, CharFormat?)[]{},
-							new (string, CharFormat?)[]{("Session (available everywhere):", null)},
-							new (string, CharFormat?)[]{("Shift + M", Palette.info), (" change mode", null)},
-							new (string, CharFormat?)[]{("Shift + S", Palette.info), (" see source", null)},
-						},
-						l.Xsize
-					),
-				5 =>
-					generateHelpPageElements(
-						"Exporting",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("You can export songs or whole playlists to folders.", null)},
-							new (string, CharFormat?)[]{("This allows you to have the mp3 files of your songs wherever you want, or share them.", null)},
-						},
-						l.Xsize
-					),
-				6 =>
-					generateHelpPageElements(
-						"Internal operation",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("AshRadio uses numerical ids for songs, authors and playlists.", null)},
-							new (string, CharFormat?)[]{("2147483647 is the maximum id. Try not importing that many songs!", null)},
-							new (string, CharFormat?)[]{("For the audio playing, ManagedBass is used. This .net wrapper of the c BASS library makes it really easy to play audio files.", null)},
-							new (string, CharFormat?)[]{("For data storage and many other tasks, AshLib is used. This .net library (made by me!) handles AshFiles.", null)},
-							new (string, CharFormat?)[]{("The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null)},
-						},
-						l.Xsize
-					),
-				7 =>
-					generateHelpPageElements(
-						"About the app",
-						new (string, CharFormat?)[][]{
-							new (string, CharFormat?)[]{("AshRadio v" + Radio.version, null)},
-							new (string, CharFormat?)[]{(Radio.versionDate, null)},
-							new (string, CharFormat?)[]{("Made by siljam", null)},
-							new (string, CharFormat?)[]{("This software is under the MIT license.", Palette.hint)},
-						},
-						l.Xsize
-					),	
-				_ =>
-					new List<TuiElement>()
-			};
-			
-			l.Elements.AddRange(pageSpecific);
+		switch(page){
+			case 0:
+				content.AppendLine("Concepts", Palette.info);
+				
+				content.Append(" Session", Palette.info);
+				content.AppendLine(": the current options for source, order and queue", null);
+				content.Append(" Source", Palette.info);
+				content.AppendLine(": the 'pool' from where the next song will be chosen", null);
+				content.Append(" Library", Palette.info);
+				content.AppendLine(": the whole collection of songs", null);
+				content.Append(" Order", Palette.info);
+				content.AppendLine(": the order in which the next song will be chosen: order, shuffle, smart shuffle", null);
+				content.Append(" Queue", Palette.info);
+				content.AppendLine(": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows repetition)", null);
+				break;
+			case 1:
+				content.AppendLine("Importing", Palette.info);
+				
+				content.AppendLine(" AshRadio uses ffmpeg to import non .mp3 files, transforming them. Therefore, you can import almost any audio format from files.", null);
+				content.AppendLine(" To download from youtube and other websites, AshRadio uses yt-dlp. This program downloads audio files from multiple web pages, allowing for easier importing.", null);
+				content.AppendLine(" Go to the config to change the paths of these executables or auto-download them.", null);
+				break;
+			case 2:
+				content.AppendLine("Keybinds", Palette.info);
+				
+				content.AppendLine(" Wherever songs appear:", null);
+				content.Append("  Q", Palette.info);
+				content.AppendLine(" add song to the queue", null);
+				content.Append("  P", Palette.info);
+				content.AppendLine(" play song", null);
+				content.Append("  R", Palette.info);
+				content.AppendLine(" delete song (in lists)", null);
+				content.Append("  N", Palette.info);
+				content.AppendLine(" move song up (in lists)", null);
+				content.Append("  M", Palette.info);
+				content.AppendLine(" move song down (in lists)", null);
+				content.AppendLine("", null);
+				
+				content.AppendLine(" For authors or playlists:", null);
+				content.Append("  S", Palette.info);
+				content.AppendLine(" set as source", null);
+				content.AppendLine("", null);
+				
+				content.AppendLine(" Volume (available everywhere):", null);
+				content.Append("  -", Palette.info);
+				content.AppendLine(" decrease by 2", null);
+				content.Append("  +", Palette.info);
+				content.AppendLine(" increase by 2", null);
+				break;
+			case 3:
+				content.AppendLine("Keybinds", Palette.info);
+				
+				content.AppendLine(" Player (available everywhere):", null);
+				content.Append("  Space", Palette.info);
+				content.AppendLine(" play/pause music", null);
+				content.Append("  K", Palette.info);
+				content.AppendLine(" play/pause music", null);
+				content.Append("  Shift + J", Palette.info);
+				content.AppendLine(" restart song", null);
+				content.Append("  J", Palette.info);
+				content.AppendLine(" go back X seconds (advance time)", null);
+				content.Append("  L", Palette.info);
+				content.AppendLine(" go forward X seconds (advance time)", null);
+				content.Append("  N", Palette.info);
+				content.AppendLine(" previous song", null);
+				content.Append("  M", Palette.info);
+				content.AppendLine(" next song", null);
+				content.Append("  Shift + Space", Palette.info);
+				content.AppendLine(" see playing song", null);
+				break;
+			case 4:
+				content.AppendLine("Keybinds", Palette.info);
+				
+				content.AppendLine(" Navigation (available everywhere):", null);
+				content.Append("  Ctrl + L", Palette.info);
+				content.AppendLine(" see Library", null);
+				content.Append("  Ctrl + P", Palette.info);
+				content.AppendLine(" see Playlists", null);
+				content.Append("  Ctrl + U", Palette.info);
+				content.AppendLine(" see Authors", null);
+				content.AppendLine("", null);
+				
+				content.AppendLine(" Session (available everywhere):", null);
+				content.Append("  Shift + M", Palette.info);
+				content.AppendLine(" change mode", null);
+				content.Append("  Shift + S", Palette.info);
+				content.AppendLine(" see source", null);
+				break;
+			case 5:
+				content.AppendLine("Exporting", Palette.info);
+				content.AppendLine(" You can export songs or whole playlists to folders.", null);
+				content.AppendLine(" This allows you to have the mp3 files of your songs wherever you want, or share them.", null);
+				break;
+			case 6:
+				content.AppendLine("Internal operation", Palette.info);
+				
+				content.AppendLine(" AshRadio uses numerical ids for songs, authors and playlists.", null);
+				content.AppendLine(" 2147483647 is the maximum id. Try not importing that many songs!", null);
+				content.AppendLine(" For the audio playing, ManagedBass is used. This .net wrapper of the c BASS library makes it really easy to play audio files.", null);
+				content.AppendLine(" For data storage and many other tasks, AshLib is used. This .net library (made by me!) handles AshFiles.", null);
+				content.AppendLine(" The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null);
+				break;
+			case 7:
+				content.AppendLine("About the app", Palette.info);
+				content.AppendLine(" AshRadio v" + Radio.version, null);
+				content.AppendLine(" Made by siljam", null);
+				content.AppendLine(" This software is under the MIT license", Palette.hint);
+				break;
 		}
-		
-		update();
-		
-		l.OnResize += (s, a) => {
-			update();
-		};
 		
 		setMiddleScreen(l3);
 	}

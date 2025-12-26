@@ -265,44 +265,12 @@ public partial class Screens{
 			setPathConfig();
 		});
 		
-		TuiButton open1 = new TuiButton("Open ffmpeg.org", Placement.BottomLeft, 3, 3, null, Palette.user).SetAction((s, ck) => {
+		TuiButton open1 = new TuiButton("Open ffmpeg.org", Placement.BottomRight, 3, 3, null, Palette.user).SetAction((s, ck) => {
 			openUrl("https://ffmpeg.org/");
 		});
 		
-		TuiButton open2 = new TuiButton("Open yt-dlp downloads", Placement.BottomRight, 3, 3, null, Palette.user).SetAction((s, ck) => {
+		TuiButton open2 = new TuiButton("Open yt-dlp downloads", Placement.BottomLeft, 3, 3, null, Palette.user).SetAction((s, ck) => {
 			openUrl("https://github.com/yt-dlp/yt-dlp/releases");
-		});
-		
-		TuiButton auto = new TuiButton("Auto download all", Placement.BottomCenter, 0, 5, null, Palette.user).SetAction((s, ck) => {
-			Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-			Radio.dep.path + "/yt-dlp.exe", async () => {
-				ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
-				Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
-				Radio.config.Save();
-			});
-			
-			Radio.downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
-			Radio.dep.path + "/temp.zip", async () => {
-				try{
-					ZipFile.ExtractToDirectory(Radio.dep.path + "/temp.zip", Radio.dep.path + "/temp", true);
-					
-					string p = Directory.GetFiles(Radio.dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
-					
-					if(File.Exists(Radio.dep.path + "/ffmpeg.exe")){
-						File.Delete(Radio.dep.path + "/ffmpeg.exe");
-					}
-					
-					File.Copy(p, Radio.dep.path + "/ffmpeg.exe");
-					
-					Directory.Delete(Radio.dep.path + "/temp", true);
-					File.Delete(Radio.dep.path + "/temp.zip");
-				}catch(Exception e){
-					File.AppendAllText(Radio.errorFilePath, e.ToString() + "\n");
-				}
-				ffmpeg.Text = Radio.dep.path + "/ffmpeg.exe";
-				Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));
-				Radio.config.Save();
-			});
 		});
 		
 		void save(){	
@@ -316,25 +284,87 @@ public partial class Screens{
 			save();
 		});
 		
-		TuiSelectable[,] t = OperatingSystem.IsWindows() ? new TuiSelectable[,]{{
-			ffmpeg, ffmpeg
-		},{
-			ytdlp, ytdlp
-		},{
-			auto, auto
-		},{
-			open1, open2
-		},{
-			done, done
-		}} : new TuiSelectable[,]{{
-			ffmpeg, ffmpeg
-		},{
-			ytdlp, ytdlp
-		},{
-			open1, open2
-		},{
-			done, done
-		}};
+		#if WINDOWS
+			bool c = false;
+			
+			TuiButton autoYtdlp = new TuiButton("Auto download yt-dlp.exe", Placement.BottomLeft, 3, 5, null, Palette.user).SetAction((s, ck) => {
+				if(c){
+					return;
+				}
+				c = true;
+				
+				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
+				Radio.dep.path + "/yt-dlp.exe", async () => {
+					ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
+					Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
+					Radio.config.Save();
+					c = false;
+				});
+			});
+			
+			int b = 2;
+			
+			TuiButton autoAll = new TuiButton("Auto download all", Placement.BottomRight, 3, 5, null, Palette.user).SetAction((s, ck) => {
+				if(b < 2){
+					return;
+				}
+				b = 0;
+				
+				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
+				Radio.dep.path + "/yt-dlp.exe", async () => {
+					ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
+					Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
+					Radio.config.Save();
+					b++;
+				});
+				
+				Radio.downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
+				Radio.dep.path + "/temp.zip", async () => {
+					try{
+						ZipFile.ExtractToDirectory(Radio.dep.path + "/temp.zip", Radio.dep.path + "/temp", true);
+						
+						string p = Directory.GetFiles(Radio.dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+						
+						if(File.Exists(Radio.dep.path + "/ffmpeg.exe")){
+							File.Delete(Radio.dep.path + "/ffmpeg.exe");
+						}
+						
+						File.Copy(p, Radio.dep.path + "/ffmpeg.exe");
+						
+						Directory.Delete(Radio.dep.path + "/temp", true);
+						File.Delete(Radio.dep.path + "/temp.zip");
+					}catch(Exception e){
+						File.AppendAllText(Radio.errorFilePath, e.ToString() + "\n");
+					}
+					ffmpeg.Text = Radio.dep.path + "/ffmpeg.exe";
+					Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));
+					Radio.config.Save();
+					b++;
+				});
+			});
+			
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				ffmpeg, ffmpeg
+			},{
+				ytdlp, ytdlp
+			},{
+				autoYtdlp, autoAll
+			},{
+				open2, open1
+			},{
+				done, done
+			}};
+		#else
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				ffmpeg, ffmpeg
+			},{
+				ytdlp, ytdlp
+			},{
+				open2, open1
+			},{
+				done, done
+			}};
+		#endif
 		
 		TuiScreenInteractive l = generateMiddleInteractive(t);
 		

@@ -7,7 +7,7 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.4.0";
+	public const string version = "1.4.1";
 	public const string versionDate = "December 2025";
 	
 	public static Dependencies dep = null!;
@@ -97,16 +97,7 @@ public static class Radio{
 		importAll("", new string[0], out string a);
 	}
 	
-	static void initScreens(){
-		//Trying to make it work on linux... (didnt work)
-		Console.OutputEncoding = Encoding.UTF8;
-		try{
-			Environment.SetEnvironmentVariable("DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR", "1");
-			Environment.SetEnvironmentVariable("TERM", "xterm-256color");
-		}catch(Exception e){
-			
-		}
-		
+	static void initScreens(){		
 		Palette.init();
 		sc = new Screens();
 		
