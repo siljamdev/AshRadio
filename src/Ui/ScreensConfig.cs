@@ -10,6 +10,11 @@ using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
 	void setConfig(){
+		if(currentMiddleScreen.identifier == "config"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			new TuiButton("Palette", Placement.TopCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
 				setPaletteConfig();
@@ -29,6 +34,7 @@ public partial class Screens{
 		}};
 		
 		MiddleScreen l = generateMiddle(t);
+		l.identifier = "config";
 		
 		l.interactive.Elements.Add(new TuiLabel("Config", Placement.TopCenter, 0, 1, Palette.main));
 		l.interactive.Elements.Add(new TuiTwoLabels("AshRadio v" + Radio.version, " made by siljam", Placement.BottomRight, 0, 0, Palette.hint, null));
@@ -294,8 +300,8 @@ public partial class Screens{
 				c = true;
 				
 				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-				Radio.dep.path + "/yt-dlp.exe", async () => {
-					ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
+				Radio.appDataPath + "/yt-dlp.exe", async () => {
+					ytdlp.Text = Radio.appDataPath + "/yt-dlp.exe";
 					Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
 					Radio.config.Save();
 					c = false;
@@ -311,33 +317,33 @@ public partial class Screens{
 				b = 0;
 				
 				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-				Radio.dep.path + "/yt-dlp.exe", async () => {
-					ytdlp.Text = Radio.dep.path + "/yt-dlp.exe";
-					Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
+				Radio.appDataPath + "/yt-dlp.exe", async () => {
+					ytdlp.Text = Radio.appDataPath + "/yt-dlp.exe";
+					Radio.config.Set("ytdlpPath", Radio.appDataPath + "/yt-dlp.exe");
 					Radio.config.Save();
 					b++;
 				});
 				
 				Radio.downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
-				Radio.dep.path + "/temp.zip", async () => {
+				Radio.appDataPath + "/temp.zip", async () => {
 					try{
-						ZipFile.ExtractToDirectory(Radio.dep.path + "/temp.zip", Radio.dep.path + "/temp", true);
+						ZipFile.ExtractToDirectory(Radio.appDataPath + "/temp.zip", Radio.appDataPath + "/temp", true);
 						
-						string p = Directory.GetFiles(Radio.dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+						string p = Directory.GetFiles(Radio.appDataPath + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
 						
-						if(File.Exists(Radio.dep.path + "/ffmpeg.exe")){
-							File.Delete(Radio.dep.path + "/ffmpeg.exe");
+						if(File.Exists(Radio.appDataPath + "/ffmpeg.exe")){
+							File.Delete(Radio.appDataPath + "/ffmpeg.exe");
 						}
 						
-						File.Copy(p, Radio.dep.path + "/ffmpeg.exe");
+						File.Copy(p, Radio.appDataPath + "/ffmpeg.exe");
 						
-						Directory.Delete(Radio.dep.path + "/temp", true);
-						File.Delete(Radio.dep.path + "/temp.zip");
+						Directory.Delete(Radio.appDataPath + "/temp", true);
+						File.Delete(Radio.appDataPath + "/temp.zip");
 					}catch(Exception e){
-						File.AppendAllText(Radio.errorFilePath, e.ToString() + "\n");
+						Radio.reportError(e.ToString());
 					}
-					ffmpeg.Text = Radio.dep.path + "/ffmpeg.exe";
-					Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));
+					ffmpeg.Text = Radio.appDataPath + "/ffmpeg.exe";
+					Radio.config.Set("ffmpegPath", Radio.appDataPath + "/ffmpeg.exe");
 					Radio.config.Save();
 					b++;
 				});
@@ -383,8 +389,12 @@ public partial class Screens{
 	void setMiscConfig(){
 		TuiFramedCheckBox usercp = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrcp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
 		
-		TuiButton openAppdata = new TuiButton("Open appdata folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+		TuiButton openData = new TuiButton("Open data directory", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
 			openFolder(Radio.dep.path);
+		});
+		
+		TuiButton openAppdata = new TuiButton("Open config directory", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
+			openFolder(Radio.appDataPath);
 		});
 		
 		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
@@ -416,6 +426,8 @@ public partial class Screens{
 		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			usercp
+		},{
+			openData
 		},{
 			openAppdata
 		},{

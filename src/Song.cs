@@ -107,7 +107,7 @@ public class Song{
 	//True if succesful
 	public static bool export(int id, string dirPath, out string err){
 		if(!exists(id)){
-			err = null;
+			err = "Song does not exist";
 			return false;
 		}
 		
@@ -165,7 +165,11 @@ public class Song{
 			return -1;
 		}
 		
-		title = title.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
+		if(string.IsNullOrWhiteSpace(title)){
+			title = Path.GetFileNameWithoutExtension(path);
+		}
+		
+		title = title.Trim().Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
 		
 		authors ??= Array.Empty<int>();
 		

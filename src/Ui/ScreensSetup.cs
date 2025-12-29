@@ -69,9 +69,7 @@ public partial class Screens{
 		
 		master.AutoResize = true;
 		
-		Console.CursorVisible = false;
-		
-		master.OnResize += (s, a) => Console.CursorVisible = false;
+		master.OnResize += (s, a) => hideCursor();
 		
 		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.Control, (s, cki) => {
 			setSelectedScreen(playing);
@@ -211,6 +209,9 @@ public partial class Screens{
 	
 	//Method to start it all
 	public void play(){
+		enterAltBuffer();
+		hideCursor();
+		
 		master.Play();
 	}
 	
@@ -601,9 +602,14 @@ public partial class Screens{
 		prepareScreen(navigation);
 	}
 	
-	void setHelp(int page = 0){
+	void setHelp(int page = 0, bool ignore = false){
+		if(!ignore && currentMiddleScreen.identifier == "help"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
 		const int maxPage = 7;
 		MiddleScreen l3 = generateMiddle(null);
+		l3.identifier = "help";
 		
 		//Juto to avoid rewriting a lot of code
 		TuiScreenInteractive l = l3.interactive;
@@ -629,14 +635,14 @@ public partial class Screens{
 		
 		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
 			if(page != 0){
-				setHelp(page - 1);
+				setHelp(page - 1, true);
 				removeMiddleScreen(l3);
 			}
 		});
 		
 		l.SubKeyEvent(ConsoleKey.M, (s, ck) => {
 			if(page != maxPage){
-				setHelp(page + 1);
+				setHelp(page + 1, true);
 				removeMiddleScreen(l3);
 			}
 		});
@@ -654,7 +660,7 @@ public partial class Screens{
 				content.Append(" Order", Palette.info);
 				content.AppendLine(": the order in which the next song will be chosen: order, shuffle, smart shuffle", null);
 				content.Append(" Queue", Palette.info);
-				content.AppendLine(": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows repetition)", null);
+				content.AppendLine(": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows for repetition)", null);
 				break;
 			case 1:
 				content.AppendLine("Importing", Palette.info);
@@ -744,8 +750,9 @@ public partial class Screens{
 				content.AppendLine(" The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null);
 				break;
 			case 7:
-				content.AppendLine("About the app", Palette.info);
+				content.AppendLine("About", Palette.info);
 				content.AppendLine(" AshRadio v" + Radio.version, null);
+				content.AppendLine(" " + Radio.versionDate, null);
 				content.AppendLine(" Made by siljam", null);
 				content.AppendLine(" This software is under the MIT license", Palette.hint);
 				break;

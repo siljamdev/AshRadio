@@ -9,6 +9,11 @@ using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
 	void setImport(){
+		if(currentMiddleScreen.identifier == "import"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			new TuiButton("Import song", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
 				setImportSingleFile();
@@ -36,6 +41,7 @@ public partial class Screens{
 		}};
 		
 		MiddleScreen l = generateMiddle(t);
+		l.identifier = "import";
 		
 		l.interactive.Elements.Add(new TuiLabel("Import songs", Placement.TopCenter, 0, 1, Palette.main));
 		l.interactive.Elements.Add(new TuiLabel("From file", Placement.TopCenter, 0, 4, Palette.info));

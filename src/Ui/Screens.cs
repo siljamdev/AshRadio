@@ -168,4 +168,20 @@ public partial class Screens{
 		}
 		return s;
 	}
+	
+	static void hideCursor(){
+		Console.Write("\x1b[?25l");
+	}
+	
+	public static void showCursor(){
+		Console.Write("\x1b[?25h");
+	}
+	
+	static void enterAltBuffer(){
+		Console.Write("\x1b[?1049h");
+	}
+	
+	public static void exitAltBuffer(){
+		Console.Write("\x1b[?1049l");
+	}
 }

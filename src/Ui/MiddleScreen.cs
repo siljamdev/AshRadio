@@ -146,14 +146,17 @@ public partial class Screens{
 class MiddleScreen{
 	public TuiScreen screen;
 	public TuiScreenInteractive interactive;
+	public string identifier;
 	
-	public MiddleScreen(TuiScreen s, TuiScreenInteractive i){
+	public MiddleScreen(TuiScreen s, TuiScreenInteractive i, string id = null){
 		screen = s;
 		interactive = i;
+		identifier = id;
 	}
 	
-	public MiddleScreen(TuiScreenInteractive i){
+	public MiddleScreen(TuiScreenInteractive i, string id = null){
 		screen = i;
 		interactive = i;
+		identifier = id;
 	}
 }

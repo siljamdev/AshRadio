@@ -7,8 +7,11 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.4.1";
+	public const string version = "1.4.2";
 	public const string versionDate = "December 2025";
+	
+	public static string errorFilePath = null;
+	public static string appDataPath = null;
 	
 	public static Dependencies dep = null!;
 	public static AshFile config = null!;
@@ -18,15 +21,9 @@ public static class Radio{
 	
 	public static DiscordPresence dcrcp;
 	
-	public static string errorFilePath = null;
-	
-	public static void Main(string[] args){
+	/* public static void Main(string[] args){
 		
-		string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-		dep = new Dependencies(appDataPath + "/ashproject/ashradio", true, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
-		
-		errorFilePath = dep.path + "/error" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".log";
-		
+		//Exit if not interactive
 		if(!(Environment.UserInteractive && !Console.IsInputRedirected && !Console.IsOutputRedirected)){
 			Console.Error.WriteLine("This application needs an interactive console to be run.");
 			return;
@@ -35,46 +32,38 @@ public static class Radio{
 		try{
 			initCore();
 			initScreens();
-			
-			//debug();
-			
+		}catch(Exception e){
+			Screens.exitAltBuffer();
+			Console.Error.WriteLine("An error occured while initializing! Details saved to: " + errorFilePath);
+			Console.Error.WriteLine(e);
+			reportError(e.ToString());
+			return;
+		}
+		
+		try{
 			sc.play();
 		}catch(Exception e){
+			Screens.exitAltBuffer();
 			Console.Error.WriteLine("An error occured! Details saved to: " + errorFilePath);
 			Console.Error.WriteLine(e);
-			File.AppendAllText(errorFilePath, e.ToString() + "\n");
+			reportError(e.ToString());
 		}
-	}
-	
-	static void debug(){
-		
-		//importSingleVideo("https://www.youtube.com/watch?v=lT57yUqdKSk", "", new string[0], null);
-		
-		//Playlist.create("test");
-		//Playlist p = Playlist.load(0);
-		//
-		//p.addSong(14);
-		//p.addSong(3);
-		//p.addSong(4);
-		
-		//Session.setSource(SourceType.Playlist, 0);
-		//Session.setSource(SourceType.Library);
-		//Session.setMode(SessionMode.Order);
-		
-		//py.askForSong();
-		
-		//Random rand = new Random();
-		//while(true){
-		//	Console.ReadLine();
-		//	var p = Player.getDeviceList().ToList();
-		//	py.setDevice(p[rand.Next(p.Count)].Value);
-		//	py.resume();
-		//}
-	}
+	} */
 	
 	//Complete init logic
-	static void initCore(){
-		config = dep.config;
+	public static void initCore(string directory = null){
+		appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/ashproject/ashradio";
+		
+		errorFilePath = appDataPath + "/error" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss") + ".log";
+		
+		//Setup dep
+		if(directory == null){
+			dep = new Dependencies(appDataPath, true, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
+		}else{
+			dep = new Dependencies(directory, false, new string[]{"songs", "songs/files", "songs/data", "import"}, null);
+		}
+		
+		config = new AshFile(appDataPath + "/config.ash");
 		
 		initConfig();
 		
@@ -95,15 +84,6 @@ public static class Radio{
 		}
 		
 		importAll("", new string[0], out string a);
-	}
-	
-	static void initScreens(){		
-		Palette.init();
-		sc = new Screens();
-		
-		if(!config.TryGetValue("dcrcp", out bool b) || b){
-			dcrcp = new DiscordPresence();
-		}
 	}
 	
 	static void initConfig(){
@@ -145,41 +125,48 @@ public static class Radio{
 			config.Set("path", System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
 		}catch{}
 		
-		if(OperatingSystem.IsWindows()){
+		#if WINDOWS
 			if(!config.TryGetValue("init", out bool b) || !b){
 				downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-				dep.path + "/yt-dlp.exe", async () => {
-					config.Set("ytdlpPath", dep.path + "/yt-dlp.exe");
+				appDataPath + "/yt-dlp.exe", async () => {
+					config.Set("ytdlpPath", appDataPath + "/yt-dlp.exe");
 					config.Save();
 				});
 				
 				downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
-				dep.path + "/temp.zip", async () => {
+				appDataPath + "/temp.zip", async () => {
 					try{
-						ZipFile.ExtractToDirectory(dep.path + "/temp.zip", dep.path + "/temp", true);
+						ZipFile.ExtractToDirectory(appDataPath + "/temp.zip", appDataPath + "/temp", true);
 						
-						string p = Directory.GetFiles(dep.path + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
-						File.Copy(p, dep.path + "/ffmpeg.exe");
+						string p = Directory.GetFiles(appDataPath + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
+						File.Copy(p, appDataPath + "/ffmpeg.exe");
 						
-						Directory.Delete(dep.path + "/temp", true);
-						File.Delete(dep.path + "/temp.zip");
+						Directory.Delete(appDataPath + "/temp", true);
+						File.Delete(appDataPath + "/temp.zip");
 					}catch(Exception e){
-						File.AppendAllText(errorFilePath, e.ToString() + "\n");
+						reportError(e.ToString());
 					}
 					config.Set("init", true);
-					config.Set("ffmpegPath", dep.path + "/ffmpeg.exe");
+					config.Set("ffmpegPath", appDataPath + "/ffmpeg.exe");
 					config.Save();
 				});
 			}
-		}
+		#endif
 		
 		config.Save();
 	}
 	
-	public static int importSingleFile(string path, string title, string[] authors, out string err){
-		if(string.IsNullOrEmpty(title.Trim())){
-			title = Path.GetFileNameWithoutExtension(path);
+	public static void initScreens(){		
+		Palette.init();
+		sc = new Screens();
+		
+		if(config.TryGetValue("dcrcp", out bool b) && b){
+			dcrcp = new DiscordPresence();
 		}
+	}
+	
+	//Importing
+	public static int importSingleFile(string path, string title, string[] authors, out string err){
 		return Song.import(path, title, Author.getAuthors(authors), out err);
 	}
 	
@@ -245,7 +232,7 @@ public static class Radio{
 			string[] files = Directory.GetFiles(path, "*");
 			
 			foreach(string p in files){
-				Song.import(p, Path.GetFileNameWithoutExtension(p), aus, out string err2);
+				Song.import(p, null, aus, out string err2);
 				if(!string.IsNullOrEmpty(err2)){
 					err += err2 + "\n";
 				}
@@ -311,9 +298,11 @@ public static class Radio{
 				return -1;
 			}
 			
-			if(string.IsNullOrEmpty(title.Trim())){
+			if(string.IsNullOrWhiteSpace(title)){
 				title = Path.GetFileName(path);
 			}
+			
+			title = title.Trim();
 			
 			int[] aus = Author.getAuthors(authors);
 			
@@ -322,7 +311,7 @@ public static class Radio{
 			List<int> added = new();
 			
 			foreach(string h in files){
-				int s = Song.import(h, Path.GetFileNameWithoutExtension(h), aus, out string err2);
+				int s = Song.import(h, null, aus, out string err2);
 				if(!string.IsNullOrEmpty(err2)){
 					err += err2 + "\n";
 				}
@@ -409,7 +398,7 @@ public static class Radio{
 		List<int> s = new();
 		
 		foreach(string f in files){
-			int s2 = Song.import(f, Path.GetFileNameWithoutExtension(f), aus, out string err);
+			int s2 = Song.import(f, null, aus, out string err);
 			if(s2 > -1){
 				s.Add(s2);
 			}
@@ -428,6 +417,17 @@ public static class Radio{
 		return s;
 	}
 	
+	//Save on exit the current song and time left
+	static void onExit(object sender, EventArgs e){
+		config.Set("player.elapsed", py.elapsed);
+		
+		py.Dispose();
+		
+		dcrcp?.Dispose();
+		
+		config.Save();
+	}
+	
 	public static async Task downloadFile(string url, string outputPath, Func<Task> onComplete){
 		using HttpClient client = new HttpClient();
 		using HttpResponseMessage response = await client.GetAsync(url);
@@ -443,18 +443,11 @@ public static class Radio{
 		await onComplete(); // Lambda executed after file is saved
 	}
 	
-	//Save on exit the current song and time left
-	static void onExit(object sender, EventArgs e){
-		config.Set("player.elapsed", py.elapsed);
-		
-		py.Dispose();
-		
-		dcrcp?.Dispose();
-		
-		config.Save();
-	}
-	
 	static string geYtDlpPath(){
 		return Radio.config.GetValue<string>("ytdlpPath");
+	}
+	
+	public static void reportError(string e){
+		File.AppendAllText(errorFilePath, e.ToString() + "\n");
 	}
 }

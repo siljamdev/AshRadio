@@ -61,6 +61,9 @@ public class Player : IDisposable{
 	public void init(int song = -1, float el = 0f){
 		loadSong(song);
 		elapsed = el;
+		
+		Radio.config.Set("player.elapsed", elapsed);
+		Radio.config.Save();
 	}
 	
 	public void loadSong(int song){
@@ -163,9 +166,6 @@ public class Player : IDisposable{
 		if(isStoping){
 			return;
 		}
-		
-		//Console.WriteLine("Song ended " + new Random().Next(10000));
-		//Console.ReadKey();
 		
 		Task.Run(() => {
 			onSongFinish?.Invoke(this, EventArgs.Empty);

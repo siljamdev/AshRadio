@@ -70,7 +70,7 @@ public partial class Screens{
 		});
 		
 		//Selectables
-		TuiSelectable[,] temp = new TuiSelectable[Math.Max((s?.authors.Length + 1) ?? 0, 5), 2];
+		TuiSelectable[,] temp = new TuiSelectable[Math.Max((s?.authors.Length ?? 0) + 1, 5), 2];
 		
 		temp[0, 1] = titleInput;
 		temp[1, 1] = authorsInput;
@@ -155,6 +155,11 @@ public partial class Screens{
 	}
 	
 	void setLibrary(string query = null){
+		if(currentMiddleScreen.identifier == "library"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
 		setMiddleScreen(library(query));
 	}
 	
@@ -165,7 +170,7 @@ public partial class Screens{
 			query = query.Trim();
 		}
 		
-		List<Song> lib = query == null ? Song.getLibrary() : Song.getLibrary().Where(n => n != null && n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+		List<Song> lib = query == null ? Song.getLibrary() : Song.getLibrary().Where(n => n.title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 		
 		TuiButton import = new TuiButton("Import songs", Placement.TopRight, 0, 1, null, Palette.user);
 		
@@ -173,7 +178,16 @@ public partial class Screens{
 			setImport();
 		});
 		
-		TuiSelectable[,] t = new TuiSelectable[Math.Max(lib.Count, 1), query == null ? 2 : 1];
+		TuiButton exp = new TuiButton("Export library", Placement.TopRight, 0, 3, null, Palette.user).SetAction((s2, ck) => {
+			setExportLibrary();
+		});
+		
+		TuiSelectable[,] t = new TuiSelectable[Math.Max(lib.Count, 2), query == null ? 2 : 1];
+		
+		if(query == null){
+			t[0, 1] = import;
+			t[1, 1] = exp;
+		}
 		
 		for(int i = 0; i < lib.Count; i++){
 			Song s = lib[i];
@@ -193,7 +207,11 @@ public partial class Screens{
 			
 			t[i, 0] = b;
 			if(query == null){
-				t[i, 1] = import;
+				if(i % 2 == 0){
+					t[i, 1] = import;
+				}else{
+					t[i, 1] = exp;
+				}
 			}
 		}
 		
@@ -233,15 +251,16 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 6, 0);
 		};
 		
-		l.Elements.Remove(import);
-		l.Elements.Add(import);
-		l.FixedElements.Add(import);
+		if(query == null){
+			l.FixedElements.Add(import);
+			l.FixedElements.Add(exp);
+		}
 		
 		l.SubKeyEvent(ConsoleKey.S, (s, ck) => { //Set source
 			Session.setSource(SourceType.Library);
 		});
 		
-		MiddleScreen c2 = new MiddleScreen(backg, l);
+		MiddleScreen c2 = new MiddleScreen(backg, l, "library");
 		
 		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
 			setSearchScreen("Search song in library:", s => setLibrary(s));
@@ -297,6 +316,9 @@ public partial class Screens{
 		List<Song> songs = s?.getSongs();
 		
 		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 2), 2];
+		
+		temp[0, 1] = name;
+		temp[1, 1] = del;
 		
 		if(songs != null){
 			for(int i = 0; i < songs.Count; i++){
@@ -360,12 +382,7 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 8, 0);
 		};
 		
-		l.Elements.Remove(name);
-		l.Elements.Add(name);
 		l.FixedElements.Add(name);
-		
-		l.Elements.Remove(del);
-		l.Elements.Add(del);
 		l.FixedElements.Add(del);
 		
 		l.SubKeyEvent(ConsoleKey.S, (sc, ck) => { //Set source
@@ -408,6 +425,11 @@ public partial class Screens{
 	}
 	
 	void setAuthors(string query = null){
+		if(currentMiddleScreen.identifier == "authors"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
 		setMiddleScreen(authors(query));
 	}
 	
@@ -472,7 +494,7 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 6, 0);
 		};
 		
-		MiddleScreen c2 = new MiddleScreen(backg, l);
+		MiddleScreen c2 = new MiddleScreen(backg, l, "authors");
 		
 		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
 			setSearchScreen("Search authors:", s => setAuthors(s));
@@ -543,9 +565,14 @@ public partial class Screens{
 		
 		List<Song> songs = s?.getSongs();
 		
+		TuiScrollingScreenInteractive l = null!;
+		
 		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 4), 2];
 		
-		TuiScrollingScreenInteractive l = null!;
+		temp[0, 1] = name;
+		temp[1, 1] = add;
+		temp[2, 1] = exp;
+		temp[3, 1] = del;
 		
 		if(songs != null){
 			for(int i = 0; i < songs.Count; i++){
@@ -633,17 +660,10 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 8, 0);
 		};
 		
-		l.Elements.Remove(name);
-		l.Elements.Add(name);
 		l.FixedElements.Add(name);
-		
-		l.Elements.Remove(add);
-		l.Elements.Add(add);
 		l.FixedElements.Add(add);
-		
-		l.Elements.Remove(del);
-		l.Elements.Add(del);
 		l.FixedElements.Add(del);
+		l.FixedElements.Add(exp);
 		
 		l.SubKeyEvent(ConsoleKey.S, (sc, ck) => { //Set source
 			if(s == null){
@@ -689,6 +709,11 @@ public partial class Screens{
 	}
 	
 	void setPlaylists(string query = null){
+		if(currentMiddleScreen.identifier == "playlists"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
 		setMiddleScreen(playlists(query));
 	}
 	
@@ -719,6 +744,12 @@ public partial class Screens{
 		});
 		
 		TuiSelectable[,] t = new TuiSelectable[Math.Max(lib.Count, 3), query == null ? 2 : 1];
+		
+		if(query == null){
+			t[0, 1] = create;
+			t[1, 1] = import;
+			t[2, 1] = importYt;
+		}
 		
 		for(int i = 0; i < lib.Count; i++){
 			Playlist s = lib[i];
@@ -779,19 +810,13 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 6, 0);
 		};
 		
-		l.Elements.Remove(create);
-		l.Elements.Add(create);
-		l.FixedElements.Add(create);
+		if(query == null){
+			l.FixedElements.Add(create);
+			l.FixedElements.Add(import);
+			l.FixedElements.Add(importYt);
+		}
 		
-		l.Elements.Remove(import);
-		l.Elements.Add(import);
-		l.FixedElements.Add(import);
-		
-		l.Elements.Remove(importYt);
-		l.Elements.Add(importYt);
-		l.FixedElements.Add(importYt);
-		
-		MiddleScreen c2 = new MiddleScreen(backg, l);
+		MiddleScreen c2 = new MiddleScreen(backg, l, "playlists");
 		
 		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
 			setSearchScreen("Search playlists:", s => setPlaylists(s));
