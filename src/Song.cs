@@ -10,7 +10,7 @@ public class Song{
 	public int id{get; private set;}
 	
 	public void setTitle(string t){
-		title = t?.Trim() ?? "Untitled song";
+		title = t?.Trim() ?? nullTitle;
 		save();
 		
 		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
@@ -34,11 +34,13 @@ public class Song{
 	
 	public override string ToString(){
 		return title + " | Id: " + id.ToString() + " | " +
-			(authors.Length == 0 ? "Unknown author" :
-			(authors.Length == 1 ? "Author: " + (Author.get(authors[0])?.name ?? "Unknown author") : "Authors: " + string.Join(", ", authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
+			(authors.Length == 0 ? Author.nullName :
+			(authors.Length == 1 ? "Author: " + (Author.get(authors[0])?.name ?? Author.nullName) : "Authors: " + string.Join(", ", authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))));
 	}
 	
 	//STATIC
+	
+	public const string nullTitle = "Untitled song";
 	
 	static int latestId;
 	
@@ -47,7 +49,7 @@ public class Song{
 	static List<Song> library;
 	
 	static AshFileModel songModel = new AshFileModel(
-		new ModelInstance(ModelInstanceOperation.Type, "t", "Untitled song"), //title
+		new ModelInstance(ModelInstanceOperation.Type, "t", nullTitle), //title
 		new ModelInstance(ModelInstanceOperation.Type, "a", Array.Empty<int>()) //authors
 	);
 	
@@ -268,6 +270,41 @@ public class Song{
 		}
 	}
 	
+	public static float getDuration(int id){
+		if(!exists(id)){
+			return -1f;
+		}
+		
+		try{
+			var startInfo = new ProcessStartInfo{
+				FileName = getFfprobePath(),
+				Arguments = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"" + getAudioPath(id) + "\"",
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+			
+			using var process = Process.Start(startInfo);
+			
+			string stdOut = process.StandardOutput.ReadToEnd();
+			
+			process.WaitForExit();
+			
+			if(process.ExitCode != 0){
+				return 0f;
+			}
+			
+			if(float.TryParse(stdOut, out float f)){
+				return f;
+			}else{
+				return 0f;
+			}
+		}catch(Exception ex){
+			return 0f;
+		}
+	}
+	
 	public static List<Song> getLibrary(){
 		return library.Where(h => h != null).ToList();
 		//string[] mp3Files = Directory.GetFiles(Radio.dep.path + "/songs/files", "*.mp3");
@@ -284,12 +321,16 @@ public class Song{
 	}
 	
 	static void saveAll(){
-		Radio.config.Set("songs.latestId", latestId);
-		Radio.config.Save();
+		Radio.data.Set("songs.latestId", latestId);
+		Radio.data.Save();
 	}
 	
 	static string getFfmpegPath(){
 		return Radio.config.GetValue<string>("ffmpegPath");
+	}
+	
+	static string getFfprobePath(){
+		return Radio.config.GetValue<string>("ffprobePath");
 	}
 }
 

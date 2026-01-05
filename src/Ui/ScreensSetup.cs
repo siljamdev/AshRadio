@@ -223,7 +223,7 @@ public partial class Screens{
 			}
 		});
 		
-		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? "Unknown author" : (temp.authors.Length == 1 ? (Author.get(temp.authors[0])?.name ?? "Unknown author") : string.Join(", ", temp.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))), Placement.BottomLeft, 2, 1, null, Palette.author);
+		TuiTwoLabels authors = new TuiTwoLabels("Authors: ", temp == null ? "" : (temp.authors.Length == 0 ? Author.nullName : string.Join(", ", temp.authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))), Placement.BottomLeft, 2, 1, null, Palette.author);
 		
 		TuiProgressBar progress = new TuiProgressBar(70, '█', '░', Placement.Center, 0, 0, Palette.main, Palette.main);
 		
@@ -316,7 +316,7 @@ public partial class Screens{
 			Song s = Song.get(Radio.py.playingSong);
 			
 			song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
-			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? "Unknown author" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
+			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))));
 			
 			int sec = Math.Max((int) Radio.py.duration, 0);
 			totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
@@ -358,11 +358,11 @@ public partial class Screens{
 				f = Palette.info;
 				break;
 			case SourceType.Author:
-				name = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
+				name = Author.get(Session.sourceIdentifier)?.name ?? Author.nullName;
 				f = Palette.author;
 				break;
 			case SourceType.Playlist:
-				name = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+				name = Playlist.get(Session.sourceIdentifier)?.title ?? Playlist.nullTitle;
 				f = Palette.playlist;
 				break;
 		}
@@ -381,11 +381,11 @@ public partial class Screens{
 					f2 = Palette.info;
 					break;
 				case SourceType.Author:
-					nam = Author.get(Session.sourceIdentifier)?.name ?? "Unknown author";
+					nam = Author.get(Session.sourceIdentifier)?.name ?? Author.nullName;
 					f2 = Palette.author;
 					break;
 				case SourceType.Playlist:
-					nam = Playlist.get(Session.sourceIdentifier)?.title ?? "Untitled playlist";
+					nam = Playlist.get(Session.sourceIdentifier)?.title ?? Playlist.nullTitle;
 					f2 = Palette.playlist;
 					break;
 			}
@@ -467,7 +467,7 @@ public partial class Screens{
 				
 				for(int i = 0; i < queue.Count; i++){
 					Song s = Song.get(queue[i]);
-					TuiButton t2 = new TuiButton(s?.title ?? "Untitled song", Placement.TopLeft, 0, i, Palette.song, Palette.user);
+					TuiButton t2 = new TuiButton(s?.title ?? Song.nullTitle, Placement.TopLeft, 0, i, Palette.song, Palette.user);
 					
 					t2.SetAction((s, cl) => {
 						int myIndex = queueScreen.Elements.IndexOf(t2);

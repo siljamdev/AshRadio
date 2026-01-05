@@ -136,7 +136,7 @@ public partial class Screens{
 			return true;
 		}
 		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			if(save()){
 				closeMiddleScreen(); //update
 				setPaletteConfig();
@@ -193,6 +193,7 @@ public partial class Screens{
 		
 		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
 			Radio.py.volumeExponent = 2f;
+			Radio.config.Set("player.volumeExponent", 2f);
 			Radio.config.Set("player.advanceTime", 5f);
 			Radio.config.Save();
 			
@@ -211,6 +212,7 @@ public partial class Screens{
 			}
 			
 			Radio.py.volumeExponent = f1;
+			Radio.config.Set("player.volumeExponent", f1);
 			Radio.config.Set("player.advanceTime", f2);
 			
 			Radio.config.Save();
@@ -219,7 +221,7 @@ public partial class Screens{
 			return true;
 		}
 		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			save();
 		});
 		
@@ -252,131 +254,105 @@ public partial class Screens{
 	
 	void setPathConfig(){
 		TuiFramedScrollingTextBox ffmpeg = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffmpegPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox ytdlp = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ytdlpPath"), 256, 16, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox ffprobe = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffprobePath"), 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox ytdlp = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ytdlpPath"), 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
 		
 		ffmpeg.OnParentResize += (s, a) => {
 			ffmpeg.BoxXsize = Math.Max(0, a.X - 4);
+		};
+		
+		ffprobe.OnParentResize += (s, a) => {
+			ffprobe.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
 		ytdlp.OnParentResize += (s, a) => {
 			ytdlp.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
-		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-			Radio.config.Set("ffmpegPath", "ffmpeg");
-			Radio.config.Set("ytdlpPath", "yt-dlp");
-			Radio.config.Save();
-			
-			closeMiddleScreen(); //update
-			setPathConfig();
-		});
-		
-		TuiButton open1 = new TuiButton("Open ffmpeg.org", Placement.BottomRight, 3, 3, null, Palette.user).SetAction((s, ck) => {
+		TuiButton openFfmpeg = new TuiButton("Open ffmpeg.org", Placement.BottomLeft, 3, 3, null, Palette.user).SetAction((s, ck) => {
 			openUrl("https://ffmpeg.org/");
 		});
 		
-		TuiButton open2 = new TuiButton("Open yt-dlp downloads", Placement.BottomLeft, 3, 3, null, Palette.user).SetAction((s, ck) => {
+		TuiButton openYtdlp = new TuiButton("Open yt-dlp downloads", Placement.BottomRight, 3, 3, null, Palette.user).SetAction((s, ck) => {
 			openUrl("https://github.com/yt-dlp/yt-dlp/releases");
 		});
 		
-		void save(){	
+		void save(){
 			Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));
+			Radio.config.Set("ffprobePath", removeQuotesSingle(ffprobe.Text));
 			Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
 			
 			Radio.config.Save();
 		}
 		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			save();
 		});
 		
-		#if WINDOWS
-			bool c = false;
+		bool d = false;
+		TuiButton autoFfmpeg = new TuiButton("Auto dl ffmpeg & ffprobe", Placement.BottomLeft, 3, 7, null, Palette.user).SetAction((s, ck) => {
+			if(d){
+				return;
+			}
+			d = true;
+			(ffmpeg.Text, ffprobe.Text) = Radio.downloadFfmpeg(() => {
+				d = false;
+			});
+		});
+		
+		bool c = false;
+		TuiButton autoYtdlp = new TuiButton("Auto dl yt-dlp", Placement.BottomRight, 3, 7, null, Palette.user).SetAction((s, ck) => {
+			if(c){
+				return;
+			}
+			c = true;
+			ytdlp.Text = Radio.downloadYtdlp(() => {
+				c = false;
+			});
+		});
+		
+		TuiButton updateYtdlp = new TuiButton("Auto update yt-dlp", Placement.BottomRight, 3, 5, null, Palette.user).SetAction((s, ck) => {
+			Radio.updateYtdlp();
+		});
+		
+		int b = 2;
+		TuiButton autoAll = new TuiButton("Auto download all", Placement.BottomLeft, 3, 5, null, Palette.user).SetAction((s, ck) => {
+			if(b < 2){
+				return;
+			}
+			b = 0;
 			
-			TuiButton autoYtdlp = new TuiButton("Auto download yt-dlp.exe", Placement.BottomLeft, 3, 5, null, Palette.user).SetAction((s, ck) => {
-				if(c){
-					return;
-				}
-				c = true;
-				
-				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-				Radio.appDataPath + "/yt-dlp.exe", async () => {
-					ytdlp.Text = Radio.appDataPath + "/yt-dlp.exe";
-					Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
-					Radio.config.Save();
-					c = false;
-				});
+			ytdlp.Text = Radio.downloadYtdlp(() => {
+				b++;
 			});
 			
-			int b = 2;
-			
-			TuiButton autoAll = new TuiButton("Auto download all", Placement.BottomRight, 3, 5, null, Palette.user).SetAction((s, ck) => {
-				if(b < 2){
-					return;
-				}
-				b = 0;
-				
-				Radio.downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
-				Radio.appDataPath + "/yt-dlp.exe", async () => {
-					ytdlp.Text = Radio.appDataPath + "/yt-dlp.exe";
-					Radio.config.Set("ytdlpPath", Radio.appDataPath + "/yt-dlp.exe");
-					Radio.config.Save();
-					b++;
-				});
-				
-				Radio.downloadFile("https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.1.1-essentials_build.zip",
-				Radio.appDataPath + "/temp.zip", async () => {
-					try{
-						ZipFile.ExtractToDirectory(Radio.appDataPath + "/temp.zip", Radio.appDataPath + "/temp", true);
-						
-						string p = Directory.GetFiles(Radio.appDataPath + "/temp", "ffmpeg.exe", SearchOption.AllDirectories).FirstOrDefault();
-						
-						if(File.Exists(Radio.appDataPath + "/ffmpeg.exe")){
-							File.Delete(Radio.appDataPath + "/ffmpeg.exe");
-						}
-						
-						File.Copy(p, Radio.appDataPath + "/ffmpeg.exe");
-						
-						Directory.Delete(Radio.appDataPath + "/temp", true);
-						File.Delete(Radio.appDataPath + "/temp.zip");
-					}catch(Exception e){
-						Radio.reportError(e.ToString());
-					}
-					ffmpeg.Text = Radio.appDataPath + "/ffmpeg.exe";
-					Radio.config.Set("ffmpegPath", Radio.appDataPath + "/ffmpeg.exe");
-					Radio.config.Save();
-					b++;
-				});
+			(ffmpeg.Text, ffprobe.Text) = Radio.downloadFfmpeg(() => {
+				b++;
 			});
-			
-			TuiSelectable[,] t = new TuiSelectable[,]{{
-				ffmpeg, ffmpeg
-			},{
-				ytdlp, ytdlp
-			},{
-				autoYtdlp, autoAll
-			},{
-				open2, open1
-			},{
-				done, done
-			}};
-		#else
-			TuiSelectable[,] t = new TuiSelectable[,]{{
-				ffmpeg, ffmpeg
-			},{
-				ytdlp, ytdlp
-			},{
-				open2, open1
-			},{
-				done, done
-			}};
-		#endif
+		});
+		
+		TuiSelectable[,] t = new TuiSelectable[,]{{
+			ffmpeg, ffmpeg
+		},{
+			ffprobe, ffprobe,
+		},{
+			ytdlp, ytdlp
+		},{
+			autoFfmpeg, autoYtdlp
+		},{
+			autoAll, updateYtdlp,
+		},{
+			openFfmpeg, openYtdlp
+		},{
+			done, done
+		}};
 		
 		TuiScreenInteractive l = generateMiddleInteractive(t);
 		
 		l.Elements.Add(new TuiLabel("Paths config", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("FFMPEG path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("YT-DLP path:", Placement.TopLeft, 2, 9));
+		l.Elements.Add(new TuiLabel("FFPROBE path:", Placement.TopLeft, 2, 8));
+		l.Elements.Add(new TuiLabel("YT-DLP path:", Placement.TopLeft, 2, 12));
 		
 		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
 			save();
@@ -387,7 +363,7 @@ public partial class Screens{
 	}
 	
 	void setMiscConfig(){
-		TuiFramedCheckBox usercp = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrcp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
+		TuiFramedCheckBox userpc = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
 		
 		TuiButton openData = new TuiButton("Open data directory", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
 			openFolder(Radio.dep.path);
@@ -398,34 +374,34 @@ public partial class Screens{
 		});
 		
 		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-			Radio.config.Set("dcrcp", true);
+			Radio.config.Set("dcrp", true);
 			Radio.config.Save();
 			
-			usercp.Checked = true;
+			userpc.Checked = true;
 		});
 		
 		bool save(){
-			Radio.config.Set("dcrcp", usercp.Checked);
+			Radio.config.Set("dcrp", userpc.Checked);
 			Radio.config.Save();
 			
-			if(usercp.Checked){
-				if(Radio.dcrcp == null){
-					Radio.dcrcp = new DiscordPresence();
+			if(userpc.Checked){
+				if(Radio.dcrpc == null){
+					Radio.dcrpc = new DiscordPresence();
 				}
 			}else{
-				Radio.dcrcp?.Dispose();
-				Radio.dcrcp = null;
+				Radio.dcrpc?.Dispose();
+				Radio.dcrpc = null;
 			}
 			
 			return true;
 		}
 		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			save();
 		});
 		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
-			usercp
+			userpc
 		},{
 			openData
 		},{

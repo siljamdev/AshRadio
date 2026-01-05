@@ -6,7 +6,7 @@ public class Author{
 	public int id{get; private set;}
 	
 	public void setName(string n){
-		name = n?.Trim() ?? "Unknown author";
+		name = n?.Trim() ?? nullName;
 		save();
 	}
 	
@@ -32,6 +32,9 @@ public class Author{
 	}
 	
 	//STATIC
+	
+	public const string nullName = "Unknown author";
+	
 	static AshFile authorsFile = null!;
 	
 	static int latestId;
@@ -152,7 +155,7 @@ public class Author{
 	}
 	
 	static void saveAll(){
-		Radio.config.Set("authors.latestId", latestId);
-		Radio.config.Save();
+		Radio.data.Set("authors.latestId", latestId);
+		Radio.data.Save();
 	}
 }

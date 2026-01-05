@@ -163,12 +163,21 @@ static class CommandLineHandler{
 				Console.WriteLine(s.id + ". " + s.title);
 			}
 			return 0;
-		});
+		}).setDescription("List all songs in library and their ids");
 		
 		root.chain("library").chain("count").setAction(args => {
 			Console.WriteLine(Song.getLibrary().Count);
 			return 0;
-		});
+		}).setDescription("Count number of songs in library");
+		
+		root.chain("library").chain("search", 1).setArgNames("query").setAction(args => {
+			List<Song> lib = Song.getLibrary().Where(n => n.title.Contains(args[0], StringComparison.OrdinalIgnoreCase)).ToList();
+			
+			foreach(Song s in lib){
+				Console.WriteLine(s.id + ". " + s.title);
+			}
+			return 0;
+		}).setDescription("Search for songs in library");
 		
 		root.chain("library").chain("export", 1).setArgNames("directory").setAction(args => {
 			List<Song> lib = Song.getLibrary();
@@ -182,16 +191,7 @@ static class CommandLineHandler{
 				}
 			}
 			return anyBad ? 10 : 0;
-		});
-		
-		root.chain("library").chain("search", 1).setArgNames("query").setAction(args => {
-			List<Song> lib = Song.getLibrary().Where(n => n.title.Contains(args[0], StringComparison.OrdinalIgnoreCase)).ToList();
-			
-			foreach(Song s in lib){
-				Console.WriteLine(s.id + ". " + s.title);
-			}
-			return 0;
-		});
+		}).setDescription("Export whole library to directory");
 		
 		root.chain("song").chain("get", 1).setArgNames("song id").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
@@ -202,41 +202,14 @@ static class CommandLineHandler{
 			Song s = Song.get(id);
 			if(s != null){
 				Console.WriteLine("Title: " + s.title);
-				Console.WriteLine("Authors: " + (s.authors.Length == 0 ? "Unknown author" : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author")))));
+				Console.WriteLine("Authors: " + (s.authors.Length == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))));
 				
 				return 0;
 			}else{
 				report("Song not found");
 				return 11;
 			}
-		});
-		
-		root.chain("song").chain("export", 2).setArgNames("song id", "directory").setAction(args => {
-			if(!int.TryParse(args[0], out int id)){
-				report("A number was expected, instead was found: " + args[0]);
-				return 2;
-			}
-			
-			if(!Song.export(id, args[1], out string err)){
-				report(err);
-				
-				return 10;
-			}else{
-				return 0;
-			}
-		});
-		
-		root.chain("song").chain("import", 3).setArgNames("path", "title", "authors").setAction(args => {
-			int id = Radio.importSingleFile(args[0], args[1], args[2].Split(','), out string err);
-			if(id == -1){
-				report(err);
-				
-				return 10;
-			}else{
-				Console.WriteLine(id);
-				return 0;
-			}
-		}).setDescription("Authors separated by commas");
+		}).setDescription("Get detailed info on a song");
 		
 		root.chain("song").chain("play", 1).setArgNames("song id").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
@@ -259,19 +232,46 @@ static class CommandLineHandler{
 				report("Song not found");
 				return 11;
 			}
-		});
+		}).setDescription("Play a song");
+		
+		root.chain("song").chain("import", 3).setArgNames("path", "title", "authors").setAction(args => {
+			int id = Radio.importSingleFile(args[0], args[1], args[2].Split(','), out string err);
+			if(id == -1){
+				report(err);
+				
+				return 10;
+			}else{
+				Console.WriteLine(id);
+				return 0;
+			}
+		}).setDescription("Import song from file. Authors separated by commas");
+		
+		root.chain("song").chain("export", 2).setArgNames("song id", "directory").setAction(args => {
+			if(!int.TryParse(args[0], out int id)){
+				report("A number was expected, instead was found: " + args[0]);
+				return 2;
+			}
+			
+			if(!Song.export(id, args[1], out string err)){
+				report(err);
+				
+				return 10;
+			}else{
+				return 0;
+			}
+		}).setDescription("Export song to directory");
 		
 		root.chain("author").chain("list").setAction(args => {
 			foreach(Author a in Author.getAllAuthors()){
 				Console.WriteLine(a.id + ". " + a.name);
 			}
 			return 0;
-		});
+		}).setDescription("List all authors and their ids");
 		
 		root.chain("author").chain("count").setAction(args => {
 			Console.WriteLine(Author.getAllAuthors().Count);
 			return 0;
-		});
+		}).setDescription("Count number of authors");
 		
 		root.chain("author").chain("search", 1).setArgNames("query").setAction(args => {
 			List<Author> lib = Author.getAllAuthors().Where(n => n.name.Contains(args[0], StringComparison.OrdinalIgnoreCase)).ToList();
@@ -280,7 +280,7 @@ static class CommandLineHandler{
 				Console.WriteLine(a.id + ". " + a.name);
 			}
 			return 0;
-		});
+		}).setDescription("Search for authors");
 		
 		root.chain("author").chain("get", 1).setArgNames("author id").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
@@ -300,19 +300,19 @@ static class CommandLineHandler{
 				report("Author not found");
 				return 11;
 			}
-		});
+		}).setDescription("Get detailed info on an author");
 		
 		root.chain("playlist").chain("list").setAction(args => {
 			foreach(Playlist p in Playlist.getAllPlaylists()){
 				Console.WriteLine(p.id + ". " + p.title);
 			}
 			return 0;
-		});
+		}).setDescription("List all playlists and their ids");
 		
 		root.chain("playlist").chain("count").setAction(args => {
 			Console.WriteLine(Playlist.getAllPlaylists().Count);
 			return 0;
-		});
+		}).setDescription("Count number of playlists");
 		
 		root.chain("playlist").chain("search", 1).setArgNames("query").setAction(args => {
 			List<Playlist> lib = Playlist.getAllPlaylists().Where(n => n.title.Contains(args[0], StringComparison.OrdinalIgnoreCase)).ToList();
@@ -321,7 +321,7 @@ static class CommandLineHandler{
 				Console.WriteLine(p.id + ". " + p.title);
 			}
 			return 0;
-		});
+		}).setDescription("Search for playlists");
 		
 		root.chain("playlist").chain("get", 1).setArgNames("playlist id").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
@@ -341,7 +341,46 @@ static class CommandLineHandler{
 				report("Playlist not found");
 				return 11;
 			}
-		});
+		}).setDescription("Get detailed info on a playlist");
+		
+		root.chain("playlist").chain("add", 2).setArgNames("playlist id", "song id").setAction(args => {			
+			if(!int.TryParse(args[0], out int id)){
+				report("A number was expected, instead was found: " + args[0]);
+				return 2;
+			}
+			
+			if(!int.TryParse(args[1], out int sid)){
+				report("A number was expected, instead was found: " + args[1]);
+				return 2;
+			}
+			
+			Playlist p = Playlist.get(id);
+			if(p != null){
+				p.addSong(sid);
+				return 0;
+			}else{
+				report("Playlist not found");
+				return 11;
+			}
+		}).setDescription("Add a song to a playlist");
+		
+		root.chain("playlist").chain("create", 1).setArgNames("title").setAction(args => {			
+			int id = Playlist.create(args[0]);
+			Console.WriteLine(id);
+			return 0;
+		}).setDescription("Create a new playlist");
+		
+		root.chain("playlist").chain("import", 2).setArgNames("directory", "title").setAction(args => {			
+			int id = Radio.importPlaylistFromFolder(args[0], args[1], Array.Empty<string>(), out string err);
+			if(id == -1){
+				report(err);
+				
+				return 10;
+			}else{
+				Console.WriteLine(id);
+				return 0;
+			}
+		}).setDescription("Import a playlist from directory");
 		
 		root.chain("playlist").chain("export", 1).setArgNames("playlist id").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
@@ -366,19 +405,12 @@ static class CommandLineHandler{
 				report("Playlist not found");
 				return 11;
 			}
-		});
+		}).setDescription("Export a playlist to directory");
 		
-		root.chain("playlist").chain("import", 2).setArgNames("path", "title").setAction(args => {			
-			int id = Radio.importPlaylistFromFolder(args[0], args[1], Array.Empty<string>(), out string err);
-			if(id == -1){
-				report(err);
-				
-				return 10;
-			}else{
-				Console.WriteLine(id);
-				return 0;
-			}
-		});
+		root.chain("config").chain("reset").setAction(args => {
+			Radio.resetConfig();
+			return 0;
+		}).setDescription("Reset the config");
 		
 		return root;
 	}
@@ -437,7 +469,7 @@ class CLINode{
 		return this;
 	}
 	
-	public string help(int indent = 0){
+	public string help(int indent = 0, int len = 0){
 		string tab = new string(' ', indent);
 		StringBuilder sb = new();
 		sb.Append(tab);
@@ -447,14 +479,27 @@ class CLINode{
 				sb.Append(" <" + n + ">");
 			}
 		}
-		sb.Append("    " + description);
+		
+		if(description != null){
+			sb.Append(new string(' ', Math.Max(0, len - helpLen())) + "    " + description);
+		}
+		
 		sb.Append(Environment.NewLine);
 		
+		int l = 0;
 		foreach(CLINode c in children){
-			sb.Append(c.help(indent + 3));
+			l = Math.Max(l, c.helpLen());
+		}
+		
+		foreach(CLINode c in children){
+			sb.Append(c.help(indent + 3, l));
 		}
 		
 		return sb.ToString();
+	}
+	
+	int helpLen(){
+		return command.Length + (action == null ? 0 : extraArgsNames.Select(h => h.Length + 3).Sum());
 	}
 	
 	public int handle(string[] args, Action<string> report, Action onMatch){

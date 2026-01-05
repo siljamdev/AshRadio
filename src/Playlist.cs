@@ -8,7 +8,7 @@ public class Playlist{
 	public int id{get; private set;}
 	
 	public void setTitle(string n){
-		title = n?.Trim() ?? "Untitled playlist";
+		title = n?.Trim() ?? nullTitle;
 		save();
 	}
 	
@@ -46,6 +46,8 @@ public class Playlist{
 	}
 	
 	//STATIC
+	
+	public const string nullTitle = "Untitled playlist";
 	
 	static AshFile playlistsFile = null!;
 	
@@ -140,8 +142,8 @@ public class Playlist{
 	}
 	
 	static void saveAll(){
-		Radio.config.Set("playlists.latestId", latestId);
-		Radio.config.Save();
+		Radio.data.Set("playlists.latestId", latestId);
+		Radio.data.Save();
 	}
 }
 

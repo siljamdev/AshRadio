@@ -12,7 +12,7 @@ public class DiscordPresence : IDisposable{
 		
 		client.SetPresence(new DiscordRPC.RichPresence(){
 			Details = s?.title ?? "Nothing playing yet",
-            State = s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))),
+            State = s == null ? "" : (s.authors.Length == 0 ? "" : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))),
             Assets = new DiscordRPC.Assets(){
                 LargeImageKey = "icon", // uploaded image name from Dev Portal
                 LargeImageText = "AshRadio"
@@ -26,15 +26,18 @@ public class DiscordPresence : IDisposable{
 			Type = DiscordRPC.ActivityType.Listening
         });
 		
-		Radio.py.onSongLoad += (se, e) => {
-			Song s = Song.get(Radio.py.playingSong);
-			
-			client.UpdateDetails(s?.title ?? "Nothing playing yet");
-			client.UpdateState(s == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))));
-		};
+		Radio.py.onSongLoad += update;
+	}
+	
+	void update(object sender, EventArgs a){
+		Song s = Song.get(Radio.py.playingSong);
+		
+		client.UpdateDetails(s?.title ?? "Nothing playing yet");
+		client.UpdateState(s == null ? "" : (s.authors.Length == 0 ? "" : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))));
 	}
 	
 	public void Dispose(){
         client.Dispose();
+		Radio.py.onSongLoad -= update;
     }
 }

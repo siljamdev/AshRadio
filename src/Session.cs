@@ -10,7 +10,11 @@ public static class Session{
 	static List<int> pool;
 	
 	static List<int> queue;
-	public static bool queueEmpties = true;
+	public static bool queueEmpties {get; set{
+		queueIndex = 0;
+		field = value;
+	}} = true;
+	static int queueIndex = 0;
 	
 	static List<int> prevPlayed = new();
 	
@@ -45,7 +49,7 @@ public static class Session{
 				pool.RemoveAll(n => n == Radio.py.playingSong);
 			}
 			
-			Radio.config.Set("session.sourceSeen", sourceSeen.ToArray());
+			Radio.session.Set("session.sourceSeen", sourceSeen.ToArray());
 		};
 		
 		Radio.py.onSongFinish += (s, a) => {
@@ -78,6 +82,7 @@ public static class Session{
 	
 	public static void removeFromQueue(int index){
 		queue.RemoveAt(index);
+		queueIndex = 0;
 		onQueueChange?.Invoke(null, EventArgs.Empty);
 	}
 	
@@ -90,10 +95,15 @@ public static class Session{
 	
 	public static int serveNext(){
 		if(queue.Count > 0){
-			int s = queue[0];
+			int s = queue[queueIndex];
 			if(queueEmpties){
-				queue.RemoveAt(0);
+				queue.RemoveAt(queueIndex);
 				onQueueChange?.Invoke(null, EventArgs.Empty);
+			}else{
+				queueIndex++;
+				if(queueIndex >= queue.Count){
+					queueIndex = 0;
+				}
 			}
 			return s;
 		}
@@ -194,8 +204,8 @@ public static class Session{
 	public static void setMode(SessionMode m){
 		mode = m;
 		
-		Radio.config.Set("session.mode", (int) mode);
-		Radio.config.Save();
+		Radio.session.Set("session.mode", (int) mode);
+		Radio.session.Save();
 	}
 	
 	//Update pool
@@ -240,10 +250,10 @@ public static class Session{
 			pool.RemoveAll(n => n == s);
 		}
 		
-		Radio.config.Set("session.sourceType", (int) sourceType);
-		Radio.config.Set("session.sourceIdentifier", sourceIdentifier);
-		Radio.config.Set("session.sourceSeen", sourceSeen.ToArray());
-		Radio.config.Save();
+		Radio.session.Set("session.sourceType", (int) sourceType);
+		Radio.session.Set("session.sourceIdentifier", sourceIdentifier);
+		Radio.session.Set("session.sourceSeen", sourceSeen.ToArray());
+		Radio.session.Save();
 	}
 	
 	public static string name(this SourceType s){

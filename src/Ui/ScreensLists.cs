@@ -18,7 +18,7 @@ public partial class Screens{
 	MiddleScreen songDetails(Song s){
 		MiddleScreen c2 = null;
 		
-		TuiFramedScrollingTextBox titleInput = new TuiFramedScrollingTextBox(s?.title ?? "Untitled song", 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox titleInput = new TuiFramedScrollingTextBox(s?.title ?? Song.nullTitle, 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.user, Palette.user);
 		
 		titleInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setTitle(titleInput.Text);
@@ -28,7 +28,7 @@ public partial class Screens{
 			titleInput.BoxXsize = Math.Clamp(a.X - 32, 16, 38);
 		};
 		
-		TuiFramedScrollingTextBox authorsInput = new TuiFramedScrollingTextBox(s?.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? "Unknown author") : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? "Unknown author"))))),
+		TuiFramedScrollingTextBox authorsInput = new TuiFramedScrollingTextBox(s?.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? Author.nullName) : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))))),
 			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.user, Palette.user);
 		
 		authorsInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
@@ -82,7 +82,7 @@ public partial class Screens{
 		if(s?.authors != null){
 			for(int i = 0; i < s.authors.Length; i++){
 				int tt3 = s.authors[i];
-				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? "Unknown author", Placement.TopLeft, 4, 7 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
+				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? Author.nullName, Placement.TopLeft, 4, 7 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
 					setAuthorDetails(tt3);
 				});
 				
@@ -101,7 +101,7 @@ public partial class Screens{
 		c.MatrixPointerX = (uint) ((s?.authors.Length > 0) ? 0 : 1);
 		c.MatrixPointerY = (uint) ((s?.authors.Length > 0) ? 1 : 2);
 		
-		c.Elements.Add(new TuiLabel(s?.title ?? "Untitled song", Placement.TopLeft, 2, 2, Palette.song));
+		c.Elements.Add(new TuiLabel(s?.title ?? Song.nullTitle, Placement.TopLeft, 2, 2, Palette.song));
 		c.Elements.Add(new TuiLabel("Song", Placement.TopLeft, 4, 3));
 		c.Elements.Add(new TuiLabel("Set title:", Placement.TopRight, 14, 4));
 		c.Elements.Add(new TuiLabel("Set authors:", Placement.TopRight, 12, 9));
@@ -191,7 +191,7 @@ public partial class Screens{
 		
 		for(int i = 0; i < lib.Count; i++){
 			Song s = lib[i];
-			TuiButton b = new TuiButton(s?.title ?? "Untitled song", Placement.TopLeft, 1, i, Palette.song, Palette.user);
+			TuiButton b = new TuiButton(s?.title ?? Song.nullTitle, Placement.TopLeft, 1, i, Palette.song, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				setSongDetails(s);
@@ -293,7 +293,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen authorDetails(Author s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? "Unknown author", 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
 		
 		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setName(name.Text);
@@ -324,7 +324,7 @@ public partial class Screens{
 			for(int i = 0; i < songs.Count; i++){
 				Song ttt3 = songs[i];
 				
-				TuiButton b = new TuiButton(ttt3?.title ?? "Untitled song", Placement.TopLeft, 0, i, Palette.song, Palette.user).SetAction((s, ck) => {
+				TuiButton b = new TuiButton(ttt3?.title ?? Song.nullTitle, Placement.TopLeft, 0, i, Palette.song, Palette.user).SetAction((s, ck) => {
 					setSongDetails(ttt3);
 				});
 				
@@ -348,7 +348,7 @@ public partial class Screens{
 		//Static screen
 		TuiScreen backg = generateMiddleStatic();
 		
-		backg.Elements.Add(new TuiLabel(s?.name ?? "Unknown author", Placement.TopLeft, 2, 2, Palette.author));
+		backg.Elements.Add(new TuiLabel(s?.name ?? Author.nullName, Placement.TopLeft, 2, 2, Palette.author));
 		backg.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 4, 3));
 		
 		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.info, null));
@@ -446,7 +446,7 @@ public partial class Screens{
 		
 		for(int i = 0; i < lib.Count; i++){
 			Author s = lib[i];
-			TuiButton b = new TuiButton(s?.name ?? "Unknown author", Placement.TopLeft, 1, i, Palette.author, Palette.user);
+			TuiButton b = new TuiButton(s?.name ?? Author.nullName, Placement.TopLeft, 1, i, Palette.author, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				setAuthorDetails(s);
@@ -527,7 +527,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen playlistDetails(Playlist s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? "Untitled playlist", 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
 		
 		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setTitle(name.Text);
@@ -580,7 +580,7 @@ public partial class Screens{
 				
 				int j = i;
 				
-				TuiButton b = new TuiButton(ttt3?.title ?? "Untitled song", Placement.TopLeft, 0, i, Palette.song, Palette.user).SetAction((s, ck) => {
+				TuiButton b = new TuiButton(ttt3?.title ?? Song.nullTitle, Placement.TopLeft, 0, i, Palette.song, Palette.user).SetAction((s, ck) => {
 					setSongDetails(ttt3);
 				});
 				
@@ -626,7 +626,7 @@ public partial class Screens{
 		//Static screen
 		TuiScreen backg = generateMiddleStatic();
 		
-		backg.Elements.Add(new TuiLabel(s?.title ?? "Untitled playlist", Placement.TopLeft, 2, 2, Palette.playlist));
+		backg.Elements.Add(new TuiLabel(s?.title ?? Playlist.nullTitle, Placement.TopLeft, 2, 2, Palette.playlist));
 		backg.Elements.Add(new TuiLabel("Playlist", Placement.TopLeft, 4, 3));
 		
 		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.info, null));
@@ -729,7 +729,7 @@ public partial class Screens{
 		TuiButton create = new TuiButton("Create playlist", Placement.TopRight, 3, 0, null, Palette.user);
 		
 		create.SetAction((s, ck) => {
-			setPlaylistDetails(Playlist.create("Untitled playlist"));
+			setPlaylistDetails(Playlist.create(Playlist.nullTitle));
 		});
 		
 		TuiButton import = new TuiButton("Import from folder", Placement.TopRight, 3, 2, null, Palette.user);
@@ -753,7 +753,7 @@ public partial class Screens{
 		
 		for(int i = 0; i < lib.Count; i++){
 			Playlist s = lib[i];
-			TuiButton b = new TuiButton(s?.title ?? "Untitled playlist", Placement.TopLeft, 1, i, Palette.playlist, Palette.user);
+			TuiButton b = new TuiButton(s?.title ?? Playlist.nullTitle, Placement.TopLeft, 1, i, Palette.playlist, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				setPlaylistDetails(s);
@@ -859,7 +859,7 @@ public partial class Screens{
 		
 		for(int i = 0; i < lib.Count; i++){
 			Playlist s = lib[i];
-			TuiButton b = new TuiButton(s?.title ?? "Untitled playlist", Placement.TopLeft, 1, i, Palette.playlist, Palette.user);
+			TuiButton b = new TuiButton(s?.title ?? Playlist.nullTitle, Placement.TopLeft, 1, i, Palette.playlist, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				s.addSong(sindex);
@@ -872,7 +872,7 @@ public partial class Screens{
 		//Static screen
 		TuiScreen backg = generateMiddleStatic();
 		
-		backg.Elements.Add(new TuiTwoLabels("Select playlist where to add ", Song.get(sindex)?.title ?? "Untitled song", Placement.TopCenter, 0, 1, null, Palette.song));
+		backg.Elements.Add(new TuiTwoLabels("Select playlist where to add ", Song.get(sindex)?.title ?? Song.nullTitle, Placement.TopCenter, 0, 1, null, Palette.song));
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
@@ -943,7 +943,7 @@ public partial class Screens{
 		
 		for(int i = 0; i < lib.Count; i++){
 			Song s = lib[i];
-			TuiButton b = new TuiButton(s?.title ?? "Untitled song", Placement.TopLeft, 1, i, Palette.song, Palette.user);
+			TuiButton b = new TuiButton(s?.title ?? Song.nullTitle, Placement.TopLeft, 1, i, Palette.song, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				p?.addSong(s.id);
@@ -956,7 +956,7 @@ public partial class Screens{
 		//Static screen
 		TuiScreen backg = generateMiddleStatic();
 		
-		backg.Elements.Add(new TuiTwoLabels("Select song to add to ", p?.title ?? "Untitled playlist", Placement.TopCenter, 0, 1, null, Palette.playlist));
+		backg.Elements.Add(new TuiTwoLabels("Select song to add to ", p?.title ?? Playlist.nullTitle, Placement.TopCenter, 0, 1, null, Palette.playlist));
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}

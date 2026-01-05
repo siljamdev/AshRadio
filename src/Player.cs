@@ -1,10 +1,8 @@
 using System.IO;
+using System.Diagnostics;
 using ManagedBass;
 
-public class Player : IDisposable{
-	int stream;
-	int finishSync;
-	
+public class Player : IDisposable{	
 	public DeviceInfo currentDevice{get; private set;}
 	
 	public int volume{get; private set;} //0 to 100
@@ -25,14 +23,16 @@ public class Player : IDisposable{
 			skip();
 		}else if(value < 0f){
 			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, 0f));
+		}else{
+			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, value));
 		}
-		
-		Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, value));
 	}}
 	
 	public bool isPaused{get{
 		return Bass.ChannelIsActive(stream) != PlaybackState.Playing;
 	}}
+	
+	public Stopwatch timer {get;} = new Stopwatch();
 	
 	public event EventHandler onBeforeSongLoad;
 	public event EventHandler onSongLoad;
@@ -40,6 +40,9 @@ public class Player : IDisposable{
 	
 	public event EventHandler onChangePlaystate;
 	public event EventHandler onChangeDevice;
+	
+	int stream;
+	int finishSync;
 	
 	bool isStoping;
 	
@@ -62,8 +65,8 @@ public class Player : IDisposable{
 		loadSong(song);
 		elapsed = el;
 		
-		Radio.config.Set("player.elapsed", elapsed);
-		Radio.config.Save();
+		Radio.session.Set("player.elapsed", elapsed);
+		Radio.session.Save();
 	}
 	
 	public void loadSong(int song){
@@ -72,14 +75,15 @@ public class Player : IDisposable{
 		stop();
 		
 		playingSong = song;
+		timer.Reset();
 		
 		if(!Song.exists(playingSong)){
 			playingSong = -1;
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
-			Radio.config.Set("player.song", playingSong);
-			Radio.config.Set("player.elapsed", 0f);
-			Radio.config.Save();
+			Radio.session.Set("player.song", playingSong);
+			Radio.session.Set("player.elapsed", 0f);
+			Radio.session.Save();
 			return;
 		}
 		
@@ -88,9 +92,9 @@ public class Player : IDisposable{
 			playingSong = -1;
 			
 			onSongLoad?.Invoke(this, EventArgs.Empty);
-			Radio.config.Set("player.song", playingSong);
-			Radio.config.Set("player.elapsed", 0f);
-			Radio.config.Save();
+			Radio.session.Set("player.song", playingSong);
+			Radio.session.Set("player.elapsed", 0f);
+			Radio.session.Save();
 			return;
 		}
 		
@@ -101,9 +105,9 @@ public class Player : IDisposable{
 		attachFinish();
 		
 		onSongLoad?.Invoke(this, EventArgs.Empty);
-		Radio.config.Set("player.song", playingSong);
-		Radio.config.Set("player.elapsed", 0f);
-		Radio.config.Save();
+		Radio.session.Set("player.song", playingSong);
+		Radio.session.Set("player.elapsed", 0f);
+		Radio.session.Save();
 	}
 	
 	public void play(int song){
@@ -114,12 +118,14 @@ public class Player : IDisposable{
 	public void pause(){
 		if(Bass.ChannelPause(stream)){
 			onChangePlaystate?.Invoke(this, EventArgs.Empty);
+			timer.Stop();
 		}
 	}
 	
 	public void resume(){
 		if(Bass.ChannelPlay(stream)){
 			onChangePlaystate?.Invoke(this, EventArgs.Empty);
+			timer.Start();
 		}
 	}
 	
@@ -173,6 +179,7 @@ public class Player : IDisposable{
 	}
 	
 	void stop(){
+		timer.Stop();
 		isStoping = true;
 		Bass.ChannelRemoveSync(stream, finishSync);
 		Bass.StreamFree(stream);

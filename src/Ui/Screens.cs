@@ -132,15 +132,15 @@ public partial class Screens{
 					FileName = url,
 					UseShellExecute = true
 				});
-			}
-			else if(OperatingSystem.IsLinux()){
+			}else if(OperatingSystem.IsLinux()){
 				Process.Start("xdg-open", url);
-			}
-			else if(OperatingSystem.IsMacOS()){
+			}else if(OperatingSystem.IsMacOS()){
 				Process.Start("open", url);
 			}
 		}
-		catch(Exception e){}
+		catch(Exception e){
+			Radio.reportError(e.ToString());
+		}
 	}
 	
 	static void openFolder(string path){
@@ -150,15 +150,15 @@ public partial class Screens{
 					FileName = path,
 					UseShellExecute = true
 				});
-			}
-			else if(OperatingSystem.IsLinux()){
+			}else if(OperatingSystem.IsLinux()){
 				Process.Start("xdg-open", path);
-			}
-			else if(OperatingSystem.IsMacOS()){
+			}else if(OperatingSystem.IsMacOS()){
 				Process.Start("open", path);
 			}
 		}
-		catch(Exception e){}
+		catch(Exception e){
+			Radio.reportError(e.ToString());
+		}
 	}
 	
 	//Crop length of string
