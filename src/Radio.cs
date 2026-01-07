@@ -51,6 +51,8 @@ public static class Radio{
 		if(!config.TryGetValue("internal.init", out bool b) || !b){
 			downloadYtdlp(null);
 			downloadFfmpeg(null);
+			config.Set("internal.init", true);
+			config.Save();
 		}
 		
 		Song.init(data.GetValue<int>("songs.latestId"));
