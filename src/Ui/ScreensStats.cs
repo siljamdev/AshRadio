@@ -469,7 +469,7 @@ public partial class Screens{
 		ins.Elements.Add(new TuiMultipleLabels(new string[]{start.ToString(), " - ", end.ToString()}, Placement.TopLeft, 0, 0, new CharFormat?[]{Palette.info, null, Palette.info}));
 		ins.Elements.Add(new TuiTwoLabels("", secondsToReadable(totalTime) + " (" + (totalTime / 60f).ToString("F0") + " mins)", Placement.TopRight, 0, 0, null, Palette.info));
 		
-		l.Elements.Add(new TuiLabel("FlashCard", Placement.TopCenter, 0, 1, Palette.main));
+		l.Elements.Add(new TuiLabel("Flashcard", Placement.TopCenter, 0, 1, Palette.main));
 		
 		TuiLabel lab = new TuiLabel("AshRadio", Placement.Center, (l.Xsize - 12)/2, -8, Palette.hint);
 		lab.OnParentResize += (s, a) => {
