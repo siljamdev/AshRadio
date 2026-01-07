@@ -1,6 +1,6 @@
 using System.Text;
 
-static class CommandLineHandler{
+public static class CommandLineHandler{
 	static bool quiet = false;
 	static bool onlyCli = true;
 	

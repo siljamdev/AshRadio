@@ -107,8 +107,8 @@ public partial class Screens{
 		c.Elements.Add(new TuiLabel("Set authors:", Placement.TopRight, 12, 9));
 		c.Elements.Add(new TuiLabel("(separated by commas)", Placement.TopRight, 3, 10));
 		
-		c.Elements.Add(new TuiTwoLabels("Q", " Add to queue", Placement.BottomRight, 0, 1, Palette.info, null));
-		c.Elements.Add(new TuiTwoLabels("P", " Play", Placement.BottomRight, 0, 0, Palette.info, null));
+		c.Elements.Add(new TuiTwoLabels("Q", " Add to queue", Placement.BottomRight, 0, 1, Palette.hint, null));
+		c.Elements.Add(new TuiTwoLabels("P", " Play", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(s?.authors != null){
 			if(s.authors.Length == 1){
@@ -223,8 +223,8 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.info, null));
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 1, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
+		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 1, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " song:", Placement.TopLeft, 2, 3));
@@ -351,7 +351,7 @@ public partial class Screens{
 		backg.Elements.Add(new TuiLabel(s?.name ?? Author.nullName, Placement.TopLeft, 2, 2, Palette.author));
 		backg.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 4, 3));
 		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(songs != null){
 			if(songs.Count == 1){
@@ -467,7 +467,7 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " author:", Placement.TopLeft, 2, 3));
@@ -629,7 +629,7 @@ public partial class Screens{
 		backg.Elements.Add(new TuiLabel(s?.title ?? Playlist.nullTitle, Placement.TopLeft, 2, 2, Palette.playlist));
 		backg.Elements.Add(new TuiLabel("Playlist", Placement.TopLeft, 4, 3));
 		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(songs != null){
 			if(songs.Count == 1){
@@ -729,7 +729,7 @@ public partial class Screens{
 		TuiButton create = new TuiButton("Create playlist", Placement.TopRight, 3, 0, null, Palette.user);
 		
 		create.SetAction((s, ck) => {
-			setPlaylistDetails(Playlist.create(Playlist.nullTitle));
+			setPlaylistDetails(Playlist.create("New playlist"));
 		});
 		
 		TuiButton import = new TuiButton("Import from folder", Placement.TopRight, 3, 2, null, Palette.user);
@@ -783,7 +783,7 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " playlist:", Placement.TopLeft, 2, 3));
@@ -877,7 +877,7 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " playlist:", Placement.TopLeft, 2, 3));
@@ -961,7 +961,7 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.info, null));
+		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " song:", Placement.TopLeft, 2, 3));

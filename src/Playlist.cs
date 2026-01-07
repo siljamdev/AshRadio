@@ -141,6 +141,18 @@ public class Playlist{
 		return getAllPlaylists().Select(h => h.id).ToList();
 	}
 	
+	public static void repairLatestId(){
+		int b = -1;
+		foreach(string s in playlistsFile.Keys){
+			string[] a = s.Split(".");
+			if(a.Length == 2 && int.TryParse(a[0], out int i) && playlistsFile.ContainsKey(a[0] + ".t") && playlistsFile.ContainsKey(a[0] + ".s") && i > b){
+				b = i;
+			}
+		}
+		
+		init(b);
+	}
+	
 	static void saveAll(){
 		Radio.data.Set("playlists.latestId", latestId);
 		Radio.data.Save();

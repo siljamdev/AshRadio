@@ -396,26 +396,7 @@ public partial class Screens{
 		
 		mode = new TuiOptionPicker(new string[]{"Order", "Shuffle", "Smart Shuffle"}, (uint) ((int) Session.mode), Placement.TopLeft, 7, 5, Palette.info, Palette.user);
 		
-		mode.DeleteAllKeyEvents();
-		
-		mode.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
-			if(mode.SelectedOptionIndex == 0){
-				mode.SelectedOptionIndex = 2;
-			}else{
-				mode.SelectedOptionIndex--;
-			}
-			
-			Session.setMode((SessionMode) mode.SelectedOptionIndex);
-		});
-		
-		mode.SubKeyEvent(ConsoleKey.RightArrow, (s, cki) => {
-			if(mode.SelectedOptionIndex == 2){
-				mode.SelectedOptionIndex = 0;
-			}else{
-				mode.SelectedOptionIndex++;
-			}
-			Session.setMode((SessionMode) mode.SelectedOptionIndex);
-		});
+		setLooping(mode);
 		
 		TuiButton modifyQueue = new TuiButton("Modify queue", Placement.BottomLeft, 3, 6, null, Palette.user).SetAction((s, cki) => {
 			if(Session.getQueue().Count > 0){
@@ -569,6 +550,10 @@ public partial class Screens{
 			setImport();
 		});
 		
+		TuiButton sta = new TuiButton("Stats", Placement.TopLeft, 2, 15, null, Palette.user).SetAction((s, ck) => {
+			setStatsSelect();
+		});
+		
 		TuiButton help = new TuiButton("Help", Placement.BottomCenter, 0, 3, null, Palette.user).SetAction((s, ck) => {
 			setHelp();
 		});
@@ -585,6 +570,8 @@ public partial class Screens{
 			aut
 		},{
 			imp
+		},{
+			sta
 		},{
 			help
 		},{
@@ -607,7 +594,8 @@ public partial class Screens{
 			setSelectedScreen(currentMiddleScreen);
 			return;
 		}
-		const int maxPage = 7;
+		const int maxPage = 8;
+		
 		MiddleScreen l3 = generateMiddle(null);
 		l3.identifier = "help";
 		
@@ -626,11 +614,11 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Help - Page " + (page + 1), Placement.TopCenter, 0, 1, Palette.main));
 		
 		if(page > 0){
-			l.Elements.Add(new TuiTwoLabels("N", " Previous page", Placement.BottomRight, 0, 1, Palette.info, null));
+			l.Elements.Add(new TuiTwoLabels("N", " Previous page", Placement.BottomRight, 0, 1, Palette.hint, null));
 		}
 		
 		if(page < maxPage){
-			l.Elements.Add(new TuiTwoLabels("M", " Next page", Placement.BottomRight, 0, 0, Palette.info, null));
+			l.Elements.Add(new TuiTwoLabels("M", " Next page", Placement.BottomRight, 0, 0, Palette.hint, null));
 		}
 		
 		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
@@ -673,74 +661,83 @@ public partial class Screens{
 				content.AppendLine("Keybinds", Palette.info);
 				
 				content.AppendLine(" Wherever songs appear:", null);
-				content.Append("  Q", Palette.info);
+				content.Append("  Q", Palette.hint);
 				content.AppendLine(" add song to the queue", null);
-				content.Append("  P", Palette.info);
+				content.Append("  P", Palette.hint);
 				content.AppendLine(" play song", null);
-				content.Append("  R", Palette.info);
+				content.Append("  R", Palette.hint);
 				content.AppendLine(" delete song (in lists)", null);
-				content.Append("  N", Palette.info);
+				content.Append("  N", Palette.hint);
 				content.AppendLine(" move song up (in lists)", null);
-				content.Append("  M", Palette.info);
+				content.Append("  M", Palette.hint);
 				content.AppendLine(" move song down (in lists)", null);
 				content.AppendLine("", null);
 				
 				content.AppendLine(" For authors or playlists:", null);
-				content.Append("  S", Palette.info);
+				content.Append("  S", Palette.hint);
 				content.AppendLine(" set as source", null);
 				content.AppendLine("", null);
 				
 				content.AppendLine(" Volume (available everywhere):", null);
-				content.Append("  -", Palette.info);
+				content.Append("  -", Palette.hint);
 				content.AppendLine(" decrease by 2", null);
-				content.Append("  +", Palette.info);
+				content.Append("  +", Palette.hint);
 				content.AppendLine(" increase by 2", null);
 				break;
 			case 3:
 				content.AppendLine("Keybinds", Palette.info);
 				
 				content.AppendLine(" Player (available everywhere):", null);
-				content.Append("  Space", Palette.info);
+				content.Append("  Space", Palette.hint);
 				content.AppendLine(" play/pause music", null);
-				content.Append("  K", Palette.info);
+				content.Append("  K", Palette.hint);
 				content.AppendLine(" play/pause music", null);
-				content.Append("  Shift + J", Palette.info);
+				content.Append("  Shift+J", Palette.hint);
 				content.AppendLine(" restart song", null);
-				content.Append("  J", Palette.info);
+				content.Append("  J", Palette.hint);
 				content.AppendLine(" go back X seconds (advance time)", null);
-				content.Append("  L", Palette.info);
+				content.Append("  L", Palette.hint);
 				content.AppendLine(" go forward X seconds (advance time)", null);
-				content.Append("  N", Palette.info);
+				content.Append("  N", Palette.hint);
 				content.AppendLine(" previous song", null);
-				content.Append("  M", Palette.info);
+				content.Append("  M", Palette.hint);
 				content.AppendLine(" next song", null);
-				content.Append("  Shift + Space", Palette.info);
+				content.Append("  Shift+Space", Palette.hint);
 				content.AppendLine(" see playing song", null);
 				break;
 			case 4:
 				content.AppendLine("Keybinds", Palette.info);
 				
 				content.AppendLine(" Navigation (available everywhere):", null);
-				content.Append("  Ctrl + L", Palette.info);
+				content.Append("  Ctrl+L", Palette.hint);
 				content.AppendLine(" see Library", null);
-				content.Append("  Ctrl + P", Palette.info);
+				content.Append("  Ctrl+P", Palette.hint);
 				content.AppendLine(" see Playlists", null);
-				content.Append("  Ctrl + U", Palette.info);
+				content.Append("  Ctrl+U", Palette.hint);
 				content.AppendLine(" see Authors", null);
 				content.AppendLine("", null);
 				
 				content.AppendLine(" Session (available everywhere):", null);
-				content.Append("  Shift + M", Palette.info);
+				content.Append("  Shift+M", Palette.hint);
 				content.AppendLine(" change mode", null);
-				content.Append("  Shift + S", Palette.info);
+				content.Append("  Shift+S", Palette.hint);
 				content.AppendLine(" see source", null);
 				break;
 			case 5:
+				content.AppendLine("Stats", Palette.info);
+				content.AppendLine(" You can check the stats divided into months.", null);
+				content.AppendLine(" Every time a song is loaded into the player, it counts as 'song laoded'.", null);
+				content.AppendLine(" Then, the time listening to that song while it is playing is tracked.", null);
+				content.AppendLine(" Also, dividing the time lime listened by the duration gives a much more accurate number of times the song was listened to. This is what is called 'song listened'.", null);
+				content.AppendLine(" When seeing the stats you can filter between these numbers.", null);
+				content.AppendLine(" Additionally, you can see top authors and their top tracks.", null);
+				break;
+			case 6:
 				content.AppendLine("Exporting", Palette.info);
 				content.AppendLine(" You can export songs or whole playlists to folders.", null);
 				content.AppendLine(" This allows you to have the mp3 files of your songs wherever you want, or share them.", null);
 				break;
-			case 6:
+			case 7:
 				content.AppendLine("Internal operation", Palette.info);
 				
 				content.AppendLine(" AshRadio uses numerical ids for songs, authors and playlists.", null);
@@ -749,7 +746,7 @@ public partial class Screens{
 				content.AppendLine(" For data storage and many other tasks, AshLib is used. This .net library (made by me!) handles AshFiles.", null);
 				content.AppendLine(" The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null);
 				break;
-			case 7:
+			case 8:
 				content.AppendLine("About", Palette.info);
 				content.AppendLine(" AshRadio v" + Radio.version, null);
 				content.AppendLine(" " + Radio.versionDate, null);

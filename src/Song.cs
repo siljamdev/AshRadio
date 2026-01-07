@@ -307,17 +307,20 @@ public class Song{
 	
 	public static List<Song> getLibrary(){
 		return library.Where(h => h != null).ToList();
-		//string[] mp3Files = Directory.GetFiles(Radio.dep.path + "/songs/files", "*.mp3");
-		//mp3Files = mp3Files.Select(f => Path.GetFileNameWithoutExtension(f)).ToArray();
-		//
-		//List<int> f = new(mp3Files.Length);
-		//foreach(string s in mp3Files){
-		//	if(int.TryParse(s, out int i) && File.Exists(getDataPath(i))){
-		//		f.Add(i);
-		//	}
-		//}
-		//f.Sort();
-		//return f;
+	}
+	
+	public static void repairLatestId(){
+		string[] mp3Files = Directory.GetFiles(Radio.dep.path + "/songs/files", "*.mp3");
+		mp3Files = mp3Files.Select(f => Path.GetFileNameWithoutExtension(f)).ToArray();
+		
+		int b = -1;
+		foreach(string s in mp3Files){
+			if(int.TryParse(s, out int i) && File.Exists(getDataPath(i)) && i > b){
+				b = i;
+			}
+		}
+		
+		init(b);
 	}
 	
 	static void saveAll(){

@@ -365,11 +365,17 @@ public partial class Screens{
 	void setMiscConfig(){
 		TuiFramedCheckBox userpc = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
 		
-		TuiButton openData = new TuiButton("Open data directory", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+		TuiButton repair = new TuiButton("Attempt id repair", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			Song.repairLatestId();
+			Author.repairLatestId();
+			Playlist.repairLatestId();
+		});
+		
+		TuiButton openData = new TuiButton("Open data directory", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
 			openFolder(Radio.dep.path);
 		});
 		
-		TuiButton openAppdata = new TuiButton("Open config directory", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
+		TuiButton openAppdata = new TuiButton("Open config directory", Placement.TopCenter, 0, 12, null, Palette.user).SetAction((s, ck) => {
 			openFolder(Radio.appDataPath);
 		});
 		
@@ -402,6 +408,8 @@ public partial class Screens{
 		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			userpc
+		},{
+			repair
 		},{
 			openData
 		},{

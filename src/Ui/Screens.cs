@@ -108,6 +108,26 @@ public partial class Screens{
 	
 	//Utilities
 	
+	static void setLooping(TuiOptionPicker top){
+		top.DeleteAllKeyEvents();
+		
+		top.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
+			if(top.SelectedOptionIndex == 0){
+				top.SelectedOptionIndex = (uint) (top.Options.Length - 1);
+			}else{
+				top.SelectedOptionIndex--;
+			}
+		});
+		
+		top.SubKeyEvent(ConsoleKey.RightArrow, (s, cki) => {
+			if(top.SelectedOptionIndex == top.Options.Length - 1){
+				top.SelectedOptionIndex = 0;
+			}else{
+				top.SelectedOptionIndex++;
+			}
+		});
+	}
+	
 	//remove surrounding quotes
 	static string removeQuotesSingle(string p){
 		p = p.Trim();
@@ -167,6 +187,42 @@ public partial class Screens{
 			return s.Substring(0, len - 1) + "…";
 		}
 		return s;
+	}
+	
+	static string secondsToReadable(float seconds){
+		TimeSpan ts = TimeSpan.FromSeconds(seconds);
+		
+		int days = ts.Days;
+		int hours = ts.Hours;
+		int minutes = ts.Minutes;
+		int secs = ts.Seconds;
+		
+		List<string> parts = new();
+		
+		if(days > 0){
+			parts.Add($"{days}d");
+		}
+		if(hours > 0){
+			parts.Add($"{hours}h");
+		}
+		if(minutes > 0){
+			parts.Add($"{minutes}m");
+		}
+		parts.Add($"{secs}s");
+		
+		return string.Join(" ", parts);
+	}
+	
+	static string secondsToHourTime(float seconds){
+		TimeSpan ts = TimeSpan.FromSeconds(seconds);
+		
+		return string.Format("{0:D2}:{1:D2}:{2:D2}", (int)ts.TotalHours, ts.Minutes, ts.Seconds);
+	}
+	
+	static string secondsToMinuteTime(float seconds){
+		TimeSpan ts = TimeSpan.FromSeconds(seconds);
+		
+		return string.Format("{0:D2}:{1:D2}", (int)ts.TotalMinutes, ts.Seconds);
 	}
 	
 	static void hideCursor(){

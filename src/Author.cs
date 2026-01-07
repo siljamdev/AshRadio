@@ -154,6 +154,17 @@ public class Author{
 		return authors.Where(h => h != null).ToList();
 	}
 	
+	public static void repairLatestId(){
+		int b = -1;
+		foreach(string s in authorsFile.Keys){
+			if(int.TryParse(s, out int i) && i > b){
+				b = i;
+			}
+		}
+		
+		init(b);
+	}
+	
 	static void saveAll(){
 		Radio.data.Set("authors.latestId", latestId);
 		Radio.data.Save();

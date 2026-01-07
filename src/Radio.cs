@@ -59,6 +59,7 @@ public static class Radio{
 		
 		py = new Player(config.GetValue<int>("player.volume"), config.GetValue<float>("player.volumeExponent"));
 		Session.init((SessionMode) session.GetValue<int>("session.mode"), (SourceType) session.GetValue<int>("session.sourceType"), session.GetValue<int>("session.sourceIdentifier"), session.GetValue<int[]>("session.sourceSeen"));
+		Stats.init();
 		py.init(session.GetValue<int>("player.song"), session.GetValue<float>("player.elapsed"));
 		
 		AppDomain.CurrentDomain.ProcessExit += onExit;
@@ -720,6 +721,8 @@ public static class Radio{
 	//Save on exit the current song and time left
 	static void onExit(object sender, EventArgs e){
 		session.Set("player.elapsed", py.elapsed);
+		
+		Stats.setTime();
 		
 		py.Dispose();
 		
