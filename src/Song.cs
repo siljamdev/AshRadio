@@ -305,6 +305,12 @@ public class Song{
 		}
 	}
 	
+	public static async Task<float[]> getDurationsAsync(int[] ids){
+		Task<float>[] tasks = ids.Select(id => Task.Run(() => getDuration(id))).ToArray();
+		
+		return await Task.WhenAll(tasks);
+	}
+	
 	public static List<Song> getLibrary(){
 		return library.Where(h => h != null).ToList();
 	}

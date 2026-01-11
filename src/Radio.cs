@@ -8,7 +8,7 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.5.0";
+	public const string version = "1.5.1";
 	public const string versionDate = "January 2026";
 	
 	public static string errorFilePath = null;

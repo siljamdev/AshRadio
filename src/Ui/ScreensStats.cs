@@ -75,10 +75,19 @@ public partial class Screens{
 			return true;
 		}
 		
-		TuiButton seeSongs = new TuiButton("See top songs", Placement.BottomLeft, 3, 4, null, Palette.user).SetAction((s2, ck) => {
+		bool b = false;
+		
+		TuiButton seeSongs = null!;
+		seeSongs = new TuiButton("See top songs", Placement.BottomLeft, 3, 4, null, Palette.user).SetAction((s2, ck) => {
 			if(!tryParseDates(out MonthDate s, out MonthDate e)){
 				return;
 			}
+			
+			if(b){
+				return;
+			}
+			seeSongs.Text = "Loading…";
+			b = true;
 			
 			Task.Run(() => {
 				(float totalTime, Dictionary<int, (uint, float)> stt) = Stats.getStats(s, e);
@@ -94,10 +103,17 @@ public partial class Screens{
 			});
 		});
 		
-		TuiButton seeAuthors = new TuiButton("See top authors", Placement.BottomRight, 3, 4, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton seeAuthors = null!;
+		seeAuthors = new TuiButton("See top authors", Placement.BottomRight, 3, 4, null, Palette.user).SetAction((s2, ck) => {
 			if(!tryParseDates(out MonthDate s, out MonthDate e)){
 				return;
 			}
+			
+			if(b){
+				return;
+			}
+			seeAuthors.Text = "Loading…";
+			b = true;
 			
 			Task.Run(() => {
 				(float totalTime, Dictionary<int, (uint, float)> stt) = Stats.getStats(s, e);
@@ -113,10 +129,17 @@ public partial class Screens{
 			});
 		});
 		
-		TuiButton flashcard = new TuiButton("See flashcard", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton flashcard = null!;
+		flashcard = new TuiButton("See flashcard", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s2, ck) => {
 			if(!tryParseDates(out MonthDate s, out MonthDate e)){
 				return;
 			}
+			
+			if(b){
+				return;
+			}
+			flashcard.Text = "Loading…";
+			b = true;
 			
 			Task.Run(() => {
 				(float totalTime, Dictionary<int, (uint, float)> stt) = Stats.getStats(s, e);

@@ -56,6 +56,14 @@ public partial class Screens{
 		t.SubKeyEvent(ConsoleKey.DownArrow, TuiScreenInteractive.MoveDown);
 		t.SubKeyEvent(ConsoleKey.LeftArrow, TuiScreenInteractive.MoveLeft);
 		t.SubKeyEvent(ConsoleKey.RightArrow, TuiScreenInteractive.MoveRight);
+		
+		//t.SubKeyEvent(ConsoleKey.W, TuiScreenInteractive.MoveUp);
+		//t.SubKeyEvent(ConsoleKey.S, TuiScreenInteractive.MoveDown);
+		//t.SubKeyEvent(ConsoleKey.A, TuiScreenInteractive.MoveLeft);
+		//t.SubKeyEvent(ConsoleKey.D, TuiScreenInteractive.MoveRight);
+		//
+		//t.SubKeyEvent(ConsoleKey.PageUp, TuiScreenInteractive.MoveUp);
+		//t.SubKeyEvent(ConsoleKey.PageDown, TuiScreenInteractive.MoveDown);
 	}
 	
 	//Generic screens

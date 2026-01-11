@@ -19,14 +19,7 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = null;
 		
-		bool b = false;
-		
-		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s2, ck) => {
-			if(b){
-				return;
-			}
-			
-			b = true;
+		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
 			bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
 			if(!succ){
 				foreach(TuiLabel a in error){
@@ -46,8 +39,6 @@ public partial class Screens{
 			}else{
 				closeMiddleScreen();
 			}
-			
-			b = false;
 		});
 		
 		#if WINDOWS
@@ -102,11 +93,13 @@ public partial class Screens{
 		
 		bool b = false;
 		
-		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton export = null!;
+		export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
 			if(b){
 				return;
 			}
 			
+			export.Text = "Exporting…";
 			b = true;
 			foreach(TuiLabel a in error){
 				l.Elements.Remove(a);
@@ -118,27 +111,31 @@ public partial class Screens{
 			bool anyBad = false;
 			int j = 10;
 			
-			foreach(Song s in lib){
-				bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
-				if(!succ){
-					string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
-					
-					foreach(string e in r){
-						TuiLabel a = new TuiLabel(e, Placement.TopLeft, 3, j, Palette.error);
-						j++;
-						l.Elements.Insert(0, a);
-						error.Add(a);
+			Task task = Task.Run(() => {
+				foreach(Song s in lib){
+					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+					if(!succ){
+						string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
+						
+						foreach(string e in r){
+							TuiLabel a = new TuiLabel(e, Placement.TopLeft, 3, j, Palette.error);
+							j++;
+							l.Elements.Insert(0, a);
+							error.Add(a);
+						}
+						
+						anyBad = true;
 					}
-					
-					anyBad = true;
 				}
-			}
+			});
 			
-			if(!anyBad){
-				closeMiddleScreen();
-			}
-			
-			b = false;
+			task.ContinueWith(t => {
+				if(!anyBad){
+					closeMiddleScreen();
+				}
+				export.Text = "Export";
+				b = false;
+			});
 		});
 		
 		#if WINDOWS
@@ -193,11 +190,13 @@ public partial class Screens{
 		
 		bool b = false;
 		
-		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton export = null!;
+		export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
 			if(b){
 				return;
 			}
 			
+			export.Text = "Exporting…";
 			b = true;
 			foreach(TuiLabel a in error){
 				l.Elements.Remove(a);
@@ -209,27 +208,31 @@ public partial class Screens{
 			bool anyBad = false;
 			int j = 10;
 			
-			foreach(Song s in lib){
-				bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
-				if(!succ){
-					string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
-					
-					foreach(string e in r){
-						TuiLabel a = new TuiLabel(e, Placement.TopLeft, 3, j, Palette.error);
-						j++;
-						l.Elements.Insert(0, a);
-						error.Add(a);
+			Task task = Task.Run(() => {
+				foreach(Song s in lib){
+					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+					if(!succ){
+						string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
+						
+						foreach(string e in r){
+							TuiLabel a = new TuiLabel(e, Placement.TopLeft, 3, j, Palette.error);
+							j++;
+							l.Elements.Insert(0, a);
+							error.Add(a);
+						}
+						
+						anyBad = true;
 					}
-					
-					anyBad = true;
 				}
-			}
+			});
 			
-			if(!anyBad){
-				closeMiddleScreen();
-			}
-			
-			b = false;
+			task.ContinueWith(t => {
+				if(!anyBad){
+					closeMiddleScreen();
+				}
+				export.Text = "Export";
+				b = false;
+			});
 		});
 		
 		#if WINDOWS

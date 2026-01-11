@@ -520,13 +520,13 @@ public partial class Screens{
 			session.Ysize = Math.Max(a.Y - 6, 0);
 		};
 		
+		prepareScreen(session);
+		
 		session.SubKeyEvent(ConsoleKey.Q, (s, ck) => {
 			if(Session.getQueue().Count > 0){
 				setSelectedScreen(queueScreen);
 			}
 		});
-		
-		prepareScreen(session);
 		
 		Radio.py.onChangeDevice += (s, a) => {
 			device.Text = Radio.py.currentDevice.Name;
@@ -621,18 +621,46 @@ public partial class Screens{
 			l.Elements.Add(new TuiTwoLabels("M", " Next page", Placement.BottomRight, 0, 0, Palette.hint, null));
 		}
 		
-		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
-			if(page != 0){
-				setHelp(page - 1, true);
+		//Helper method
+		void setPage(int n){
+			if(n != page && n > -1 && n <= maxPage){
+				setHelp(n, true);
 				removeMiddleScreen(l3);
 			}
-		});
+		}
 		
+		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
+			setPage(page - 1);
+		});
 		l.SubKeyEvent(ConsoleKey.M, (s, ck) => {
-			if(page != maxPage){
-				setHelp(page + 1, true);
-				removeMiddleScreen(l3);
-			}
+			setPage(page + 1);
+		});
+		l.SubKeyEvent(ConsoleKey.D1, (s, ck) => {
+			setPage(0);
+		});
+		l.SubKeyEvent(ConsoleKey.D2, (s, ck) => {
+			setPage(1);
+		});
+		l.SubKeyEvent(ConsoleKey.D3, (s, ck) => {
+			setPage(2);
+		});
+		l.SubKeyEvent(ConsoleKey.D4, (s, ck) => {
+			setPage(3);
+		});
+		l.SubKeyEvent(ConsoleKey.D5, (s, ck) => {
+			setPage(4);
+		});
+		l.SubKeyEvent(ConsoleKey.D6, (s, ck) => {
+			setPage(5);
+		});
+		l.SubKeyEvent(ConsoleKey.D7, (s, ck) => {
+			setPage(6);
+		});
+		l.SubKeyEvent(ConsoleKey.D8, (s, ck) => {
+			setPage(7);
+		});
+		l.SubKeyEvent(ConsoleKey.D9, (s, ck) => {
+			setPage(8);
 		});
 		
 		switch(page){

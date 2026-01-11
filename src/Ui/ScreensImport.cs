@@ -60,7 +60,7 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = null;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			int s2 = Radio.importSingleFile(removeQuotesSingle(path.Text), title.Text, authors.Text.Split(','), out string err);
 			if(s2 < 0){
 				foreach(TuiLabel a in error){
@@ -156,10 +156,12 @@ public partial class Screens{
 		
 		bool b = false;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = null!;
+		import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			if(b){
 				return;
 			}
+			import.Text = "Importing…";
 			b = true;
 			j = 17;
 			
@@ -186,6 +188,7 @@ public partial class Screens{
 					closeMiddleScreen();
 					setSongDetails(t.Result);
 				}
+				import.Text = "Import";
 				b = false;
 			});
 		});
@@ -230,7 +233,7 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = null;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			bool s2 = Radio.importFromFolder(removeQuotesSingle(path.Text), authors.Text.Split(','), out string err);
 			if(!s2){
 				foreach(TuiLabel a in error){
@@ -315,10 +318,12 @@ public partial class Screens{
 		
 		bool b = false;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = null!;
+		import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			if(b){
 				return;
 			}
+			import.Text = "Importing…";
 			b = true;
 			j = 13;
 			
@@ -344,6 +349,7 @@ public partial class Screens{
 				if(currentMiddleScreen.interactive == l && t.Result){
 					closeMiddleScreen();
 				}
+				import.Text = "Import";
 				b = false;
 			});
 		});
@@ -382,7 +388,7 @@ public partial class Screens{
 		
 		TuiScreenInteractive l = null;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			int s2 = Radio.importPlaylistFromFolder(removeQuotesSingle(path.Text), title.Text, authors.Text.Split(','), out string err);
 			if(s2 < 0){
 				foreach(TuiLabel a in error){
@@ -478,10 +484,12 @@ public partial class Screens{
 		
 		bool b = false;
 		
-		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+		TuiButton import = null!;
+		import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
 			if(b){
 				return;
 			}
+			import.Text = "Importing…";
 			b = true;
 			j = 17;
 			
@@ -508,6 +516,7 @@ public partial class Screens{
 					closeMiddleScreen();
 					setPlaylistDetails(t.Result);
 				}
+				import.Text = "Import";
 				b = false;
 			});
 		});
