@@ -8,7 +8,7 @@
     <Nullable>enable</Nullable>
 	<LangVersion>preview</LangVersion>
     
-    <Version>1.4.2</Version>
+    <Version>1.5.2</Version>
     <Authors>siljam</Authors>
     <Company>AshProject</Company>
     <PackageDescription>Lightweight music player in your terminal</PackageDescription>
