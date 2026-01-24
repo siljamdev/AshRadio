@@ -57,13 +57,10 @@ public partial class Screens{
 		t.SubKeyEvent(ConsoleKey.LeftArrow, TuiScreenInteractive.MoveLeft);
 		t.SubKeyEvent(ConsoleKey.RightArrow, TuiScreenInteractive.MoveRight);
 		
-		//t.SubKeyEvent(ConsoleKey.W, TuiScreenInteractive.MoveUp);
-		//t.SubKeyEvent(ConsoleKey.S, TuiScreenInteractive.MoveDown);
-		//t.SubKeyEvent(ConsoleKey.A, TuiScreenInteractive.MoveLeft);
-		//t.SubKeyEvent(ConsoleKey.D, TuiScreenInteractive.MoveRight);
-		//
-		//t.SubKeyEvent(ConsoleKey.PageUp, TuiScreenInteractive.MoveUp);
-		//t.SubKeyEvent(ConsoleKey.PageDown, TuiScreenInteractive.MoveDown);
+		//t.SubKeyEvent(ConsoleKey.W, ConsoleModifiers.Control, TuiScreenInteractive.MoveUp);
+		//t.SubKeyEvent(ConsoleKey.S, ConsoleModifiers.Control, TuiScreenInteractive.MoveDown);
+		//t.SubKeyEvent(ConsoleKey.A, ConsoleModifiers.Control, TuiScreenInteractive.MoveLeft);
+		//t.SubKeyEvent(ConsoleKey.D, ConsoleModifiers.Control, TuiScreenInteractive.MoveRight);
 	}
 	
 	//Generic screens
@@ -109,6 +106,8 @@ public partial class Screens{
 		
 		sc.interactive.Elements.Add(new TuiLabel(question, Placement.Center, 0, -1));
 		sc.interactive.Elements.Add(new TuiFrame(Math.Max(question.Length + 4, 20), 7, Placement.Center, 0, 0, Palette.user));
+		
+		sc.interactive.MatrixPointerX = 1;
 		
 		setMiddleScreen(sc);
 	}
@@ -222,15 +221,15 @@ public partial class Screens{
 	}
 	
 	static string secondsToHourTime(float seconds){
-		TimeSpan ts = TimeSpan.FromSeconds(seconds);
+		int sec = Math.Max(0, (int) Math.Round(seconds));
 		
-		return string.Format("{0:D2}:{1:D2}:{2:D2}", (int)ts.TotalHours, ts.Minutes, ts.Seconds);
+		return string.Format("{0}:{1:D2}:{2:D2}", sec / 3600, (sec % 3600) / 60, sec % 60);
 	}
 	
 	static string secondsToMinuteTime(float seconds){
-		TimeSpan ts = TimeSpan.FromSeconds(seconds);
+		int sec = Math.Max(0, (int) Math.Round(seconds));
 		
-		return string.Format("{0:D2}:{1:D2}", (int)ts.TotalMinutes, ts.Seconds);
+		return string.Format("{0}:{1:D2}", sec / 60, sec % 60);
 	}
 	
 	static void hideCursor(){

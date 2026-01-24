@@ -203,6 +203,7 @@ public static class CommandLineHandler{
 			if(s != null){
 				Console.WriteLine("Title: " + s.title);
 				Console.WriteLine("Authors: " + (s.authors.Length == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))));
+				Console.WriteLine("Duration: " + s.duration);
 				
 				return 0;
 			}else{

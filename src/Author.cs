@@ -94,7 +94,7 @@ public class Author{
 	}
 	
 	public static Author get(string nam){
-		return authors.FirstOrDefault(h => string.Equals(h.name, nam, StringComparison.OrdinalIgnoreCase));
+		return authors.FirstOrDefault(h => h != null && string.Equals(h.name, nam, StringComparison.OrdinalIgnoreCase));
 	}
 	
 	public static void delete(int id){

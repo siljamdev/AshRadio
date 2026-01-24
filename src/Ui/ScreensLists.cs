@@ -82,7 +82,7 @@ public partial class Screens{
 		if(s?.authors != null){
 			for(int i = 0; i < s.authors.Length; i++){
 				int tt3 = s.authors[i];
-				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? Author.nullName, Placement.TopLeft, 4, 7 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
+				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? Author.nullName, Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
 					setAuthorDetails(tt3);
 				});
 				
@@ -110,13 +110,15 @@ public partial class Screens{
 		c.Elements.Add(new TuiTwoLabels("Q", " Add to queue", Placement.BottomRight, 0, 1, Palette.hint, null));
 		c.Elements.Add(new TuiTwoLabels("P", " Play", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
+		c.Elements.Add(new TuiLabel(secondsToMinuteTime(s.duration), Placement.TopLeft, 4, 5, Palette.info));
+		
 		if(s?.authors != null){
 			if(s.authors.Length == 1){
-				c.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 2, 6));
+				c.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 2, 7));
 			}else if(s.authors.Length > 1){
-				c.Elements.Add(new TuiLabel("Authors", Placement.TopLeft, 2, 6));
+				c.Elements.Add(new TuiLabel("Authors", Placement.TopLeft, 2, 7));
 			}else{
-				c.Elements.Add(new TuiLabel("Unknown authors", Placement.TopLeft, 2, 6));
+				c.Elements.Add(new TuiLabel("Unknown authors", Placement.TopLeft, 2, 7));
 			}
 		}
 		

@@ -9,6 +9,8 @@ public class Song{
 	
 	public int id{get; private set;}
 	
+	public float duration{get; private set;}
+	
 	public void setTitle(string t){
 		title = t?.Trim() ?? nullTitle;
 		save();
@@ -25,10 +27,30 @@ public class Song{
 		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(p.Union(authors).ToArray()));
 	}
 	
+	//Will also set if needed
+	public float getDuration(){
+		if(duration >= 0f){
+			return duration;
+		}
+		
+		setDuration(loadDuration(id));
+		return duration;
+	}
+	
+	void setDuration(float d){
+		if(d < 0f || d == duration){
+			return;
+		}
+		
+		duration = d;
+		save();
+	}
+	
 	void save(){
 		AshFile s2 = new AshFile();
 		s2.Set("t", title);
 		s2.Set("a", authors);
+		s2.Set("d", duration);
 		s2.Save(getDataPath(id));
 	}
 	
@@ -50,7 +72,8 @@ public class Song{
 	
 	static AshFileModel songModel = new AshFileModel(
 		new ModelInstance(ModelInstanceOperation.Type, "t", nullTitle), //title
-		new ModelInstance(ModelInstanceOperation.Type, "a", Array.Empty<int>()) //authors
+		new ModelInstance(ModelInstanceOperation.Type, "a", Array.Empty<int>()), //authors
+		new ModelInstance(ModelInstanceOperation.Type, "d", -1f) //duration
 	);
 	
 	public static void init(int li){
@@ -59,6 +82,15 @@ public class Song{
 		saveAll();
 		
 		loadLibrary();
+	}
+	
+	public static void subEvents(){
+		Radio.py.onSongLoad += (s, a) => {
+			Song t = get(Radio.py.playingSong);
+			if(t != null){
+				t.setDuration(Radio.py.duration);
+			}
+		};
 	}
 	
 	static void loadLibrary(){
@@ -87,6 +119,7 @@ public class Song{
 		return new Song(){
 			title = f.GetValue<string>("t"),
 			authors = f.GetValue<int[]>("a"),
+			duration = f.GetValue<float>("d"),
 			id = s
 		};
 	}
@@ -188,16 +221,15 @@ public class Song{
 				return -1;
 			}
 			
-			AshFile s2 = new AshFile();
-			s2.Set("t", title);
-			s2.Set("a", authors);
-			s2.Save(getDataPath(latestId));
-			
-			library.Add(new Song(){
+			Song s2 = new Song(){
 				title = title,
 				authors = authors,
+				duration = loadDuration(latestId),
 				id = latestId
-			});
+			};
+			s2.save();
+			
+			library.Add(s2);
 			
 			saveAll();
 			
@@ -221,16 +253,15 @@ public class Song{
 			return -1;
 		}
 		
-		AshFile s = new AshFile();
-		s.Set("t", title);
-		s.Set("a", authors);
-		s.Save(getDataPath(latestId));
-		
-		library.Add(new Song(){
+		Song s = new Song(){
 			title = title,
 			authors = authors,
+			duration = loadDuration(latestId),
 			id = latestId
-		});
+		};
+		s.save();
+		
+		library.Add(s);
 		
 		saveAll();
 		
@@ -270,7 +301,7 @@ public class Song{
 		}
 	}
 	
-	public static float getDuration(int id){
+	static float loadDuration(int id){
 		if(!exists(id)){
 			return -1f;
 		}
@@ -306,7 +337,7 @@ public class Song{
 	}
 	
 	public static async Task<float[]> getDurationsAsync(int[] ids){
-		Task<float>[] tasks = ids.Select(id => Task.Run(() => getDuration(id))).ToArray();
+		Task<float>[] tasks = ids.Select(id => Task.Run(() => get(id)?.getDuration() ?? -1f)).ToArray();
 		
 		return await Task.WhenAll(tasks);
 	}

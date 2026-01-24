@@ -102,6 +102,7 @@ public static class Stats{
 		
 		int[] ids = s.Keys.ToArray();
 		float[] drs = Song.getDurationsAsync(ids).Result;
+		//float[] drs = Song.getDurations(ids);
 		Dictionary<int, float> durations = ids.Zip(drs, (id, dur) => (id, dur)).ToDictionary(x => x.Item1, x => x.Item2);
 		
 		foreach(KeyValuePair<int, (uint, float)> kvp in s){
@@ -110,7 +111,7 @@ public static class Stats{
 			//float dur = Song.getDuration(id);
 			
 			if(dur > 0f){
-				ind[id] = (kvp.Value.Item1, kvp.Value.Item2, dur, (uint) (Math.Ceiling(kvp.Value.Item2 / dur)));
+				ind[id] = (kvp.Value.Item1, kvp.Value.Item2, dur, (uint) (Math.Round(kvp.Value.Item2 / dur)));
 			}else{
 				ind[id] = (kvp.Value.Item1, kvp.Value.Item2, 0f, 0);
 			}

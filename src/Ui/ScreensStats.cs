@@ -508,6 +508,7 @@ public partial class Screens{
 			
 			left.Elements.Add(new TuiLabel((i + 1) + ".", Placement.TopLeft, 0, i * 2 + 1));
 			left.Elements.Add(new TuiLabel(s?.title ?? Song.nullTitle, Placement.TopLeft, 3, i * 2 + 1, Palette.song)); //Song title
+			left.Elements.Add(new TuiLabel(stats[s.id].Item4.ToString(), Placement.TopRight, 0, i * 2 + 1, Palette.info)); //Number of times
 			left.Elements.Add(new TuiLabel((s?.authors?.Length ?? 0) == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))), Placement.TopLeft, 6, i * 2 + 2, Palette.author)); //Song author
 		}
 		

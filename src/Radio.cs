@@ -8,7 +8,7 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.5.1";
+	public const string version = "1.5.2";
 	public const string versionDate = "January 2026";
 	
 	public static string errorFilePath = null;
@@ -63,6 +63,8 @@ public static class Radio{
 		Session.init((SessionMode) session.GetValue<int>("session.mode"), (SourceType) session.GetValue<int>("session.sourceType"), session.GetValue<int>("session.sourceIdentifier"), session.GetValue<int[]>("session.sourceSeen"));
 		Stats.init();
 		py.init(session.GetValue<int>("player.song"), session.GetValue<float>("player.elapsed"));
+		
+		Song.subEvents();
 		
 		AppDomain.CurrentDomain.ProcessExit += onExit;
 		
@@ -195,9 +197,13 @@ public static class Radio{
 		Palette.init();
 		sc = new Screens();
 		
-		if(config.TryGetValue("dcrp", out bool b) && b){
+		if(config.TryGetValue("dcrp", out bool b) && b){
 			dcrpc = new DiscordPresence();
 		}
+		
+		#if WINDOWS
+			Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); //WinForms will have better visual quality
+		#endif
 	}
 	
 	public static void resetConfig(){

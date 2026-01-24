@@ -14,7 +14,7 @@ public static class Session{
 		queueIndex = 0;
 		field = value;
 	}} = true;
-	static int queueIndex = 0;
+	public static int queueIndex {get; private set;} = 0;
 	
 	static List<int> prevPlayed = new();
 	
@@ -98,13 +98,13 @@ public static class Session{
 			int s = queue[queueIndex];
 			if(queueEmpties){
 				queue.RemoveAt(queueIndex);
-				onQueueChange?.Invoke(null, EventArgs.Empty);
 			}else{
 				queueIndex++;
 				if(queueIndex >= queue.Count){
 					queueIndex = 0;
 				}
 			}
+			onQueueChange?.Invoke(null, EventArgs.Empty);
 			return s;
 		}
 		

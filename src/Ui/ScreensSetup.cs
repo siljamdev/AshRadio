@@ -231,8 +231,8 @@ public partial class Screens{
 			progress.Xsize = Math.Max(a.X - 30, 0);
 		};
 		
-		TuiLabel elapsedTime = new TuiLabel("0:00", Placement.Center, -39, 0, Palette.info);
-		TuiLabel totalTime = new TuiLabel("0:00", Placement.Center, 39, 0, Palette.info);
+		TuiLabel elapsedTime = new TuiLabel("00:00", Placement.Center, -39, 0, Palette.info);
+		TuiLabel totalTime = new TuiLabel("00:00", Placement.Center, 39, 0, Palette.info);
 		
 		elapsedTime.OnParentResize += (s, a) => {
 			elapsedTime.OffsetX = -(a.X - 30)/2 - 4;
@@ -242,8 +242,7 @@ public partial class Screens{
 			totalTime.OffsetX = (a.X - 30)/2 + 4;
 		};
 		
-		int sec = Math.Max((int) Radio.py.duration, 0);
-		totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
+		totalTime.Text = secondsToMinuteTime(Radio.py.duration);
 		
 		TuiButton play = new TuiButton("‖", Placement.TopCenter, 0, 1, null, Palette.user); //► or ‖
 		play.SetAction((s, cki) => {
@@ -303,8 +302,7 @@ public partial class Screens{
 				progress.Percentage = n;
 			}
 			
-			int sec = Math.Max((int) Radio.py.elapsed, 0);
-			string s2 = (sec / 60) + ":" + (sec % 60).ToString("D2");
+			string s2 = secondsToMinuteTime(Radio.py.elapsed);
 			if(s2 != elapsedTime.Text){
 				elapsedTime.Text = s2;
 			}
@@ -318,8 +316,7 @@ public partial class Screens{
 			song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
 			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))));
 			
-			int sec = Math.Max((int) Radio.py.duration, 0);
-			totalTime.Text = (sec / 60) + ":" + (sec % 60).ToString("D2");
+			totalTime.Text = secondsToMinuteTime(Radio.py.duration);
 		};
 		
 		Radio.py.onChangePlaystate += (se, e) => {
@@ -448,7 +445,7 @@ public partial class Screens{
 				
 				for(int i = 0; i < queue.Count; i++){
 					Song s = Song.get(queue[i]);
-					TuiButton t2 = new TuiButton(s?.title ?? Song.nullTitle, Placement.TopLeft, 0, i, Palette.song, Palette.user);
+					TuiButton t2 = new TuiButton(s?.title ?? Song.nullTitle, Placement.TopLeft, Session.queueIndex == i ? 1 : 0, i, Palette.song, Palette.user);
 					
 					t2.SetAction((s, cl) => {
 						int myIndex = queueScreen.Elements.IndexOf(t2);
