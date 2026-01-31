@@ -52,9 +52,9 @@ public partial class Screens{
 	}
 	
 	void setImportSingleFile(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
 		
@@ -145,9 +145,9 @@ public partial class Screens{
 	}
 	
 	void setImportSingleVideo(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		int j = 17;
 		List<TuiLabel> error = new();
@@ -226,8 +226,8 @@ public partial class Screens{
 	}
 	
 	void setImportFolder(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
 		
@@ -308,8 +308,8 @@ public partial class Screens{
 	}
 	
 	void setImportFromPlaylist(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		int j = 13;
 		List<TuiLabel> error = new();
@@ -380,9 +380,9 @@ public partial class Screens{
 	}
 	
 	void setImportFolderPlaylist(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 10, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 14, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		List<TuiLabel> error = new();
 		
@@ -473,9 +473,9 @@ public partial class Screens{
 	}
 	
 	void setImportPlaylist(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox title = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox authors = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		int j = 17;
 		List<TuiLabel> error = new();

@@ -302,7 +302,7 @@ public class Song{
 	}
 	
 	static float loadDuration(int id){
-		if(!exists(id)){
+		if(!File.Exists(getAudioPath(id))){
 			return -1f;
 		}
 		

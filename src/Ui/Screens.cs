@@ -24,7 +24,7 @@ public partial class Screens{
 		master.SelectedScreen = s.interactive;
 		
 		if(master.SelectedScreen != null){
-			s.screen.DefFormat = Palette.background;
+			s.screen.DefFormat = Palette.selectedPanel;
 		}
 	}
 	
@@ -45,7 +45,7 @@ public partial class Screens{
 		master.SelectedScreen = s;
 		
 		if(master.SelectedScreen != null){
-			master.SelectedScreen.DefFormat = Palette.background;
+			master.SelectedScreen.DefFormat = Palette.selectedPanel;
 		}
 	}
 	
@@ -68,7 +68,7 @@ public partial class Screens{
 	void setSearchScreen(string question, Action<string> onEnter){
 		MiddleScreen sc = null!;
 		
-		TuiMultiLineScrollingFramedTextBox input = new TuiMultiLineScrollingFramedTextBox("", 256, 34, 3, Placement.TopCenter, 0, 4, null, null, null, Palette.user, Palette.user);
+		TuiMultiLineScrollingFramedTextBox input = new TuiMultiLineScrollingFramedTextBox("", 256, 34, 3, Placement.TopCenter, 0, 4, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		input.OnParentResize += (s, a) => {
 			input.BoxXsize = Math.Max(0, a.X - 4);

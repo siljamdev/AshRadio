@@ -8,8 +8,8 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.5.2";
-	public const string versionDate = "January 2026";
+	public const string version = "1.6.0";
+	public const string versionDate = "February 2026";
 	
 	public static string errorFilePath = null;
 	public static string appDataPath = null;
@@ -24,6 +24,8 @@ public static class Radio{
 	public static Screens sc;
 	
 	public static DiscordPresence dcrpc;
+	
+	public static AshFileModel configModel;
 	
 	//Complete init logic
 	public static void initCore(string directory = null){
@@ -174,6 +176,9 @@ public static class Radio{
 			new ModelInstance(ModelInstanceOperation.Type, "dcrp", true),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "ui.useColors", true),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.cursorBlinks", true),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.cursor", "_"),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.selectors", "><"),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "internal.init", false)
 		);
@@ -181,6 +186,8 @@ public static class Radio{
 		m.Merge(Palette.getPaletteModel());
 		
 		m.deleteNotMentioned = true;
+		
+		configModel = m;
 		
 		config *= m;
 		
@@ -218,7 +225,10 @@ public static class Radio{
 			
 			new ModelInstance(ModelInstanceOperation.Value, "dcrp", true),
 			
-			new ModelInstance(ModelInstanceOperation.Value, "ui.useColors", true)
+			new ModelInstance(ModelInstanceOperation.Value, "ui.useColors", true),
+			new ModelInstance(ModelInstanceOperation.Value, "ui.cursorBlinks", true),
+			new ModelInstance(ModelInstanceOperation.Value, "ui.cursor", "_"),
+			new ModelInstance(ModelInstanceOperation.Value, "ui.selectors", "><")
 		);
 		
 		config *= m;
@@ -230,18 +240,28 @@ public static class Radio{
 	
 	//Auto-downloading
 	
-	//Returns path
-	public static string downloadYtdlp(Action onComplete){
+	static bool downloadingYtdlp = false;
+	
+	//Returns if it is being downloaded
+	public static bool downloadYtdlp(Action onComplete = null){
+		if(downloadingYtdlp){
+			return false;
+		}
+		
 		try{
 			if(OperatingSystem.IsWindows()){
+				downloadingYtdlp = true;
+				
 				downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
 				appDataPath + "/yt-dlp.exe", async () => {
 					config.Set("ytdlpPath", appDataPath + "/yt-dlp.exe");
 					onComplete?.Invoke();
 					config.Save();
+					
+					downloadingYtdlp = false;
 				});
 				
-				return appDataPath + "/yt-dlp.exe";
+				return true;
 			}else if(OperatingSystem.IsLinux()){
 				string arch;
 				bool downloadZip = false;
@@ -263,8 +283,10 @@ public static class Radio{
 						break;
 					
 					default:
-						return "";
+						return false;
 				}
+				
+				downloadingYtdlp = true;
 				
 				if(downloadZip){
 					downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/" + arch,
@@ -290,6 +312,8 @@ public static class Radio{
 						config.Set("ytdlpPath", appDataPath + "/yt-dlp");
 						onComplete?.Invoke();
 						config.Save();
+						
+						downloadingYtdlp = false;
 					});
 				}else{
 					downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/" + arch,
@@ -303,11 +327,15 @@ public static class Radio{
 						config.Set("ytdlpPath", appDataPath + "/yt-dlp");
 						onComplete?.Invoke();
 						config.Save();
+						
+						downloadingYtdlp = false;
 					});
 				}
 				
-				return appDataPath + "/yt-dlp";
+				return true;
 			}else if(OperatingSystem.IsMacOS()){
+				downloadingYtdlp = false;
+				
 				downloadFile("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos",
 				appDataPath + "/yt-dlp", async () => {
 					try{
@@ -319,21 +347,29 @@ public static class Radio{
 					config.Set("ytdlpPath", appDataPath + "/yt-dlp");
 					onComplete?.Invoke();
 					config.Save();
+					
+					downloadingYtdlp = false;
 				});
 				
-				return appDataPath + "/yt-dlp";
+				return true; 
 			}else{
-				return "";
+				return false;
 			}
 		}catch(Exception e){
 			reportError(e.ToString());
 			
-			return "";
+			return false;
 		}
 	}
 	
-	//Returns paths (ffmpeg, ffprobe)
-	public static (string, string) downloadFfmpeg(Action onComplete){
+	static bool downloadingFfmpeg = false;
+	
+	//Returns if it is being downloaded
+	public static bool downloadFfmpeg(Action onComplete = null){
+		if(downloadingFfmpeg){
+			return false;
+		}
+		
 		try{
 			if(OperatingSystem.IsWindows()){
 				string dlurl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/";
@@ -351,8 +387,10 @@ public static class Radio{
 						break;
 					
 					default:
-						return ("", "");
+						return false;
 				};
+				
+				downloadingFfmpeg = true;
 				
 				downloadFile(dlurl,
 				appDataPath + "/ffmpegtemp.zip", async () => {
@@ -374,9 +412,11 @@ public static class Radio{
 					config.Set("ffprobePath", appDataPath + "/ffprobe.exe");
 					onComplete?.Invoke();
 					config.Save();
+					
+					downloadingFfmpeg = false;
 				});
 				
-				return (appDataPath + "/ffmpeg.exe", appDataPath + "/ffprobe.exe");
+				return true;
 			}else if(OperatingSystem.IsLinux()){
 				string dlurl = "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/";
 				switch(RuntimeInformation.OSArchitecture){
@@ -389,8 +429,10 @@ public static class Radio{
 						break;
 					
 					default:
-						return ("", "");
+						return false;
 				};
+				
+				downloadingFfmpeg = true;
 				
 				downloadFile(dlurl,
 				appDataPath + "/ffmpegtemp.tar.xz", async () => {
@@ -443,20 +485,30 @@ public static class Radio{
 					config.Set("ffprobePath", appDataPath + "/ffprobe");
 					onComplete?.Invoke();
 					config.Save();
+					
+					downloadingFfmpeg = false;
 				});
 				
-				return (appDataPath + "/ffmpeg", appDataPath + "/ffprobe");
+				return true;
 			}else{
-				return ("", "");
+				return false;
 			}
 		}catch(Exception e){
 			reportError(e.ToString());
 			
-			return ("", "");
+			return false;
 		}
 	}
 	
+	static bool updatingYtdlp = false;
+	
 	public static void updateYtdlp(){
+		if(updatingYtdlp){
+			return;
+		}
+		
+		updatingYtdlp = true;
+		
 		var psi = new ProcessStartInfo{
 			FileName = getYtdlpPath(),
 			Arguments = "--update",
@@ -468,6 +520,10 @@ public static class Radio{
 		};
 		
 		using Process proc = Process.Start(psi);
+		
+		proc.Exited += (s, e) => {
+			updatingYtdlp = false;
+		};
 	}
 	
 	#region Importing

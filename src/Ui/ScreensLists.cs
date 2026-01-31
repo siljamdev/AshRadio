@@ -18,7 +18,7 @@ public partial class Screens{
 	MiddleScreen songDetails(Song s){
 		MiddleScreen c2 = null;
 		
-		TuiFramedScrollingTextBox titleInput = new TuiFramedScrollingTextBox(s?.title ?? Song.nullTitle, 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox titleInput = new TuiFramedScrollingTextBox(s?.title ?? Song.nullTitle, 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		titleInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setTitle(titleInput.Text);
@@ -29,7 +29,7 @@ public partial class Screens{
 		};
 		
 		TuiFramedScrollingTextBox authorsInput = new TuiFramedScrollingTextBox(s?.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? Author.nullName) : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))))),
-			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.user, Palette.user);
+			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		authorsInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			if(s != null){
@@ -295,7 +295,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen authorDetails(Author s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setName(name.Text);
@@ -305,7 +305,15 @@ public partial class Screens{
 			name.BoxXsize = Math.Clamp(a.X - 32, 16, 38);
 		};
 		
-		TuiButton del = new TuiButton("Delete author", Placement.TopRight, 2, 4, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton export = new TuiButton("Export songs", Placement.TopRight, 2, 4, null, Palette.user).SetAction((s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setExportAuthor(s);
+		});
+		
+		TuiButton del = new TuiButton("Delete author", Placement.TopRight, 2, 6, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -317,10 +325,11 @@ public partial class Screens{
 		
 		List<Song> songs = s?.getSongs();
 		
-		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 2), 2];
+		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 3), 2];
 		
 		temp[0, 1] = name;
-		temp[1, 1] = del;
+		temp[1, 1] = export;
+		temp[2, 1] = del;
 		
 		if(songs != null){
 			for(int i = 0; i < songs.Count; i++){
@@ -339,8 +348,10 @@ public partial class Screens{
 				});
 				
 				temp[i, 0] = b;
-				if(i % 2 == 0){
+				if(i % 3 == 0){
 					temp[i, 1] = name;
+				}else if(i % 3 == 1){
+					temp[i, 1] = export;
 				}else{
 					temp[i, 1] = del;
 				}
@@ -529,7 +540,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen playlistDetails(Playlist s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
 			s?.setTitle(name.Text);

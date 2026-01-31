@@ -303,6 +303,31 @@ public static class CommandLineHandler{
 			}
 		}).setDescription("Get detailed info on an author");
 		
+		root.chain("author").chain("export", 2).setArgNames("author id", "directory").setAction(args => {
+			if(!int.TryParse(args[0], out int id)){
+				report("A number was expected, instead was found: " + args[0]);
+				return 2;
+			}
+			
+			Author p = Author.get(id);
+			if(p != null){
+				List<Song> lib = p.getSongs();
+				bool anyBad = false;
+				
+				foreach(Song s in lib){
+					bool succ = Song.export(s.id, args[1], out string err);
+					if(!succ){
+						report(err);
+						anyBad = true;
+					}
+				}
+				return anyBad ? 10 : 0;
+			}else{
+				report("Author not found");
+				return 11;
+			}
+		}).setDescription("Export all songs by an author to directory");
+		
 		root.chain("playlist").chain("list").setAction(args => {
 			foreach(Playlist p in Playlist.getAllPlaylists()){
 				Console.WriteLine(p.id + ". " + p.title);
@@ -383,7 +408,7 @@ public static class CommandLineHandler{
 			}
 		}).setDescription("Import a playlist from directory");
 		
-		root.chain("playlist").chain("export", 1).setArgNames("playlist id").setAction(args => {
+		root.chain("playlist").chain("export", 2).setArgNames("playlist id", "directory").setAction(args => {
 			if(!int.TryParse(args[0], out int id)){
 				report("A number was expected, instead was found: " + args[0]);
 				return 2;
@@ -395,7 +420,7 @@ public static class CommandLineHandler{
 				bool anyBad = false;
 				
 				foreach(Song s in lib){
-					bool succ = Song.export(s.id, args[0], out string err);
+					bool succ = Song.export(s.id, args[1], out string err);
 					if(!succ){
 						report(err);
 						anyBad = true;

@@ -8,7 +8,7 @@
     <Nullable>enable</Nullable>
 	<LangVersion>preview</LangVersion>
     
-    <Version>1.5.2</Version>
+    <Version>1.6.0</Version>
     <Authors>siljam</Authors>
     <Company>AshProject</Company>
     <PackageDescription>Lightweight music player in your terminal</PackageDescription>
@@ -28,8 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ashConsoleGraphics" Version="2.2.4" />
-    <PackageReference Include="AshLib" Version="3.5.0" />
+    <PackageReference Include="ashConsoleGraphics" Version="2.2.6" />
+    <PackageReference Include="AshLib" Version="3.5.1" />
     <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
     <PackageReference Include="ManagedBass" Version="4.0.2" />
   </ItemGroup>

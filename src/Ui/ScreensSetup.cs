@@ -14,7 +14,13 @@ public partial class Screens{
 	TuiScreenInteractive navigation = null!;
 	TuiScrollingScreenInteractive queueScreen = null!;
 	
+	bool cursorBlinks = true;
+	char cursor = '_';
+	
 	public Screens(){
+		init();
+		
+		//Init setup
 		setupPlaying();
 		setupSession();
 		setupNavigation();
@@ -38,7 +44,7 @@ public partial class Screens{
 			d3.OffsetX = Math.Min(a.X, 30);
 		};
 		
-		TuiConnectedLinesScreen delimiters = new TuiConnectedLinesScreen(100, 20, new ILineElement[]{d1, d2, d3}, Palette.delimiter);
+		TuiConnectedLinesScreen delimiters = new TuiConnectedLinesScreen(100, 20, Palette.delimiter, d1, d2, d3);
 		
 		delimiters.OnParentResize += (s, a) => {
 			delimiters.Xsize = a.X;
@@ -63,7 +69,7 @@ public partial class Screens{
 		middle.Add(mid);
 		
 		//Creating master
-		master = new MultipleTuiScreenInteractive(100, 20, new TuiScreenInteractive[]{playing, session, navigation, mid.interactive}, null, delimiters);
+		master = new MultipleTuiScreenInteractive(100, 20, new TuiScreenInteractive[]{playing, session, navigation, mid.interactive}, Palette.defaultPanel, delimiters);
 		
 		master.ScreenList.Add(queueScreen);
 		
@@ -87,8 +93,12 @@ public partial class Screens{
 			setSelectedScreen(currentMiddleScreen);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.Escape, (s, cki) => { //Close middle
-			closeMiddleScreen();
+		master.SubKeyEvent(ConsoleKey.Escape, (s, cki) => { //Close or focus middle
+			if(master?.SelectedScreen == currentMiddleScreen.interactive){
+				closeMiddleScreen();
+			}else{
+				setSelectedScreen(currentMiddleScreen);
+			}
 		});
 		
 		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.None, (s, cki) => {
@@ -187,7 +197,23 @@ public partial class Screens{
 		int maxFps = 32;
 		double dt = 1000d / maxFps;
 		
+		int frameCounter = 0;
+		
 		master.OnFinishPlayCycle += (s, a) => { //Wait some time to avoid enourmus cpu usage
+			
+			//Update cursor if neccessary
+			frameCounter++;
+			if(frameCounter >= 20){
+				frameCounter = 0;
+				if(cursorBlinks){
+					if(TuiWritable.Cursor != ' '){
+						TuiWritable.Cursor = ' ';
+					}else{
+						TuiWritable.Cursor = cursor;
+					}	
+				}
+			}
+			
 			double st = timer.Elapsed.TotalMilliseconds;
 			while(true){
 				if(Console.KeyAvailable){
@@ -205,6 +231,19 @@ public partial class Screens{
 		};
 		
 		setSelectedScreen(navigation);
+	}
+	
+	public void init(){
+		//Load chars
+		string sels = Radio.config.GetValue<string>("ui.selectors") ?? "><";
+		TuiSelectable.LeftSelector = sels.Length > 1 ? sels[0] : '>';
+		TuiSelectable.RightSelector = sels.Length > 1 ? sels[1] : '<';
+		
+		cursorBlinks = Radio.config.GetValue<bool>("ui.cursorBlinks");
+		
+		string cur = Radio.config.GetValue<string>("ui.cursor") ?? "_";
+		cursor = cur.Length > 0 ? cur[0] : '_';
+		TuiWritable.Cursor = cursor;
 	}
 	
 	//Method to start it all
@@ -401,7 +440,7 @@ public partial class Screens{
 			}
 		});
 		
-		TuiFramedCheckBox emptyQueue = new TuiFramedCheckBox(' ', 'X', Session.queueEmpties, Placement.BottomLeft, 18, 3, null, null, null, Palette.user, Palette.user);
+		TuiFramedCheckBox emptyQueue = new TuiFramedCheckBox(' ', 'X', Session.queueEmpties, Placement.BottomLeft, 18, 3, null, null, null, Palette.writing, Palette.user);
 		
 		emptyQueue.DeleteAllKeyEvents();
 		

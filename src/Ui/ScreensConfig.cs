@@ -20,16 +20,37 @@ public partial class Screens{
 				setPaletteConfig();
 			})
 		},{
-			new TuiButton("Player", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
+			new TuiButton("UI", Placement.TopCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
+				setUiConfig();
+			})
+		},{
+			new TuiButton("Player", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
 				setPlayerConfig();
 			})
 		},{
-			new TuiButton("Paths", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+			new TuiButton("Paths", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
 				setPathConfig();
 			})
 		},{
-			new TuiButton("Miscellaneous", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
+			new TuiButton("Miscellaneous", Placement.TopCenter, 0, 12, null, Palette.user).SetAction((s, ck) => {
 				setMiscConfig();
+			})
+		},{
+			new TuiButton("Reset config", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+				setConfirmScreen("Do you want to reset the whole config?", () => {
+					Radio.resetConfig();
+					
+					init();
+					
+					if(Radio.config.GetValue<bool>("dcrp")){
+						if(Radio.dcrpc == null){
+							Radio.dcrpc = new DiscordPresence();
+						}
+					}else{
+						Radio.dcrpc?.Dispose();
+						Radio.dcrpc = null;
+					}
+				});
 			})
 		}};
 		
@@ -43,387 +64,392 @@ public partial class Screens{
 	}
 	
 	void setPaletteConfig(){
-		TuiFramedCheckBox useCols = new TuiFramedCheckBox(' ', 'X', Radio.config.GetValue<bool>("ui.useColors"), Placement.TopCenter, 4, 4, null, null, null, Palette.user, Palette.user);
-		
-		TuiFramedTextBox user = setColor3(new TuiFramedTextBox(Palette.user?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 7, null, Palette.user, Palette.user));
-		TuiFramedTextBox main = setColor3(new TuiFramedTextBox(Palette.main?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 7, null, Palette.main, Palette.user));
-		TuiFramedTextBox background = setColor3(new TuiFramedTextBox(Palette.background?.background.ToString() ?? "", 7, Placement.TopRight, 1, 7, null, null, Palette.user));
-		
-		TuiFramedTextBox song = setColor3(new TuiFramedTextBox(Palette.song?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 10, null, Palette.song, Palette.user));
-		TuiFramedTextBox author = setColor3(new TuiFramedTextBox(Palette.author?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 10, null, Palette.author, Palette.user));
-		TuiFramedTextBox playlist = setColor3(new TuiFramedTextBox(Palette.playlist?.foreground.ToString() ?? "", 7, Placement.TopRight, 1, 10, null, Palette.playlist, Palette.user));
-		
-		TuiFramedTextBox hint = setColor3(new TuiFramedTextBox(Palette.hint?.foreground.ToString() ?? "", 7, Placement.TopLeft, 8, 13, null, Palette.hint, Palette.user));
-		TuiFramedTextBox info = setColor3(new TuiFramedTextBox(Palette.info?.foreground.ToString() ?? "", 7, Placement.TopCenter, 2, 13, null, Palette.info, Palette.user));
-		TuiFramedTextBox delimiter = setColor3(new TuiFramedTextBox(Palette.delimiter?.foreground.ToString() ?? "", 7, Placement.TopRight, 1, 13, null, Palette.delimiter, Palette.user));
-		
-		TuiLabel errorLabel = new TuiLabel("", Placement.BottomCenter, 0, 4, Palette.error);
-		
-		TuiButton setAshTheme = new TuiButton("Ash Theme", Placement.BottomLeft, 3, 5, null, Palette.user).SetAction((s, ck) => {
-			Palette.setAsh();
-			closeMiddleScreen(); //update
-			setPaletteConfig();
-		});
-		
-		TuiButton setSubtleTheme = new TuiButton("Subtle Theme", Placement.BottomCenter, 0, 5, null, Palette.user).SetAction((s, ck) => {
-			Palette.setSubtle();
-			closeMiddleScreen(); //update
-			setPaletteConfig();
-		});
-		
-		TuiButton setNeonTheme = new TuiButton("Neon Theme", Placement.BottomRight, 3, 5, null, Palette.user).SetAction((s, ck) => {
-			Palette.setNeon();
-			closeMiddleScreen(); //update
-			setPaletteConfig();
-		});
-		
-		bool save(){
-			if(!Color3.TryParse(user.Text, out Color3 cUser)){
-				errorLabel.Text = "Invalid user color. Try again";
-				return false;
+		setMiddleScreen(generateConfigScreen("Palette", 8, new (string, ConfigType, string, int)[]{
+				("ui.palette.user.fg", ConfigType.Color, "User color foreground", 0),
+				("ui.palette.user.bg", ConfigType.Color, "User color background", 0),
+				
+				("ui.palette.writing.fg", ConfigType.Color, "Writing color foreground", 0),
+				("ui.palette.writing.bg", ConfigType.Color, "Writing color background", 0),
+				
+				("ui.palette.main.fg", ConfigType.Color, "Main color foreground", 0),
+				("ui.palette.main.bg", ConfigType.Color, "Main color background", 0),
+				
+				("ui.palette.song.fg", ConfigType.Color, "Song color foreground", 0),
+				("ui.palette.song.bg", ConfigType.Color, "Song color background", 0),
+				
+				("ui.palette.author.fg", ConfigType.Color, "Author color foreground", 0),
+				("ui.palette.author.bg", ConfigType.Color, "Author color background", 0),
+				
+				("ui.palette.playlist.fg", ConfigType.Color, "Playlist color foreground", 0),
+				("ui.palette.playlist.bg", ConfigType.Color, "Playlist color background", 0),
+				
+				("ui.palette.info.fg", ConfigType.Color, "Info color foreground", 0),
+				("ui.palette.info.bg", ConfigType.Color, "Info color background", 0),
+				
+				("ui.palette.hint.fg", ConfigType.Color, "Hint color foreground", 0),
+				("ui.palette.hint.bg", ConfigType.Color, "Hint color background", 0),
+				
+				("ui.palette.delimiter.fg", ConfigType.Color, "Delimiter color foreground", 0),
+				("ui.palette.delimiter.bg", ConfigType.Color, "Delimiter color background", 0),
+				
+				("ui.palette.error.fg", ConfigType.Color, "Error color foreground", 0),
+				("ui.palette.error.bg", ConfigType.Color, "Error color background", 0),
+				
+				("ui.palette.selectedDefault.fg", ConfigType.Color, "Selected panel color foreground", 0),
+				("ui.palette.selectedDefault.bg", ConfigType.Color, "Selected panel color background", 0),
+				
+				("ui.palette.default.fg", ConfigType.Color, "Default color foreground", 0),
+				("ui.palette.default.bg", ConfigType.Color, "Default color background", 0)
+			},
+			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[]{
+				("Ash Palette", (s, ck) => {
+					Palette.setAsh();
+					closeMiddleScreen(); //update
+					setPaletteConfig();
+				}),
+				("Subtle Palette", (s, ck) => {
+					Palette.setSubtle();
+					closeMiddleScreen(); //update
+					setPaletteConfig();
+				}),
+				("Neon Palette", (s, ck) => {
+					Palette.setNeon();
+					closeMiddleScreen(); //update
+					setPaletteConfig();
+				}),
+				("Light Palette", (s, ck) => {
+					Palette.setLight();
+					closeMiddleScreen(); //update
+					setPaletteConfig();
+				}),
+			},
+			() => {
+				Palette.init();
 			}
-			if(!Color3.TryParse(main.Text, out Color3 cMain)){
-				errorLabel.Text = "Invalid main color. Try again";
-				return false;
+		));
+	}
+	
+	void setUiConfig(){
+		setMiddleScreen(generateConfigScreen("UI", 8, new (string, ConfigType, string, int)[]{
+				("ui.useColors", ConfigType.Bool, "Use colors", 0),
+				("ui.cursorBlinks", ConfigType.Bool, "Cursor blinks", 1),
+				("ui.cursor", ConfigType.String, "Cursor char", 1),
+				("ui.selectors", ConfigType.String, "Selector chars", 2),
+			},
+			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[0],
+			() => {
+				init();
 			}
-			if(!Color3.TryParse(background.Text, out Color3 cBackground)){
-				errorLabel.Text = "Invalid background color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(song.Text, out Color3 cSong)){
-				errorLabel.Text = "Invalid song color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(author.Text, out Color3 cAuthor)){
-				errorLabel.Text = "Invalid author color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(playlist.Text, out Color3 cPlaylist)){
-				errorLabel.Text = "Invalid playlist color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(hint.Text, out Color3 cHint)){
-				errorLabel.Text = "Invalid hint color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(info.Text, out Color3 cInfo)){
-				errorLabel.Text = "Invalid info color. Try again";
-				return false;
-			}
-			if(!Color3.TryParse(delimiter.Text, out Color3 cDelimiter)){
-				errorLabel.Text = "Invalid delimiter color. Try again";
-				return false;
-			}
-			
-			Radio.config.Set("ui.palette.user", cUser);
-			Radio.config.Set("ui.palette.song", cSong);
-			Radio.config.Set("ui.palette.author", cAuthor);
-			Radio.config.Set("ui.palette.playlist", cPlaylist);
-			Radio.config.Set("ui.palette.main", cMain);
-			Radio.config.Set("ui.palette.delimiter", cDelimiter);
-			Radio.config.Set("ui.palette.hint", cHint);
-			Radio.config.Set("ui.palette.info", cInfo);
-			Radio.config.Set("ui.palette.background", cBackground);
-			
-			Radio.config.Set("ui.useColors", useCols.Checked);
-			
-			errorLabel.Text = "";
-			
-			Radio.config.Save();
-			
-			Palette.init();
-			
-			return true;
-		}
-		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
-			if(save()){
-				closeMiddleScreen(); //update
-				setPaletteConfig();
-			}
-		});
-		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			useCols, useCols, useCols
-		},{
-			user, main, background
-		},{
-			song, author, playlist
-		},{
-			hint, info, delimiter
-		},{
-			setAshTheme, setSubtleTheme, setNeonTheme
-		},{
-			done, done, done
-		}};
-		
-		TuiScreenInteractive l = generateMiddleInteractive(t);
-		
-		l.Elements.Add(new TuiLabel("Palette config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("Use colors:", Placement.TopCenter, -4, 5));
-		
-		l.Elements.Add(new TuiLabel("User:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Main:", Placement.TopCenter, -6, 8));
-		l.Elements.Add(new TuiLabel("Background:", Placement.TopRight, 11, 8));
-		
-		l.Elements.Add(new TuiLabel("Song:", Placement.TopLeft, 2, 11));
-		l.Elements.Add(new TuiLabel("Author:", Placement.TopCenter, -7, 11));
-		l.Elements.Add(new TuiLabel("Playlist:", Placement.TopRight, 11, 11));
-		
-		l.Elements.Add(new TuiLabel("Hint:", Placement.TopLeft, 2, 14));
-		l.Elements.Add(new TuiLabel("Info:", Placement.TopCenter, -6, 14));
-		l.Elements.Add(new TuiLabel("Delimiter:", Placement.TopRight, 11, 14));
-		
-		l.Elements.Add(errorLabel);
-		
-		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
-			if(save()){
-				closeMiddleScreen();
-			}
-		});
-		
-		setMiddleScreen(new MiddleScreen(l));
+		));
 	}
 	
 	void setPlayerConfig(){
-		TuiFramedTextBox volumeExponent = setUFloat(new TuiFramedTextBox(Radio.py.volumeExponent.ToString(), 8, Placement.TopCenter, 8, 4, null, null, null, Palette.user, Palette.user));
-		TuiFramedTextBox advanceTime = setUFloat(new TuiFramedTextBox(Radio.config.GetValue<float>("player.advanceTime").ToString(), 8, Placement.TopCenter, 8, 7, null, null, null, Palette.user, Palette.user));
-		
-		TuiLabel errorLabel = new TuiLabel("", Placement.BottomCenter, 0, 4, Palette.error);
-		
-		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-			Radio.py.volumeExponent = 2f;
-			Radio.config.Set("player.volumeExponent", 2f);
-			Radio.config.Set("player.advanceTime", 5f);
-			Radio.config.Save();
-			
-			closeMiddleScreen(); //update
-			setPlayerConfig();
-		});
-		
-		bool save(){
-			if(!float.TryParse(volumeExponent.Text, out float f1)){
-				errorLabel.Text = "Invalid volume exponent. Try again";
-				return false;
+		setMiddleScreen(generateConfigScreen("Player", 8, new (string, ConfigType, string, int)[]{
+				("player.volumeExponent", ConfigType.Ufloat, "Volume correction exponent", 8),
+				("player.advanceTime", ConfigType.Ufloat, "Advance time", 8),
+			},
+			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[0],
+			() => {
+				Radio.py.volumeExponent = Radio.config.GetValue<float>("player.advanceTime");
 			}
-			if(!float.TryParse(advanceTime.Text, out float f2)){
-				errorLabel.Text = "Invalid advance time. Try again";
-				return false;
-			}
-			
-			Radio.py.volumeExponent = f1;
-			Radio.config.Set("player.volumeExponent", f1);
-			Radio.config.Set("player.advanceTime", f2);
-			
-			Radio.config.Save();
-			
-			errorLabel.Text = "";			
-			return true;
-		}
-		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
-			save();
-		});
-		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			volumeExponent
-		},{
-			advanceTime
-		},{
-			reset
-		},{
-			done
-		}};
-		
-		TuiScreenInteractive l = generateMiddleInteractive(t);
-		
-		l.Elements.Add(new TuiLabel("Player config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("Volume correction exponent:", Placement.TopCenter, -12, 5));
-		l.Elements.Add(new TuiLabel("Advance time:", Placement.TopCenter, -5, 8));
-		
-		l.Elements.Add(errorLabel);
-		
-		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
-			if(save()){
-				closeMiddleScreen();
-			}
-		});
-		
-		setMiddleScreen(new MiddleScreen(l));
+		));
 	}
 	
 	void setPathConfig(){
-		TuiFramedScrollingTextBox ffmpeg = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffmpegPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox ffprobe = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ffprobePath"), 256, 34, Placement.TopCenter, 0, 9, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox ytdlp = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>("ytdlpPath"), 256, 34, Placement.TopCenter, 0, 13, null, null, null, Palette.user, Palette.user);
-		
-		ffmpeg.OnParentResize += (s, a) => {
-			ffmpeg.BoxXsize = Math.Max(0, a.X - 4);
-		};
-		
-		ffprobe.OnParentResize += (s, a) => {
-			ffprobe.BoxXsize = Math.Max(0, a.X - 4);
-		};
-		
-		ytdlp.OnParentResize += (s, a) => {
-			ytdlp.BoxXsize = Math.Max(0, a.X - 4);
-		};
-		
-		TuiButton openFfmpeg = new TuiButton("Open ffmpeg.org", Placement.BottomLeft, 3, 3, null, Palette.user).SetAction((s, ck) => {
-			openUrl("https://ffmpeg.org/");
-		});
-		
-		TuiButton openYtdlp = new TuiButton("Open yt-dlp downloads", Placement.BottomRight, 3, 3, null, Palette.user).SetAction((s, ck) => {
-			openUrl("https://github.com/yt-dlp/yt-dlp/releases");
-		});
-		
-		void save(){
-			Radio.config.Set("ffmpegPath", removeQuotesSingle(ffmpeg.Text));
-			Radio.config.Set("ffprobePath", removeQuotesSingle(ffprobe.Text));
-			Radio.config.Set("ytdlpPath", removeQuotesSingle(ytdlp.Text));
-			
-			Radio.config.Save();
-		}
-		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
-			save();
-		});
-		
-		bool d = false;
-		TuiButton autoFfmpeg = new TuiButton("Auto dl ffmpeg & ffprobe", Placement.BottomLeft, 3, 7, null, Palette.user).SetAction((s, ck) => {
-			if(d){
-				return;
-			}
-			d = true;
-			(ffmpeg.Text, ffprobe.Text) = Radio.downloadFfmpeg(() => {
-				d = false;
-			});
-		});
-		
-		bool c = false;
-		TuiButton autoYtdlp = new TuiButton("Auto dl yt-dlp", Placement.BottomRight, 3, 7, null, Palette.user).SetAction((s, ck) => {
-			if(c){
-				return;
-			}
-			c = true;
-			ytdlp.Text = Radio.downloadYtdlp(() => {
-				c = false;
-			});
-		});
-		
-		TuiButton updateYtdlp = new TuiButton("Auto update yt-dlp", Placement.BottomRight, 3, 5, null, Palette.user).SetAction((s, ck) => {
-			Radio.updateYtdlp();
-		});
-		
-		int b = 2;
-		TuiButton autoAll = new TuiButton("Auto download all", Placement.BottomLeft, 3, 5, null, Palette.user).SetAction((s, ck) => {
-			if(b < 2){
-				return;
-			}
-			b = 0;
-			
-			ytdlp.Text = Radio.downloadYtdlp(() => {
-				b++;
-			});
-			
-			(ffmpeg.Text, ffprobe.Text) = Radio.downloadFfmpeg(() => {
-				b++;
-			});
-		});
-		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			ffmpeg, ffmpeg
-		},{
-			ffprobe, ffprobe,
-		},{
-			ytdlp, ytdlp
-		},{
-			autoFfmpeg, autoYtdlp
-		},{
-			autoAll, updateYtdlp,
-		},{
-			openFfmpeg, openYtdlp
-		},{
-			done, done
-		}};
-		
-		TuiScreenInteractive l = generateMiddleInteractive(t);
-		
-		l.Elements.Add(new TuiLabel("Paths config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("FFMPEG path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("FFPROBE path:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("YT-DLP path:", Placement.TopLeft, 2, 12));
-		
-		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
-			save();
-			closeMiddleScreen();
-		});
-		
-		setMiddleScreen(new MiddleScreen(l));
+		setMiddleScreen(generateConfigScreen("Paths", 16, new (string, ConfigType, string, int)[]{
+				("ffmpegPath", ConfigType.Path, "FFMPEG path", 256),
+				("ffprobePath", ConfigType.Path, "FFPROBE path", 256),
+				("ytdlpPath", ConfigType.Path, "YT-DLP path", 256)
+			},
+			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[]{
+				("Open ffmpeg.org", (s, ck) => {
+					openUrl("https://ffmpeg.org/");
+				}),
+				("Open yt-dlp downloads", (s, ck) => {
+					openUrl("https://github.com/yt-dlp/yt-dlp/releases");
+				}),
+				("Auto dl ffmpeg & ffprobe", (s, ck) => {
+					TuiButton b = ((TuiButton) s);
+					MiddleScreen midsc = currentMiddleScreen;
+					if(Radio.downloadFfmpeg(() => {
+						if(currentMiddleScreen == midsc){
+							closeMiddleScreen();
+							setPathConfig();
+						}
+					})){
+						b.Text = "Downloading…";
+					}
+				}),
+				("Auto dl yt-dlp", (s, ck) => {
+					TuiButton b = ((TuiButton) s);
+					MiddleScreen midsc = currentMiddleScreen;
+					if(Radio.downloadYtdlp(() => {
+						if(currentMiddleScreen == midsc){
+							closeMiddleScreen();
+							setPathConfig();
+						}
+					})){
+						b.Text = "Downloading…";
+					}
+				}),
+				("Auto download all", (s, ck) => {
+					TuiButton b = ((TuiButton) s);
+					MiddleScreen midsc = currentMiddleScreen;
+					bool b1 = Radio.downloadFfmpeg(() => {
+						if(currentMiddleScreen == midsc){
+							closeMiddleScreen();
+							setPathConfig();
+						}
+					});
+					
+					bool b2 = Radio.downloadYtdlp(() => {
+						if(currentMiddleScreen == midsc){
+							closeMiddleScreen();
+							setPathConfig();
+						}
+					});
+					
+					if(b1 || b2){
+						b.Text = "Downloading…";
+					}
+				}),
+				("Auto update yt-dlp", (s, ck) => {
+					Radio.updateYtdlp();
+				})
+			},
+			null
+		));
 	}
 	
 	void setMiscConfig(){
-		TuiFramedCheckBox userpc = new TuiFramedCheckBox(' ', 'X', !Radio.config.TryGetValue("dcrp", out bool b) || b, Placement.TopCenter, 6, 4, null, null, null, Palette.user, Palette.user);
-		
-		TuiButton repair = new TuiButton("Attempt id repair", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
-			Song.repairLatestId();
-			Author.repairLatestId();
-			Playlist.repairLatestId();
-		});
-		
-		TuiButton openData = new TuiButton("Open data directory", Placement.TopCenter, 0, 10, null, Palette.user).SetAction((s, ck) => {
-			openFolder(Radio.dep.path);
-		});
-		
-		TuiButton openAppdata = new TuiButton("Open config directory", Placement.TopCenter, 0, 12, null, Palette.user).SetAction((s, ck) => {
-			openFolder(Radio.appDataPath);
-		});
-		
-		TuiButton reset = new TuiButton("Reset", Placement.BottomCenter, 0, 6, null, Palette.user).SetAction((s, ck) => {
-			Radio.config.Set("dcrp", true);
-			Radio.config.Save();
-			
-			userpc.Checked = true;
-		});
-		
-		bool save(){
-			Radio.config.Set("dcrp", userpc.Checked);
-			Radio.config.Save();
-			
-			if(userpc.Checked){
-				if(Radio.dcrpc == null){
-					Radio.dcrpc = new DiscordPresence();
+		setMiddleScreen(generateConfigScreen("Miscellaneous", 8, new (string, ConfigType, string, int)[]{
+				("dcrp", ConfigType.Bool, "Use Discord RPC", 0)
+			},
+			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[]{
+				("Attempt id repair", (s, ck) => {
+					Song.repairLatestId();
+					Author.repairLatestId();
+					Playlist.repairLatestId();
+				}),
+				("Open data directory", (s, ck) => {
+					openFolder(Radio.dep.path);
+				}),
+				("Open config directory", (s, ck) => {
+					openFolder(Radio.appDataPath);
+				}),
+			},
+			() => {
+				if(Radio.config.GetValue<bool>("dcrp")){
+					if(Radio.dcrpc == null){
+						Radio.dcrpc = new DiscordPresence();
+					}
+				}else{
+					Radio.dcrpc?.Dispose();
+					Radio.dcrpc = null;
 				}
+			}
+		));
+	}
+											//config .ash name, type, description, length		//Right actions
+	MiddleScreen generateConfigScreen(string title, int fieldsize, (string, ConfigType, string, int)[] configs, (string, Action<TuiSelectable, ConsoleKeyInfo>)[] actions, Action onSave){
+		//Helper method
+		string getColorString(string key){
+			if(Radio.config.TryGetValue(key, out Color3 cf)){
+				return cf.ToString();
 			}else{
-				Radio.dcrpc?.Dispose();
-				Radio.dcrpc = null;
+				return "";
+			}
+		}
+		
+		MiddleScreen midsc = null!;
+		
+		//Config fields
+		TuiSelectable[] configFields = new TuiSelectable[configs.Length];
+		TuiLabel[] configDescriptions = new TuiLabel[configs.Length];
+		
+		int y = 1;
+		
+		for(int i = 0; i < configs.Length; i++){
+			(string key, ConfigType type, string desc, int len) = configs[i];
+			
+			configDescriptions[i] = new TuiLabel(desc + ":", Placement.TopLeft, 1, y - 1);
+			
+			switch(type){
+				case ConfigType.Bool:
+					configFields[i] = new TuiFramedCheckBox(' ', 'X', Radio.config.GetValue<bool>(key), Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user);
+					y += 5;
+					break;
+				
+				case ConfigType.Int:
+					configFields[i] = setInt(new TuiFramedScrollingTextBox(Radio.config.GetValue<int>(key).ToString(), len, fieldsize, Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user, Palette.user));
+					y += 5;
+					break;
+				
+				case ConfigType.Uint:
+					configFields[i] = setUint(new TuiFramedScrollingTextBox(Radio.config.GetValue<int>(key).ToString(), len, fieldsize, Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user, Palette.user));
+					y += 5;
+					break;
+				
+				case ConfigType.Float:
+					configFields[i] = setFloat(new TuiFramedScrollingTextBox(Radio.config.GetValue<float>(key).ToString(), len, fieldsize, Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user, Palette.user));
+					y += 5;
+					break;
+				
+				case ConfigType.Ufloat:
+					configFields[i] = setUfloat(new TuiFramedScrollingTextBox(Radio.config.GetValue<float>(key).ToString(), len, fieldsize, Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user, Palette.user));
+					y += 5;
+					break;
+				
+				case ConfigType.Color:
+					configFields[i] = new TuiColor3TextBox(getColorString(key), fieldsize, Placement.TopLeft, 1, y, key.EndsWith(".bg"), null, Palette.user, Palette.user);
+					y += 5;
+					break;
+				
+				case ConfigType.String:
+				case ConfigType.Path:
+					configFields[i] = new TuiFramedScrollingTextBox(Radio.config.GetValue<string>(key), len, fieldsize, Placement.TopLeft, 1, y, null, null, null, Palette.writing, Palette.user, Palette.user);
+					y += 5;
+					break;
+			}
+		}
+		
+		//Actions
+		TuiButton[] actionButtons = new TuiButton[actions.Length + 1];
+		
+		for(int i = 0; i < actions.Length; i++){
+			(string name, Action<TuiSelectable, ConsoleKeyInfo> act) = actions[i];
+			actionButtons[i] = new TuiButton(name, Placement.TopCenter, 7, 2 + 2 * i, null, Palette.user).SetAction(act);
+		}
+		
+		//Reset button
+		actionButtons[actions.Length] = new TuiButton("Reset", Placement.BottomCenter, 5, 2, null, Palette.user).SetAction((s, ck) => {
+			for(int i = 0; i < configs.Length; i++){
+				(string key, ConfigType type, _, _) = configs[i];
+				ModelInstance ins = Radio.configModel.instances.FirstOrDefault(h => h.name == key);
+				if(ins != null){
+					Radio.config.Set(key, ins.value);
+				}
 			}
 			
+			Radio.config.Save();
+			
+			updateMiddleScreen(midsc, () => {
+				return generateConfigScreen(title, fieldsize, configs, actions, onSave);
+			});
+		});
+		
+		TuiLabel errorLabel = new TuiLabel("", Placement.BottomCenter, 0, 2, Palette.error);
+		
+		bool save(){
+			object[] results = new object[configs.Length];
+			
+			for(int i = 0; i < configs.Length; i++){
+				(_, ConfigType type, string desc, _) = configs[i];
+				switch(type){
+					case ConfigType.Bool:
+						results[i] = ((TuiCheckBox) configFields[i]).Checked;
+						break;
+					
+					case ConfigType.Int:
+						if(int.TryParse(((TuiWritable) configFields[i]).Text, out int in2)){
+							results[i] = in2;
+						}else{
+							errorLabel.Text = "Invalid " + desc + " number";
+							return false;
+						}
+						break;
+					
+					case ConfigType.Uint:
+						if(uint.TryParse(((TuiWritable) configFields[i]).Text, out uint ui)){
+							results[i] = (int) ui;
+						}else{
+							errorLabel.Text = "Invalid " + desc + " number";
+							return false;
+						}
+						break;
+					
+					case ConfigType.Float:
+					case ConfigType.Ufloat:
+						if(float.TryParse(((TuiWritable) configFields[i]).Text, out float f)){
+							results[i] = f;
+						}else{
+							errorLabel.Text = "Invalid " + desc + " number";
+							return false;
+						}
+						break;
+					
+					case ConfigType.Color:
+						if(Color3.TryParse(((TuiWritable) configFields[i]).Text, out Color3 c3)){
+							results[i] = c3;
+						}else if(((TuiWritable) configFields[i]).Text.Length == 0){
+							results[i] = false;
+						}else{
+							errorLabel.Text = "Invalid " + desc + " color";
+							return false;
+						}
+						break;
+					
+					case ConfigType.String:
+						results[i] = ((TuiWritable) configFields[i]).Text;
+						break;
+					
+					case ConfigType.Path:
+						results[i] = removeQuotesSingle(((TuiWritable) configFields[i]).Text);
+						break;
+				}
+			}
+			
+			for(int i = 0; i < configs.Length; i++){
+				(string key, _, _, _) = configs[i];
+				Radio.config.Set(key, results[i]);
+			}
+			
+			Radio.config.Save();
+			
+			errorLabel.Text = "";
+			onSave?.Invoke();
 			return true;
 		}
 		
-		TuiButton done = new TuiButton("Done", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s, ck) => {
-			save();
+		TuiButton done = new TuiButton("Done", Placement.CenterRight, 2, 0, Palette.info, Palette.user).SetAction((s, ck) => {
+			if(save()){
+				closeMiddleScreen();
+			}
 		});
 		
-		TuiSelectable[,] t = new TuiSelectable[,]{{
-			userpc
-		},{
-			repair
-		},{
-			openData
-		},{
-			openAppdata
-		},{
-			reset
-		},{
-			done
-		}};
+		//TuiSelectable matrix population
+		int lenw = Math.Max(configFields.Length, actionButtons.Length);
+		TuiSelectable[,] t = new TuiSelectable[lenw, 3];
 		
-		TuiScreenInteractive l = generateMiddleInteractive(t);
+		for(int i = 0; i < lenw; i++){
+			t[i, 0] = configFields[i % configFields.Length];
+			t[i, 1] = actionButtons[i % actionButtons.Length];
+			t[i, 2] = done;
+		}
 		
-		l.Elements.Add(new TuiLabel("Miscellaneous config", Placement.TopCenter, 0, 1, Palette.main));
-		l.Elements.Add(new TuiLabel("Use Discord RCP:", Placement.TopCenter, -4, 5));
+		//Static screen
+		TuiScreen backg = generateMiddleStatic();
+		
+		backg.Elements.Add(new TuiLabel("Config - " + title, Placement.TopCenter, 0, 1, Palette.main));
+		
+		backg.Elements.Add(errorLabel);
+		
+		//Inner screen
+		TuiScrollingScreenInteractive l = new TuiScrollingScreenInteractive(Math.Max(backg.Xsize - 6, 0),
+			Math.Max(backg.Ysize - 6, 0),
+			t, 0, 0,
+			Placement.TopLeft, 3, 4,
+			null
+		);
+		
+		backg.Elements.Add(l);
+		
+		prepareScreen(l);
+		
+		l.OnParentResize += (s, a) => {
+			l.Xsize = Math.Max(backg.Xsize - 6, 0);
+			l.Ysize = Math.Max(backg.Ysize - 6, 0);
+		};
 		
 		l.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
 			if(save()){
@@ -431,11 +457,63 @@ public partial class Screens{
 			}
 		});
 		
-		setMiddleScreen(new MiddleScreen(l));
+		l.Elements.AddRange(configDescriptions);
+		
+		l.FixedElements.AddRange(actionButtons);
+		l.FixedElements.Add(done);
+		
+		midsc = new MiddleScreen(backg, l);
+		
+		return midsc;
 	}
 	
 	//Prepare textbox
-	static TuiFramedTextBox setUFloat(TuiFramedTextBox b){
+	static TuiWritable setInt(TuiWritable b){
+		b.CanWriteChar = c => {
+			if(b.Text.Length + 1 > b.Length){
+				return null;
+			}
+			if(char.IsDigit(c) || c == '-'){
+				return c.ToString();
+			}
+			return null;
+		};
+		
+		return b;
+	}
+	
+	//Prepare textbox
+	static TuiWritable setUint(TuiWritable b){
+		b.CanWriteChar = c => {
+			if(b.Text.Length + 1 > b.Length){
+				return null;
+			}
+			if(char.IsDigit(c)){
+				return c.ToString();
+			}
+			return null;
+		};
+		
+		return b;
+	}
+	
+	//Prepare textbox
+	static TuiWritable setFloat(TuiWritable b){
+		b.CanWriteChar = c => {
+			if(b.Text.Length + 1 > b.Length){
+				return null;
+			}
+			if(char.IsDigit(c) || c == '.' || c == '-'){
+				return c.ToString();
+			}
+			return null;
+		};
+		
+		return b;
+	}
+	
+	//Prepare textbox
+	static TuiWritable setUfloat(TuiWritable b){
 		b.CanWriteChar = c => {
 			if(b.Text.Length + 1 > b.Length){
 				return null;
@@ -448,19 +526,8 @@ public partial class Screens{
 		
 		return b;
 	}
-	
-	//Prepare textbox
-	static TuiFramedTextBox setColor3(TuiFramedTextBox b){
-		b.CanWriteChar = c => {
-			if(b.Text.Length + 1 > b.Length){
-				return null;
-			}
-			if(Uri.IsHexDigit(c) || c == '#'){
-				return c.ToString();
-			}
-			return null;
-		};
-		
-		return b;
-	}
+}
+
+enum ConfigType{
+	Bool, Int, Uint, Float, Ufloat, Color, String, Path
 }

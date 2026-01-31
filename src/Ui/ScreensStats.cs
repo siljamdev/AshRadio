@@ -14,8 +14,8 @@ public partial class Screens{
 			return;
 		}
 		
-		TuiFramedScrollingTextBox start = new TuiFramedScrollingTextBox(MonthDate.Now.ToNumbers2(), 7, 16, Placement.TopCenter, 0, 5, null, null, null, Palette.user, Palette.user);
-		TuiFramedScrollingTextBox end = new TuiFramedScrollingTextBox(MonthDate.Now.ToNumbers2(), 7, 16, Placement.TopCenter, 0, 10, null, null, null, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox start = new TuiFramedScrollingTextBox(MonthDate.Now.ToNumbers2(), 7, 16, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox end = new TuiFramedScrollingTextBox(MonthDate.Now.ToNumbers2(), 7, 16, Placement.TopCenter, 0, 10, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		start.CanWriteChar = c => {
 			if(start.Text.Length + 1 > start.Length){
@@ -78,7 +78,7 @@ public partial class Screens{
 		bool b = false;
 		
 		TuiButton seeSongs = null!;
-		seeSongs = new TuiButton("See top songs", Placement.BottomLeft, 3, 4, null, Palette.user).SetAction((s2, ck) => {
+		seeSongs = new TuiButton("See top songs", Placement.BottomLeft, 3, 4, Palette.info, Palette.user).SetAction((s2, ck) => {
 			if(!tryParseDates(out MonthDate s, out MonthDate e)){
 				return;
 			}
@@ -104,7 +104,7 @@ public partial class Screens{
 		});
 		
 		TuiButton seeAuthors = null!;
-		seeAuthors = new TuiButton("See top authors", Placement.BottomRight, 3, 4, null, Palette.user).SetAction((s2, ck) => {
+		seeAuthors = new TuiButton("See top authors", Placement.BottomRight, 3, 4, Palette.info, Palette.user).SetAction((s2, ck) => {
 			if(!tryParseDates(out MonthDate s, out MonthDate e)){
 				return;
 			}
@@ -464,7 +464,7 @@ public partial class Screens{
 		
 		TuiVerticalLine ver = new TuiVerticalLine(11, 'a', Placement.TopCenter, 0, 3);
 		
-		TuiConnectedLinesScreen fram = new TuiConnectedLinesScreen(Math.Max(0, l.Xsize - 4), 15, new ILineElement[]{frame, hor, ver}, Placement.Center, 0, 0, Palette.user);
+		TuiConnectedLinesScreen fram = new TuiConnectedLinesScreen(Math.Max(0, l.Xsize - 4), 15, Placement.Center, 0, 0, Palette.user, frame, hor, ver);
 		fram.OnParentResize += (s, a) => {
 			fram.Xsize = Math.Max(0, a.X - 4);
 		};
