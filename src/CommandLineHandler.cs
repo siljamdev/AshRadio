@@ -111,7 +111,15 @@ public static class CommandLineHandler{
 		}
 		
 		try{
-			Radio.sc.play();
+			Radio.tryInitScreens = true;
+			while(Radio.tryInitScreens){
+				Radio.tryInitScreens = false;
+				Radio.sc.play();
+				
+				if(Radio.tryInitScreens){
+					Radio.reinitScreens();
+				}
+			}
 			return 0;
 		}catch(Exception e){
 			Screens.exitAltBuffer();
@@ -124,8 +132,8 @@ public static class CommandLineHandler{
 	}
 	
 	static void printVersion(){
-		Console.WriteLine("AshRadio v" + Radio.version);
-		Console.WriteLine(Radio.versionDate);
+		Console.WriteLine("AshRadio v" + BuildInfo.Version);
+		Console.WriteLine("Version built on: " + BuildInfo.BuildDate);
 		Console.WriteLine("Made by siljam");
 		Console.WriteLine("Go to https://github.com/siljamdev/AshRadio for more ");
 	}

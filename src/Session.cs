@@ -11,8 +11,9 @@ public static class Session{
 	
 	static List<int> queue;
 	public static bool queueEmpties {get; set{
-		queueIndex = 0;
 		field = value;
+		queueIndex = 0;
+		onQueueChange?.Invoke(null, EventArgs.Empty);
 	}} = true;
 	public static int queueIndex {get; private set;} = 0;
 	
@@ -90,6 +91,11 @@ public static class Session{
 		int t = queue[index];
 		queue.RemoveAt(index);
 		queue.Insert(newIndex, t);
+		onQueueChange?.Invoke(null, EventArgs.Empty);
+	}
+	
+	public static void clearQueue(){
+		queue.Clear();
 		onQueueChange?.Invoke(null, EventArgs.Empty);
 	}
 	

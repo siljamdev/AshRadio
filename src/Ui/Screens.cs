@@ -52,15 +52,15 @@ public partial class Screens{
 	void prepareScreen(TuiScreenInteractive t){
 		t.DeleteAllKeyEvents();
 		
-		t.SubKeyEvent(ConsoleKey.UpArrow, TuiScreenInteractive.MoveUp);
-		t.SubKeyEvent(ConsoleKey.DownArrow, TuiScreenInteractive.MoveDown);
-		t.SubKeyEvent(ConsoleKey.LeftArrow, TuiScreenInteractive.MoveLeft);
-		t.SubKeyEvent(ConsoleKey.RightArrow, TuiScreenInteractive.MoveRight);
+		Keybinds.up.subEvent(t, TuiScreenInteractive.MoveUp);
+		Keybinds.down.subEvent(t, TuiScreenInteractive.MoveDown);
+		Keybinds.left.subEvent(t, TuiScreenInteractive.MoveLeft);
+		Keybinds.right.subEvent(t, TuiScreenInteractive.MoveRight);
 		
-		//t.SubKeyEvent(ConsoleKey.W, ConsoleModifiers.Control, TuiScreenInteractive.MoveUp);
-		//t.SubKeyEvent(ConsoleKey.S, ConsoleModifiers.Control, TuiScreenInteractive.MoveDown);
-		//t.SubKeyEvent(ConsoleKey.A, ConsoleModifiers.Control, TuiScreenInteractive.MoveLeft);
-		//t.SubKeyEvent(ConsoleKey.D, ConsoleModifiers.Control, TuiScreenInteractive.MoveRight);
+		if(t is TuiScrollingScreenInteractive){
+			Keybinds.scrollUp.subEvent(t, TuiScrollingScreenInteractive.ScrollUp);
+			Keybinds.scrollDown.subEvent(t, TuiScrollingScreenInteractive.ScrollDown);
+		}
 	}
 	
 	//Generic screens
@@ -74,16 +74,16 @@ public partial class Screens{
 			input.BoxXsize = Math.Max(0, a.X - 4);
 		};
 		
-		input.SubKeyEvent(ConsoleKey.Enter, (s, ck) => {
-			onEnter?.Invoke(input.Text);
-			removeMiddleScreen(sc);
-		});
-		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
 			input
 		}};
 		
 		sc = generateMiddle(t);
+		
+		Keybinds.enter.subEvent(sc, "Search", (s, ck) => {
+			onEnter?.Invoke(input.Text);
+			removeMiddleScreen(sc);
+		});
 		
 		sc.interactive.Elements.Add(new TuiLabel("Search", Placement.TopCenter, 0, 1, Palette.main));
 		sc.interactive.Elements.Add(new TuiLabel(question, Placement.TopCenter, 0, 3));
@@ -112,13 +112,36 @@ public partial class Screens{
 		setMiddleScreen(sc);
 	}
 	
+	void confirmExit(){
+		TuiSelectable[,] buttons = {{
+			new TuiButton("Exit", Placement.Center, -4, 1, null, Palette.user).SetAction((s, ck) => {
+				MultipleTuiScreenInteractive.StopPlaying(master, default);
+			}),
+			new TuiButton("Cancel", Placement.Center, 4, 1, null, Palette.user).SetAction((s, ck) => closeMiddleScreen())
+		}};
+		
+		MiddleScreen t = generateMiddle(buttons);
+		t.interactive.Elements.Add(new TuiLabel("Do you want to exit?", Placement.Center, 0, -1));
+		t.interactive.Elements.Add(new TuiFrame(24, 7, Placement.Center, 0, 0, Palette.user));
+		
+		Keybinds.escape.subEvent(t, false, (s, ck) => {
+			MultipleTuiScreenInteractive.StopPlaying(master, default);
+		}); //Escape + escape will close
+		
+		setMiddleScreen(t);
+	}
+	
+	void reinitScreens(){
+		Radio.tryInitScreens = true;
+		MultipleTuiScreenInteractive.StopPlaying(master, default);
+	}
 	
 	//Utilities
 	
 	static void setLooping(TuiOptionPicker top){
 		top.DeleteAllKeyEvents();
 		
-		top.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
+		Keybinds.left.subEvent(top, (s, cki) => {
 			if(top.SelectedOptionIndex == 0){
 				top.SelectedOptionIndex = (uint) (top.Options.Length - 1);
 			}else{
@@ -126,7 +149,7 @@ public partial class Screens{
 			}
 		});
 		
-		top.SubKeyEvent(ConsoleKey.RightArrow, (s, cki) => {
+		Keybinds.right.subEvent(top, (s, cki) => {
 			if(top.SelectedOptionIndex == top.Options.Length - 1){
 				top.SelectedOptionIndex = 0;
 			}else{

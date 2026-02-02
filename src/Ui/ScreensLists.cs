@@ -20,7 +20,7 @@ public partial class Screens{
 		
 		TuiFramedScrollingTextBox titleInput = new TuiFramedScrollingTextBox(s?.title ?? Song.nullTitle, 256, 16, Placement.TopRight, 3, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
-		titleInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
+		Keybinds.enter.subEvent(titleInput, (s2, ck) => {
 			s?.setTitle(titleInput.Text);
 		});
 		
@@ -31,7 +31,7 @@ public partial class Screens{
 		TuiFramedScrollingTextBox authorsInput = new TuiFramedScrollingTextBox(s?.authors == null ? "" : (s.authors.Length == 0 ? "" : (s.authors.Length == 1 ? (Author.get(s.authors[0])?.name ?? Author.nullName) : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))))),
 			64, 16, Placement.TopRight, 3, 11, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
-		authorsInput.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
+		Keybinds.enter.subEvent(authorsInput, (s2, ck) => {
 			if(s != null){
 				string[] aps = authorsInput.Text.Split(',');
 				int[] auts = Author.getAuthors(aps);
@@ -86,7 +86,7 @@ public partial class Screens{
 					setAuthorDetails(tt3);
 				});
 				
-				ar.SubKeyEvent(ConsoleKey.S, (s, ck) => {
+				Keybinds.setSource.subEvent(ar, (s, ck) => {
 					Session.setSource(SourceType.Author, tt3);
 				});
 				
@@ -107,9 +107,6 @@ public partial class Screens{
 		c.Elements.Add(new TuiLabel("Set authors:", Placement.TopRight, 12, 9));
 		c.Elements.Add(new TuiLabel("(separated by commas)", Placement.TopRight, 3, 10));
 		
-		c.Elements.Add(new TuiTwoLabels("Q", " Add to queue", Placement.BottomRight, 0, 1, Palette.hint, null));
-		c.Elements.Add(new TuiTwoLabels("P", " Play", Placement.BottomRight, 0, 0, Palette.hint, null));
-		
 		c.Elements.Add(new TuiLabel(secondsToMinuteTime(s.duration), Placement.TopLeft, 4, 5, Palette.info));
 		
 		if(s?.authors != null){
@@ -122,7 +119,7 @@ public partial class Screens{
 			}
 		}
 		
-		c.SubKeyEvent(ConsoleKey.Q, (s2, ck) => {
+		Keybinds.addToQueue.subEvent(c2, true, (s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -130,12 +127,28 @@ public partial class Screens{
 			Session.addToQueue(s.id);
 		});
 		
-		c.SubKeyEvent(ConsoleKey.P, (s2, ck) => {
+		Keybinds.play.subEvent(c2, true, (s2, ck) => {
 			if(s == null){
 				return;
 			}
 			
 			Radio.py.play(s.id);
+		});
+		
+		Keybinds.addToPlaylist.subEvent(c2, true, (s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setSelectPlaylistToAddTo(s.id);
+		});
+		
+		Keybinds.export.subEvent(c2, true, (s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setExportSong(s);
 		});
 		
 		void onLibChange(object sender, LibraryEventArgs a){
@@ -199,12 +212,16 @@ public partial class Screens{
 				setSongDetails(s);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.Q, (s2, ck) => {
+			Keybinds.addToQueue.subEvent(b, (s2, ck) => {
 				Session.addToQueue(s.id);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.P, (s2, ck) => {
+			Keybinds.play.subEvent(b, (s2, ck) => {
 				Radio.py.play(s.id);
+			});
+			
+			Keybinds.addToPlaylist.subEvent(b, (s2, ck) => {
+				setSelectPlaylistToAddTo(s.id);
 			});
 			
 			t[i, 0] = b;
@@ -224,9 +241,6 @@ public partial class Screens{
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
-		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 1, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " song:", Placement.TopLeft, 2, 3));
@@ -258,18 +272,22 @@ public partial class Screens{
 			l.FixedElements.Add(exp);
 		}
 		
-		l.SubKeyEvent(ConsoleKey.S, (s, ck) => { //Set source
+		MiddleScreen c2 = new MiddleScreen(backg, l, "library");
+		
+		Keybinds.setSource.subEvent(c2, true, (s, ck) => {
 			Session.setSource(SourceType.Library);
 		});
 		
-		MiddleScreen c2 = new MiddleScreen(backg, l, "library");
-		
-		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
+		Keybinds.search.subEvent(c2, true, (s, ck) => {
 			setSearchScreen("Search song in library:", s => setLibrary(s));
 			
 			if(query != null){
 				removeMiddleScreen(c2);
 			}
+		});
+		
+		Keybinds.export.subEvent(c2, true, (s, ck) => {
+			setExportLibrary();
 		});
 		
 		void onLibChange(object sender, LibraryEventArgs a){
@@ -297,7 +315,7 @@ public partial class Screens{
 	MiddleScreen authorDetails(Author s, uint? inex = null){
 		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
-		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
+		Keybinds.enter.subEvent(name, (s2, ck) => {
 			s?.setName(name.Text);
 		});
 		
@@ -339,12 +357,16 @@ public partial class Screens{
 					setSongDetails(ttt3);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.Q, (s2, ck) => {
+				Keybinds.addToQueue.subEvent(b, (s2, ck) => {
 					Session.addToQueue(ttt3.id);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.P, (s2, ck) => {
+				Keybinds.play.subEvent(b, (s2, ck) => {
 					Radio.py.play(ttt3.id);
+				});
+				
+				Keybinds.addToPlaylist.subEvent(b, (s2, ck) => {
+					setSelectPlaylistToAddTo(ttt3.id);
 				});
 				
 				temp[i, 0] = b;
@@ -363,8 +385,6 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiLabel(s?.name ?? Author.nullName, Placement.TopLeft, 2, 2, Palette.author));
 		backg.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 4, 3));
-		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(songs != null){
 			if(songs.Count == 1){
@@ -398,7 +418,9 @@ public partial class Screens{
 		l.FixedElements.Add(name);
 		l.FixedElements.Add(del);
 		
-		l.SubKeyEvent(ConsoleKey.S, (sc, ck) => { //Set source
+		MiddleScreen c2 = new MiddleScreen(backg, l);
+		
+		Keybinds.setSource.subEvent(c2, true, (sc, ck) => { //Set source
 			if(s == null){
 				return;
 			}
@@ -406,7 +428,13 @@ public partial class Screens{
 			Session.setSource(SourceType.Author, s.id);
 		});
 		
-		MiddleScreen c2 = new MiddleScreen(backg, l);
+		Keybinds.export.subEvent(c2, true, (sc, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setExportAuthor(s);
+		});
 		
 		void onLibChange(object sender, LibraryEventArgs a){
 			if(updateMiddleScreen(c2, () => {
@@ -465,8 +493,12 @@ public partial class Screens{
 				setAuthorDetails(s);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.S, (s2, ck) => {
+			Keybinds.setSource.subEvent(b, (s2, ck) => {
 				Session.setSource(SourceType.Author, s.id);
+			});
+			
+			Keybinds.export.subEvent(b, (s2, ck) => {
+				setExportAuthor(s);
 			});
 			
 			t[i, 0] = b;
@@ -479,8 +511,6 @@ public partial class Screens{
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
-		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " author:", Placement.TopLeft, 2, 3));
@@ -509,7 +539,7 @@ public partial class Screens{
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l, "authors");
 		
-		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
+		Keybinds.search.subEvent(c2, true, (s, ck) => {
 			setSearchScreen("Search authors:", s => setAuthors(s));
 			
 			if(query != null){
@@ -542,7 +572,7 @@ public partial class Screens{
 	MiddleScreen playlistDetails(Playlist s, uint? inex = null){
 		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
-		name.SubKeyEvent(ConsoleKey.Enter, (s2, ck) => {
+		Keybinds.enter.subEvent(name, (s2, ck) => {
 			s?.setTitle(name.Text);
 		});
 		
@@ -597,26 +627,30 @@ public partial class Screens{
 					setSongDetails(ttt3);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.Q, (s2, ck) => {
+				Keybinds.addToQueue.subEvent(b, (s2, ck) => {
 					Session.addToQueue(ttt3.id);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.P, (s2, ck) => {
+				Keybinds.play.subEvent(b, (s2, ck) => {
 					Radio.py.play(ttt3.id);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.R, (s2, ck) => {
+				Keybinds.addToPlaylist.subEvent(b, (s2, ck) => {
+					setSelectPlaylistToAddTo(ttt3.id);
+				});
+				
+				Keybinds.listRemove.subEvent(b, (s2, ck) => {
 					s?.deleteSong(j);
 				});
 				
-				b.SubKeyEvent(ConsoleKey.N, (s2, ck) => {
+				Keybinds.listUp.subEvent(b, (s2, ck) => {
 					if(j != 0){
 						TuiScreenInteractive.MoveUp(l, ck);
 						s?.moveSong(j, j - 1);
 					}
 				});
 				
-				b.SubKeyEvent(ConsoleKey.M, (s2, ck) => {
+				Keybinds.listDown.subEvent(b, (s2, ck) => {
 					if(j != songs.Count - 1){
 						TuiScreenInteractive.MoveDown(l, ck);
 						s?.moveSong(j, j + 1);
@@ -641,8 +675,6 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiLabel(s?.title ?? Playlist.nullTitle, Placement.TopLeft, 2, 2, Palette.playlist));
 		backg.Elements.Add(new TuiLabel("Playlist", Placement.TopLeft, 4, 3));
-		
-		backg.Elements.Add(new TuiTwoLabels("S", " Set source", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(songs != null){
 			if(songs.Count == 1){
@@ -678,7 +710,9 @@ public partial class Screens{
 		l.FixedElements.Add(del);
 		l.FixedElements.Add(exp);
 		
-		l.SubKeyEvent(ConsoleKey.S, (sc, ck) => { //Set source
+		MiddleScreen c2 = new MiddleScreen(backg, l);
+		
+		Keybinds.setSource.subEvent(c2, true, (sc, ck) => {
 			if(s == null){
 				return;
 			}
@@ -686,7 +720,13 @@ public partial class Screens{
 			Session.setSource(SourceType.Playlist, s.id);
 		});
 		
-		MiddleScreen c2 = new MiddleScreen(backg, l);
+		Keybinds.export.subEvent(c2, true, (sc, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setExportPlaylist(s);
+		});
 		
 		void onLibChange(object sender, LibraryEventArgs a){
 			if(updateMiddleScreen(c2, () => {
@@ -772,8 +812,12 @@ public partial class Screens{
 				setPlaylistDetails(s);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.S, (s2, ck) => {
+			Keybinds.setSource.subEvent(b, (s2, ck) => {
 				Session.setSource(SourceType.Playlist, s.id);
+			});
+			
+			Keybinds.export.subEvent(b, (s2, ck) => {
+				setExportPlaylist(s);
 			});
 			
 			t[i, 0] = b;
@@ -795,8 +839,6 @@ public partial class Screens{
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
-		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " playlist:", Placement.TopLeft, 2, 3));
@@ -831,7 +873,7 @@ public partial class Screens{
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l, "playlists");
 		
-		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
+		Keybinds.search.subEvent(c2, true, (s, ck) => {
 			setSearchScreen("Search playlists:", s => setPlaylists(s));
 			
 			if(query != null){
@@ -890,8 +932,6 @@ public partial class Screens{
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
-		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " playlist:", Placement.TopLeft, 2, 3));
 		}else if(lib.Count > 0){
@@ -919,7 +959,7 @@ public partial class Screens{
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l);
 		
-		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
+		Keybinds.search.subEvent(c2, true, (s, ck) => {
 			setSearchScreen("Search playlists:", s => setSelectPlaylistToAddTo(sindex, s));
 			
 			removeMiddleScreen(c2);
@@ -963,6 +1003,10 @@ public partial class Screens{
 				closeMiddleScreen();
 			});
 			
+			Keybinds.play.subEvent(b, (s2, ck) => {
+				Radio.py.play(s.id);
+			});
+			
 			t[i, 0] = b;
 		}
 		
@@ -973,8 +1017,6 @@ public partial class Screens{
 		if(query != null){
 			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
 		}
-		
-		backg.Elements.Add(new TuiTwoLabels("F", " Search", Placement.BottomRight, 0, 0, Palette.hint, null));
 		
 		if(lib.Count == 1){
 			backg.Elements.Add(new TuiLabel(lib.Count + " song:", Placement.TopLeft, 2, 3));
@@ -1003,7 +1045,7 @@ public partial class Screens{
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l);
 		
-		l.SubKeyEvent(ConsoleKey.F, (s, ck) => {
+		Keybinds.search.subEvent(c2, true, (s, ck) => {
 			setSearchScreen("Search song in library:", s => setSelectSongToAdd(p, s));
 			
 			removeMiddleScreen(c2);

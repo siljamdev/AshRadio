@@ -207,12 +207,16 @@ public partial class Screens{
 				setSongDetails(s);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.Q, (s2, ck) => {
+			Keybinds.addToQueue.subEvent(b, (s2, ck) => {
 				Session.addToQueue(s.id);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.P, (s2, ck) => {
+			Keybinds.play.subEvent(b, (s2, ck) => {
 				Radio.py.play(s.id);
+			});
+			
+			Keybinds.addToQueue.subEvent(b, (s2, ck) => {
+				setSelectPlaylistToAddTo(s.id);
 			});
 			
 			t[i, 0] = b;
@@ -318,8 +322,7 @@ public partial class Screens{
 				break;
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("U", " See top authors", Placement.BottomRight, 0, 0, Palette.hint, null));
-		l.SubKeyEvent(ConsoleKey.U, (s, ck) => {
+		Keybinds.authors.subEvent(c2, "See top authors", (s, ck) => {
 			setAuthorStats(start, end, totalTime, stats, aut, 0);
 			
 			removeMiddleScreen(c2);
@@ -352,7 +355,7 @@ public partial class Screens{
 				setAuthorDetails(a);
 			});
 			
-			b.SubKeyEvent(ConsoleKey.S, (s2, ck) => {
+			Keybinds.setSource.subEvent(b, (s2, ck) => {
 				Session.setSource(SourceType.Author, a.id);
 			});
 			
@@ -432,8 +435,7 @@ public partial class Screens{
 				break;
 		}
 		
-		backg.Elements.Add(new TuiTwoLabels("L", " See top songs", Placement.BottomRight, 0, 0, Palette.hint, null));
-		l.SubKeyEvent(ConsoleKey.L, (s, ck) => {
+		Keybinds.library.subEvent(c2, "See top songs", (s, ck) => {
 			setSongStats(start, end, totalTime, stats, aut, 0);
 			
 			removeMiddleScreen(c2);

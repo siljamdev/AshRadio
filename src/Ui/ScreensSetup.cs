@@ -17,7 +17,7 @@ public partial class Screens{
 	bool cursorBlinks = true;
 	char cursor = '_';
 	
-	public Screens(){
+	public Screens(bool openConfig = false){
 		init();
 		
 		//Init setup
@@ -77,23 +77,30 @@ public partial class Screens{
 		
 		master.OnResize += (s, a) => hideCursor();
 		
-		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.Control, (s, cki) => {
+		//Panels
+		Keybinds.selectPlaying.subEvent(master, (s, cki) => {
 			setSelectedScreen(playing);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.S, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.selectSession.subEvent(master, (s, cki) => {
 			setSelectedScreen(session);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.N, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.selectNavigation.subEvent(master, (s, cki) => {
 			setSelectedScreen(navigation);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.G, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.selectMiddle.subEvent(master, (s, cki) => {
 			setSelectedScreen(currentMiddleScreen);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.Escape, (s, cki) => { //Close or focus middle
+		Keybinds.selectQueue.subEvent(master, (s, cki) => {
+			if(Session.getQueue().Count > 0){
+				setSelectedScreen(queueScreen);
+			}
+		});
+		
+		Keybinds.escape.subEvent(master, (s, cki) => { //Close or focus middle
 			if(master?.SelectedScreen == currentMiddleScreen.interactive){
 				closeMiddleScreen();
 			}else{
@@ -101,15 +108,16 @@ public partial class Screens{
 			}
 		});
 		
-		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.exit.subEvent(master, (s, cki) => { //Exit immediately
+			MultipleTuiScreenInteractive.StopPlaying(master, default);
+		});
+		
+		//Player
+		Keybinds.pause.subEvent(master, (s, cki) => {
 			Radio.py.togglePause();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.K, ConsoleModifiers.None, (s, cki) => {
-			Radio.py.togglePause();
-		});
-		
-		master.SubKeyEvent(ConsoleKey.N, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.previous.subEvent(master, (s, cki) => {
 			int j = Session.getPrevious(Radio.py.playingSong);
 			if(j < 0){
 				return;
@@ -119,49 +127,74 @@ public partial class Screens{
 			Session.addToPrevList = true;
 		});
 		
-		master.SubKeyEvent(ConsoleKey.M, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.skip.subEvent(master, (s, cki) => {
 			Radio.py.skip();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.J, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.rewind.subEvent(master, (s, cki) => {
 			Radio.py.elapsed -= Radio.config.GetValue<float>("player.advanceTime");
 		});
 		
-		master.SubKeyEvent(ConsoleKey.J, ConsoleModifiers.Shift, (s, cki) => {
+		Keybinds.restart.subEvent(master, (s, cki) => {
 			Radio.py.elapsed = 0f;
 		});
 		
-		master.SubKeyEvent(ConsoleKey.L, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.advance.subEvent(master, (s, cki) => {
 			Radio.py.elapsed += Radio.config.GetValue<float>("player.advanceTime");
 		});
 		
-		master.SubKeyEvent(ConsoleKey.OemMinus, (s, cki) => {
+		//Volume
+		Keybinds.volumeDown.subEvent(master, (s, cki) => {
 			volume.NumberDown(volume, cki);
 			Radio.py.setVolume(volume.Number);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.OemPlus, (s, cki) => {
+		Keybinds.volumeUp.subEvent(master, (s, cki) => {
 			volume.NumberUp(volume, cki);
 			Radio.py.setVolume(volume.Number);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.F1, ConsoleModifiers.None, (s, cki) => {
+		Keybinds.volumeMute.subEvent(master, (s, cki) => {
+			volume.Number = 0;
+			Radio.py.setVolume(volume.Number);
+		});
+		
+		Keybinds.volumeMax.subEvent(master, (s, cki) => {
+			volume.Number = 100;
+			Radio.py.setVolume(volume.Number);
+		});
+		
+		//Navigation
+		Keybinds.help.subEvent(master, (s, cki) => {
 			setHelp();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.L, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.config.subEvent(master, (s, cki) => {
+			setConfig();
+		});
+		
+		Keybinds.library.subEvent(master, (s, cki) => {
 			setLibrary();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.P, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.playlists.subEvent(master, (s, cki) => {
 			setPlaylists();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.U, ConsoleModifiers.Control, (s, cki) => {
+		Keybinds.authors.subEvent(master, (s, cki) => {
 			setAuthors();
 		});
 		
-		master.SubKeyEvent(ConsoleKey.M, ConsoleModifiers.Shift, (s, cki) => {
+		Keybinds.import.subEvent(master, (s, cki) => {
+			setImport();
+		});
+		
+		Keybinds.stats.subEvent(master, (s, cki) => {
+			setStatsSelect();
+		});
+		
+		//session
+		Keybinds.changeMode.subEvent(master, (s, cki) => {
 			if(mode.SelectedOptionIndex == 2){
 				mode.SelectedOptionIndex = 0;
 			}else{
@@ -170,7 +203,7 @@ public partial class Screens{
 			Session.setMode((SessionMode) mode.SelectedOptionIndex);
 		});
 		
-		master.SubKeyEvent(ConsoleKey.S, ConsoleModifiers.Shift, (s, cki) => {
+		Keybinds.seeSource.subEvent(master, (s, cki) => {
 			switch(Session.sourceType){
 				case SourceType.Library:
 					setLibrary();
@@ -186,15 +219,23 @@ public partial class Screens{
 			}
 		});
 		
-		master.SubKeyEvent(ConsoleKey.Spacebar, ConsoleModifiers.Shift, (s, cki) => {
+		Keybinds.seePlaying.subEvent(master, (s, cki) => {
 			if(Radio.py.playingSong >= 0){
 				setSongDetails(Radio.py.playingSong);
 			}
 		});
 		
+		Keybinds.toggleQueueEmpties.subEvent(master, (s, cki) => {
+			Session.queueEmpties = !Session.queueEmpties;
+		});
+		
+		Keybinds.changeDevice.subEvent(master, (s, cki) => {
+			setChangeDevice();
+		});
+		
 		Stopwatch timer = Stopwatch.StartNew();
 		
-		int maxFps = 32;
+		int maxFps = 24;
 		double dt = 1000d / maxFps;
 		
 		int frameCounter = 0;
@@ -230,7 +271,11 @@ public partial class Screens{
 			}
 		};
 		
-		setSelectedScreen(navigation);
+		if(openConfig){
+			setConfig();
+		}else{
+			setSelectedScreen(navigation);
+		}
 	}
 	
 	public void init(){
@@ -254,7 +299,7 @@ public partial class Screens{
 		master.Play();
 	}
 	
-	public void setupPlaying(){
+	void setupPlaying(){
 		Song temp = Song.get(Radio.py.playingSong);
 		TuiButton song = new TuiButton(crop(temp?.title ?? "", 38), Placement.TopLeft, 11, 1, Palette.song, Palette.user).SetAction((s, ck) => {
 			if(Radio.py.playingSong >= 0){
@@ -270,8 +315,8 @@ public partial class Screens{
 			progress.Xsize = Math.Max(a.X - 30, 0);
 		};
 		
-		TuiLabel elapsedTime = new TuiLabel("00:00", Placement.Center, -39, 0, Palette.info);
-		TuiLabel totalTime = new TuiLabel("00:00", Placement.Center, 39, 0, Palette.info);
+		TuiLabel elapsedTime = new TuiLabel("0:00", Placement.Center, -39, 0, Palette.info);
+		TuiLabel totalTime = new TuiLabel("0:00", Placement.Center, 39, 0, Palette.info);
 		
 		elapsedTime.OnParentResize += (s, a) => {
 			elapsedTime.OffsetX = -(a.X - 30)/2 - 4;
@@ -305,11 +350,11 @@ public partial class Screens{
 		volume = new TuiNumberPicker(0, 100, 2, Radio.py.volume, Placement.Center, 3, 2, Palette.info, Palette.user);
 		
 		volume.DeleteAllKeyEvents();
-		volume.SubKeyEvent(ConsoleKey.LeftArrow, (s, cki) => {
+		Keybinds.left.subEvent(volume, (s, cki) => {
 			volume.NumberDown(s, cki);
 			Radio.py.setVolume(volume.Number);
 		});
-		volume.SubKeyEvent(ConsoleKey.RightArrow, (s, cki) => {
+		Keybinds.right.subEvent(volume, (s, cki) => {
 			volume.NumberUp(s, cki);
 			Radio.py.setVolume(volume.Number);
 		});
@@ -321,9 +366,9 @@ public partial class Screens{
 		}}, 3, 0, Placement.BottomCenter, 0, 0, null,
 			new TuiLabel("Playing:", Placement.TopLeft, 2, 1),
 			new TuiLabel("Authors:", Placement.BottomLeft, 2, 1),
-			new TuiLabel("v" + Radio.version, Placement.BottomRight, 0, 0, Palette.delimiter),
+			new TuiLabel("v" + BuildInfo.Version, Placement.BottomRight, 0, 0, Palette.delimiter),
 			new TuiLabel("Volume", Placement.Center, -2, 2),
-			new TuiLabel("Ctrl+Space", Placement.TopRight, 0, 0, Palette.hint),
+			new TuiLabel(Keybinds.selectPlaying.ToString(), Placement.TopRight, 0, 0, Palette.hint),
 			authors,
 			progress, elapsedTime, totalTime
 		);
@@ -336,10 +381,7 @@ public partial class Screens{
 		};
 		
 		playing.OnFinishPlayCycle += (s, a) => {
-			int n = (int) (Math.Max(Radio.py.elapsed, 0f) / Math.Max(Radio.py.duration, 0f) * 100);
-			if(n != progress.Percentage){
-				progress.Percentage = n;
-			}
+			progress.Filled = Math.Max(Radio.py.elapsed, 0f) / Math.Max(Radio.py.duration, 0f); //Is optimized
 			
 			string s2 = secondsToMinuteTime(Radio.py.elapsed);
 			if(s2 != elapsedTime.Text){
@@ -363,24 +405,11 @@ public partial class Screens{
 		};
 	}
 	
-	public void setupSession(){
+	void setupSession(){
 		TuiLabel device = new TuiLabel(Radio.py.currentDevice.Name ?? "", Placement.BottomLeft, 1, 2, Palette.info);
 		
 		TuiButton devices = new TuiButton("Change device", Placement.BottomCenter, 0, 1, null, Palette.user).SetAction((s, cki) => {
-			var devs = Player.getDeviceList().ToList();
-			
-			TuiSelectable[,] buttons = new TuiSelectable[devs.Count, 1];
-			
-			for(int i = 0; i < devs.Count; i++){
-				int j = devs[i].Value;
-				buttons[i, 0] = new TuiButton(devs[i].Key, Placement.TopCenter, 0, 6 + i, null, Palette.user).SetAction((s, cki) => {
-					Radio.py.setDevice(j);
-					closeMiddleScreen();
-				});
-			}
-			
-			MiddleScreen changeDevice = generateMiddle(buttons);
-			setMiddleScreen(changeDevice);
+			setChangeDevice();
 		});
 		
 		string name = "";
@@ -443,10 +472,8 @@ public partial class Screens{
 		TuiFramedCheckBox emptyQueue = new TuiFramedCheckBox(' ', 'X', Session.queueEmpties, Placement.BottomLeft, 18, 3, null, null, null, Palette.writing, Palette.user);
 		
 		emptyQueue.DeleteAllKeyEvents();
-		
-		emptyQueue.SubKeyEvent(ConsoleKey.Enter, (s, ck) => {
-			emptyQueue.Checked = !emptyQueue.Checked;
-			Session.queueEmpties = emptyQueue.Checked;
+		Keybinds.enter.subEvent(emptyQueue, (s, ck) => {
+			Session.queueEmpties = !Session.queueEmpties;
 		});
 		
 		session = new TuiScreenInteractive(30, 14, new TuiSelectable[,]{{
@@ -464,7 +491,7 @@ public partial class Screens{
 			new TuiLabel("Queue:", Placement.TopLeft, 1, 7),
 			new TuiLabel("Queue empties:", Placement.BottomLeft, 3, 4),
 			new TuiLabel("Session", Placement.TopCenter, 0, 1, Palette.main),
-			new TuiLabel("Ctrl+S", Placement.BottomLeft, 0, 0, Palette.hint)
+			new TuiLabel(Keybinds.selectSession.ToString(), Placement.BottomLeft, 0, 0, Palette.hint)
 		);
 		
 		void updateQueueScreen(){
@@ -473,6 +500,8 @@ public partial class Screens{
 			if(b){
 				n = queueScreen?.Elements.IndexOf(queueScreen.Selected) ?? 0;
 			}
+			
+			emptyQueue.Checked = Session.queueEmpties;
 			
 			session.Elements.Remove(queueScreen);
 			master?.ScreenList.Remove(queueScreen);
@@ -491,12 +520,12 @@ public partial class Screens{
 						setSongDetails(queue[myIndex]);
 					});
 					
-					t2.SubKeyEvent(ConsoleKey.R, (s, ck) => {
+					Keybinds.listRemove.subEvent(t2, (s, ck) => {
 						int myIndex = queueScreen.Elements.IndexOf(t2);
 						Session.removeFromQueue(myIndex);
 					});
 					
-					t2.SubKeyEvent(ConsoleKey.N, (s, ck) => {
+					Keybinds.listUp.subEvent(t2, (s, ck) => {
 						int myIndex = queueScreen.Elements.IndexOf(t2);
 						if(myIndex != 0){
 							TuiScreenInteractive.MoveUp(queueScreen, ck); //Align properly with the change
@@ -504,7 +533,7 @@ public partial class Screens{
 						}
 					});
 					
-					t2.SubKeyEvent(ConsoleKey.M, (s, ck) => {
+					Keybinds.listDown.subEvent(t2, (s, ck) => {
 						int myIndex = queueScreen.Elements.IndexOf(t2);
 						if(myIndex != queueScreen.Elements.Count - 1){
 							TuiScreenInteractive.MoveDown(queueScreen, ck); //Align properly with the change
@@ -529,7 +558,7 @@ public partial class Screens{
 				queueScreen.Ysize = Math.Max(0, a.Y - 15);
 			};
 			
-			queueScreen.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
+			Keybinds.escape.subEvent(queueScreen, (s, ck) => {
 				setSelectedScreen(session);
 			});
 			
@@ -557,12 +586,6 @@ public partial class Screens{
 		};
 		
 		prepareScreen(session);
-		
-		session.SubKeyEvent(ConsoleKey.Q, (s, ck) => {
-			if(Session.getQueue().Count > 0){
-				setSelectedScreen(queueScreen);
-			}
-		});
 		
 		Radio.py.onChangeDevice += (s, a) => {
 			device.Text = Radio.py.currentDevice.Name;
@@ -614,7 +637,7 @@ public partial class Screens{
 			config
 		}}, 0, 0, Placement.TopLeft, 0, 0, null,
 			new TuiLabel("Navigation", Placement.TopCenter, 0, 1, Palette.main),
-			new TuiLabel("Ctrl+N", Placement.BottomRight, 0, 0, Palette.hint)
+			new TuiLabel(Keybinds.selectNavigation.ToString(), Placement.BottomRight, 0, 0, Palette.hint)
 		);
 		
 		navigation.OnParentResize += (s, a) => {
@@ -625,270 +648,21 @@ public partial class Screens{
 		prepareScreen(navigation);
 	}
 	
-	void setHelp(int page = 0, bool ignore = false){
-		if(!ignore && currentMiddleScreen.identifier == "help"){
-			setSelectedScreen(currentMiddleScreen);
-			return;
-		}
-		const int maxPage = 8;
+	void setChangeDevice(){
+		var devs = Player.getDeviceList().ToList();
 		
-		MiddleScreen l3 = generateMiddle(null);
-		l3.identifier = "help";
+		TuiSelectable[,] buttons = new TuiSelectable[devs.Count, 1];
 		
-		//Juto to avoid rewriting a lot of code
-		TuiScreenInteractive l = l3.interactive;
-		
-		TuiFormatLog content = new TuiFormatLog(l.Xsize - 4, l.Ysize - 7, Placement.TopLeft, 2, 5);
-		
-		content.OnParentResize += (s, a) => {
-			content.Xsize = l.Xsize - 4;
-			content.Ysize = l.Ysize - 7;
-		};
-		
-		l.Elements.Add(content);
-		
-		l.Elements.Add(new TuiLabel("Help - Page " + (page + 1), Placement.TopCenter, 0, 1, Palette.main));
-		
-		if(page > 0){
-			l.Elements.Add(new TuiTwoLabels("N", " Previous page", Placement.BottomRight, 0, 1, Palette.hint, null));
+		for(int i = 0; i < devs.Count; i++){
+			int j = devs[i].Value;
+			buttons[i, 0] = new TuiButton(devs[i].Key, Placement.TopCenter, 0, 6 + i, null, Palette.user).SetAction((s, cki) => {
+				Radio.py.setDevice(j);
+				closeMiddleScreen();
+			});
 		}
 		
-		if(page < maxPage){
-			l.Elements.Add(new TuiTwoLabels("M", " Next page", Placement.BottomRight, 0, 0, Palette.hint, null));
-		}
-		
-		//Helper method
-		void setPage(int n){
-			if(n != page && n > -1 && n <= maxPage){
-				setHelp(n, true);
-				removeMiddleScreen(l3);
-			}
-		}
-		
-		l.SubKeyEvent(ConsoleKey.N, (s, ck) => {
-			setPage(page - 1);
-		});
-		l.SubKeyEvent(ConsoleKey.M, (s, ck) => {
-			setPage(page + 1);
-		});
-		l.SubKeyEvent(ConsoleKey.D1, (s, ck) => {
-			setPage(0);
-		});
-		l.SubKeyEvent(ConsoleKey.D2, (s, ck) => {
-			setPage(1);
-		});
-		l.SubKeyEvent(ConsoleKey.D3, (s, ck) => {
-			setPage(2);
-		});
-		l.SubKeyEvent(ConsoleKey.D4, (s, ck) => {
-			setPage(3);
-		});
-		l.SubKeyEvent(ConsoleKey.D5, (s, ck) => {
-			setPage(4);
-		});
-		l.SubKeyEvent(ConsoleKey.D6, (s, ck) => {
-			setPage(5);
-		});
-		l.SubKeyEvent(ConsoleKey.D7, (s, ck) => {
-			setPage(6);
-		});
-		l.SubKeyEvent(ConsoleKey.D8, (s, ck) => {
-			setPage(7);
-		});
-		l.SubKeyEvent(ConsoleKey.D9, (s, ck) => {
-			setPage(8);
-		});
-		
-		switch(page){
-			case 0:
-				content.AppendLine("Concepts", Palette.info);
-				
-				content.Append(" Session", Palette.info);
-				content.AppendLine(": the current options for source, order and queue", null);
-				content.Append(" Source", Palette.info);
-				content.AppendLine(": the 'pool' from where the next song will be chosen", null);
-				content.Append(" Library", Palette.info);
-				content.AppendLine(": the whole collection of songs", null);
-				content.Append(" Order", Palette.info);
-				content.AppendLine(": the order in which the next song will be chosen: order, shuffle, smart shuffle", null);
-				content.Append(" Queue", Palette.info);
-				content.AppendLine(": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows for repetition)", null);
-				break;
-			case 1:
-				content.AppendLine("Importing", Palette.info);
-				
-				content.AppendLine(" AshRadio uses ffmpeg to import non .mp3 files, transforming them. Therefore, you can import almost any audio format from files.", null);
-				content.AppendLine(" To download from youtube and other websites, AshRadio uses yt-dlp. This program downloads audio files from multiple web pages, allowing for easier importing.", null);
-				content.AppendLine(" Go to the config to change the paths of these executables or auto-download them.", null);
-				break;
-			case 2:
-				content.AppendLine("Keybinds", Palette.info);
-				
-				content.AppendLine(" Wherever songs appear:", null);
-				content.Append("  Q", Palette.hint);
-				content.AppendLine(" add song to the queue", null);
-				content.Append("  P", Palette.hint);
-				content.AppendLine(" play song", null);
-				content.Append("  R", Palette.hint);
-				content.AppendLine(" delete song (in lists)", null);
-				content.Append("  N", Palette.hint);
-				content.AppendLine(" move song up (in lists)", null);
-				content.Append("  M", Palette.hint);
-				content.AppendLine(" move song down (in lists)", null);
-				content.AppendLine("", null);
-				
-				content.AppendLine(" For authors or playlists:", null);
-				content.Append("  S", Palette.hint);
-				content.AppendLine(" set as source", null);
-				content.AppendLine("", null);
-				
-				content.AppendLine(" Volume (available everywhere):", null);
-				content.Append("  -", Palette.hint);
-				content.AppendLine(" decrease by 2", null);
-				content.Append("  +", Palette.hint);
-				content.AppendLine(" increase by 2", null);
-				break;
-			case 3:
-				content.AppendLine("Keybinds", Palette.info);
-				
-				content.AppendLine(" Player (available everywhere):", null);
-				content.Append("  Space", Palette.hint);
-				content.AppendLine(" play/pause music", null);
-				content.Append("  K", Palette.hint);
-				content.AppendLine(" play/pause music", null);
-				content.Append("  Shift+J", Palette.hint);
-				content.AppendLine(" restart song", null);
-				content.Append("  J", Palette.hint);
-				content.AppendLine(" go back X seconds (advance time)", null);
-				content.Append("  L", Palette.hint);
-				content.AppendLine(" go forward X seconds (advance time)", null);
-				content.Append("  N", Palette.hint);
-				content.AppendLine(" previous song", null);
-				content.Append("  M", Palette.hint);
-				content.AppendLine(" next song", null);
-				content.Append("  Shift+Space", Palette.hint);
-				content.AppendLine(" see playing song", null);
-				break;
-			case 4:
-				content.AppendLine("Keybinds", Palette.info);
-				
-				content.AppendLine(" Navigation (available everywhere):", null);
-				content.Append("  Ctrl+L", Palette.hint);
-				content.AppendLine(" see Library", null);
-				content.Append("  Ctrl+P", Palette.hint);
-				content.AppendLine(" see Playlists", null);
-				content.Append("  Ctrl+U", Palette.hint);
-				content.AppendLine(" see Authors", null);
-				content.AppendLine("", null);
-				
-				content.AppendLine(" Session (available everywhere):", null);
-				content.Append("  Shift+M", Palette.hint);
-				content.AppendLine(" change mode", null);
-				content.Append("  Shift+S", Palette.hint);
-				content.AppendLine(" see source", null);
-				break;
-			case 5:
-				content.AppendLine("Stats", Palette.info);
-				content.AppendLine(" You can check the stats divided into months.", null);
-				content.AppendLine(" Every time a song is loaded into the player, it counts as 'song laoded'.", null);
-				content.AppendLine(" Then, the time listening to that song while it is playing is tracked.", null);
-				content.AppendLine(" Also, dividing the time lime listened by the duration gives a much more accurate number of times the song was listened to. This is what is called 'song listened'.", null);
-				content.AppendLine(" When seeing the stats you can filter between these numbers.", null);
-				content.AppendLine(" Additionally, you can see top authors and their top tracks.", null);
-				break;
-			case 6:
-				content.AppendLine("Exporting", Palette.info);
-				content.AppendLine(" You can export songs or whole playlists to folders.", null);
-				content.AppendLine(" This allows you to have the mp3 files of your songs wherever you want, or share them.", null);
-				break;
-			case 7:
-				content.AppendLine("Internal operation", Palette.info);
-				
-				content.AppendLine(" AshRadio uses numerical ids for songs, authors and playlists.", null);
-				content.AppendLine(" 2147483647 is the maximum id. Try not importing that many songs!", null);
-				content.AppendLine(" For the audio playing, ManagedBass is used. This .net wrapper of the c BASS library makes it really easy to play audio files.", null);
-				content.AppendLine(" For data storage and many other tasks, AshLib is used. This .net library (made by me!) handles AshFiles.", null);
-				content.AppendLine(" The UI in the console is made using AshConsoleGraphics, a .net library also made by me.", null);
-				break;
-			case 8:
-				content.AppendLine("About", Palette.info);
-				content.AppendLine(" AshRadio v" + Radio.version, null);
-				content.AppendLine(" " + Radio.versionDate, null);
-				content.AppendLine(" Made by siljam", null);
-				content.AppendLine(" This software is under the MIT license", Palette.hint);
-				break;
-		}
-		
-		setMiddleScreen(l3);
-	}
-	
-	List<TuiElement> generateHelpPageElements(string title, (string, CharFormat?)[][] parts, int xsize){
-		xsize -= 2; //Right margin
-		
-		if(xsize <= 0){
-			return new List<TuiElement>();
-		}
-		
-		int x = 3; //Left margin
-		int y = 5;
-		
-		List<TuiElement> elems = new();
-		
-		elems.Add(new TuiLabel(title, Placement.TopLeft, 2, 4, Palette.info));
-		
-		foreach((string, CharFormat?)[] line in parts){
-			foreach((string t, CharFormat? format) in line){
-				string text = t;
-				int size = text.Length;
-				
-				while(x + size > xsize){
-					int av = xsize - x;
-					if(av <= 0){
-						x = 3;
-						y++;
-						continue;
-					}
-					
-					elems.Add(new TuiLabel(text.Substring(0, xsize - x), Placement.TopLeft, x, y, format));
-					text = text.Substring(xsize - x);
-					size = text.Length;
-					
-					x = 3;
-					y++;
-				}
-				
-				if(text.Length > 0){
-					elems.Add(new TuiLabel(text, Placement.TopLeft, x, y, format));
-					
-					x += text.Length;
-				}
-			}
-			
-			y++;
-			x = 3;
-		}
-		
-		return elems;
-	}
-	
-	void confirmExit(){
-		TuiSelectable[,] buttons = {{
-			new TuiButton("Exit", Placement.Center, -4, 1, null, Palette.user).SetAction((s, ck) => {
-				MultipleTuiScreenInteractive.StopPlaying(master, default);
-				Environment.Exit(0);
-			}),
-			new TuiButton("Cancel", Placement.Center, 4, 1, null, Palette.user).SetAction((s, ck) => closeMiddleScreen())
-		}};
-		
-		MiddleScreen t = generateMiddle(buttons);
-		t.interactive.Elements.Add(new TuiLabel("Do you want to exit?", Placement.Center, 0, -1));
-		t.interactive.Elements.Add(new TuiFrame(24, 7, Placement.Center, 0, 0, Palette.user));
-		
-		t.interactive.SubKeyEvent(ConsoleKey.Escape, (s, ck) => {
-			MultipleTuiScreenInteractive.StopPlaying(master, default);
-			Environment.Exit(0);
-		}); //Escape + escape will close
-		
-		setMiddleScreen(t);
+		MiddleScreen changeDevice = generateMiddle(buttons);
+		changeDevice.interactive.Elements.Add(new TuiLabel("Select Device", Placement.TopCenter, 0, 1, Palette.main));
+		setMiddleScreen(changeDevice);
 	}
 }

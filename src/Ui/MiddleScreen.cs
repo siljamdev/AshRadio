@@ -29,7 +29,7 @@ public partial class Screens{
 		TuiScreenInteractive te = new TuiScreenInteractive(Math.Max((master?.Xsize ?? 100) - 62, 0),
 			Math.Max((master?.Ysize ?? 20) - 6, 0),
 			b, 0, 0, Placement.TopCenter, 0, 0, null,
-			new TuiLabel("Ctrl+G", Placement.BottomLeft, 0, 0, Palette.hint));
+			new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
 		
 		te.OnParentResize += (s, a) => {
 			te.Xsize = Math.Max(a.X - 62, 0);
@@ -45,7 +45,7 @@ public partial class Screens{
 		TuiScreen te = new TuiScreen(Math.Max((master?.Xsize ?? 100) - 62, 0),
 			Math.Max((master?.Ysize ?? 20) - 6, 0),
 			Placement.TopCenter, 0, 0, null,
-			new TuiLabel("Ctrl+G", Placement.BottomLeft, 0, 0, Palette.hint));
+			new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
 		
 		te.OnParentResize += (s, a) => {
 			te.Xsize = Math.Max(a.X - 62, 0);
@@ -143,10 +143,11 @@ public partial class Screens{
 	}
 }
 
-class MiddleScreen{
+public class MiddleScreen{
 	public TuiScreen screen;
 	public TuiScreenInteractive interactive;
 	public string identifier;
+	public int hintPos = 0;
 	
 	public MiddleScreen(TuiScreen s, TuiScreenInteractive i, string id = null){
 		screen = s;

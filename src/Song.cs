@@ -147,7 +147,7 @@ public class Song{
 		}
 		
 		try{
-			string path = dirPath + "/" + get(id)?.title + ".mp3";
+			string path = dirPath + "/" + safePath(get(id)?.title ?? nullTitle) + ".mp3";
 			File.Copy(getAudioPath(id), path);
 			File.SetLastWriteTime(path, DateTime.Now);
 			
@@ -224,12 +224,13 @@ public class Song{
 			Song s2 = new Song(){
 				title = title,
 				authors = authors,
-				duration = loadDuration(latestId),
 				id = latestId
 			};
-			s2.save();
 			
 			library.Add(s2);
+			
+			s2.setDuration(loadDuration(latestId)); //loadDuration needs it to be added to library first
+			s2.save();
 			
 			saveAll();
 			
@@ -371,6 +372,14 @@ public class Song{
 	
 	static string getFfprobePath(){
 		return Radio.config.GetValue<string>("ffprobePath");
+	}
+	
+	static string safePath(string p){
+		foreach(char c in Path.GetInvalidFileNameChars()){
+			p = p.Replace(c, '_');
+		}
+		
+		return p;
 	}
 }
 

@@ -8,9 +8,6 @@ using System.IO.Compression;
 using AshLib.Folders;
 
 public static class Radio{
-	public const string version = "1.6.0";
-	public const string versionDate = "February 2026";
-	
 	public static string errorFilePath = null;
 	public static string appDataPath = null;
 	
@@ -26,6 +23,8 @@ public static class Radio{
 	public static DiscordPresence dcrpc;
 	
 	public static AshFileModel configModel;
+	
+	public static bool tryInitScreens;
 	
 	//Complete init logic
 	public static void initCore(string directory = null){
@@ -164,6 +163,10 @@ public static class Radio{
 			config.Set("internal.init", b);
 		}
 		
+		if(config.TryGetValue("ui.palette.background", out Color3 c)){
+			config.Set("ui.palette.selectedDefault", new Color3[]{c});
+		}
+		
 		AshFileModel m = new AshFileModel(
 			new ModelInstance(ModelInstanceOperation.Type, "player.volume", 100),
 			new ModelInstance(ModelInstanceOperation.Type, "player.volumeExponent", 2f),
@@ -184,6 +187,7 @@ public static class Radio{
 		);
 		
 		m.Merge(Palette.getPaletteModel());
+		m.Merge(Keybinds.getKeybindsModel());
 		
 		m.deleteNotMentioned = true;
 		
@@ -192,7 +196,7 @@ public static class Radio{
 		config *= m;
 		
 		//Set current version and path. Might be needed by someone (maybe)
-		config.Set("version", version);
+		config.Set("version", BuildInfo.Version);
 		try{ //Might not work on linux
 			config.Set("path", System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
 		}catch{}
@@ -202,6 +206,7 @@ public static class Radio{
 	
 	public static void initScreens(){		
 		Palette.init();
+		Keybinds.init();
 		sc = new Screens();
 		
 		if(config.TryGetValue("dcrp", out bool b) && b){
@@ -211,6 +216,12 @@ public static class Radio{
 		#if WINDOWS
 			Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); //WinForms will have better visual quality
 		#endif
+	}
+	
+	public static void reinitScreens(){
+		Palette.init();
+		Keybinds.init();
+		sc = new Screens(true);
 	}
 	
 	public static void resetConfig(){
@@ -233,7 +244,8 @@ public static class Radio{
 		
 		config *= m;
 		
-		Palette.setAsh();
+		Palette.reset();
+		Keybinds.reset();
 		
 		config.Save();
 	}

@@ -19,41 +19,19 @@ public static class Palette{
 	
 	public static AshFileModel getPaletteModel(){
 		return new AshFileModel(
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.user.fg", new Color3("FFFF00")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.user.bg", false),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.user", toArray(new Color3("FFFF00"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.song", toArray(new Color3("3295FF"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.author", toArray(new Color3("00FF00"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.playlist", toArray(new Color3("FFA811"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.main", toArray(new Color3("E7484B"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.delimiter", toArray(new Color3("5B2D72"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.hint", toArray(new Color3("9F60C1"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.info", toArray(new Color3("849DD6"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.error", toArray(new Color3("D83F3C"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.writing", toArray(new Color3("FFFF66"), null)),
 			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.song.fg", new Color3("3295FF")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.song.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.author.fg", new Color3("00FF00")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.author.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.playlist.fg", new Color3("FFA811")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.playlist.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.main.fg", new Color3("E7484B")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.main.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.delimiter.fg", new Color3("5B2D72")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.delimiter.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.hint.fg", new Color3("9F60C1")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.hint.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.info.fg", new Color3("849DD6")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.info.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.error.fg", new Color3("D83F3C")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.error.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.writing.fg", new Color3("FFFF66")),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.writing.bg", false),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.selectedDefault.fg", false),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.selectedDefault.bg", new Color3("131313")),
-			
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.default.fg", false),
-			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.default.bg", false)
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.selectedDefault", toArray(null, new Color3("131313"))),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.default", toArray(null, null))
 		);
 	}
 	
@@ -78,157 +56,100 @@ public static class Palette{
 		selectedPanel = loadColor("selectedDefault");
 		defaultPanel = loadColor("default");
 		
-		Radio.config.Save(); //In cae any color was removed
+		Radio.config.Save(); //In case any color was removed
 	}
 	
 	//Helper method to load colors
 	static CharFormat? loadColor(string colorName){
-		Color3? fg = null;
-		if(Radio.config.TryGetValue("ui.palette." + colorName + ".fg", out Color3 cf)){
-			fg = cf;
-		}else if(!Radio.config.TryGetValue("ui.palette." + colorName + ".fg", out bool _)){
-			Radio.config.Remove("ui.palette." + colorName + ".fg");
-		}
-		
-		Color3? bg = null;
-		if(Radio.config.TryGetValue("ui.palette." + colorName + ".bg", out Color3 cb)){
-			bg = cb;
-		}else if(!Radio.config.TryGetValue("ui.palette." + colorName + ".bg", out bool _)){
-			Radio.config.Remove("ui.palette." + colorName + ".bg");
-		}
-		
-		if(fg == null && bg == null){
-			return null;
+		if(Radio.config.TryGetValue("ui.palette." + colorName, out Color3 c)){
+			return new CharFormat(c);
+		}else if(Radio.config.TryGetValue("ui.palette." + colorName, out Color3[] ca)){
+			if(ca.Length == 1){
+				return new CharFormat(null, ca[0]);
+			}else if(ca.Length == 2){
+				return new CharFormat(ca[0], ca[1]);
+			}else{
+				return null;
+			}
 		}else{
-			return new CharFormat(fg, bg);
+			Radio.config.Remove("ui.palette." + colorName);
+			return null;
 		}
 	}
 	
-	public static void setAsh(){
+	static object toArray(Color3? fg, Color3? bg){
+		if(fg == null){
+			if(bg == null){
+				return new Color3[0];
+			}else{
+				return new Color3[]{(Color3) bg};
+			}
+		}else{
+			if(bg == null){
+				return (Color3) fg;
+			}else{
+				return new Color3[]{(Color3) fg, (Color3) bg};
+			}
+		}
+	}
+	
+	public static void reset(){
 		AshFileModel m = new AshFileModel(getPaletteModel().instances.Select(h => new ModelInstance(ModelInstanceOperation.Value, h.name, h.value)).ToArray());
 		
 		Radio.config.ApplyModel(m);
-		
-		init(); //save happens here
 	}
 	
 	public static void setSubtle(){
-		Radio.config.Set("ui.palette.user.fg", new Color3("FFFF00"));
-		Radio.config.Set("ui.palette.user.bg", false);
+		Radio.config.Set("ui.palette.user", toArray(new Color3("FFFF00"), null));
+		Radio.config.Set("ui.palette.song", toArray(new Color3("BEDD58"), null));
+		Radio.config.Set("ui.palette.author", toArray(new Color3("8CD0D3"), null));
+		Radio.config.Set("ui.palette.playlist", toArray(new Color3("966DD3"), null));
+		Radio.config.Set("ui.palette.main", toArray(new Color3("E5AA62"), null));
+		Radio.config.Set("ui.palette.delimiter", toArray(new Color3("848260"), null));
+		Radio.config.Set("ui.palette.hint", toArray(new Color3("918050"), null));
+		Radio.config.Set("ui.palette.info", toArray(new Color3("CC7651"), null));
+		Radio.config.Set("ui.palette.error", toArray(new Color3("D83F3C"), null));
+		Radio.config.Set("ui.palette.writing", toArray(new Color3("FFFF66"), null));
+		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("131313")));
+		Radio.config.Set("ui.palette.default", toArray(null, null));
 		
-		Radio.config.Set("ui.palette.song.fg", new Color3("BEDD58"));
-		Radio.config.Set("ui.palette.song.bg", false);
-		
-		Radio.config.Set("ui.palette.author.fg", new Color3("8CD0D3"));
-		Radio.config.Set("ui.palette.author.bg", false);
-		
-		Radio.config.Set("ui.palette.playlist.fg", new Color3("966DD3"));
-		Radio.config.Set("ui.palette.playlist.bg", false);
-		
-		Radio.config.Set("ui.palette.main.fg", new Color3("E5AA62"));
-		Radio.config.Set("ui.palette.main.bg", false);
-		
-		Radio.config.Set("ui.palette.delimiter.fg", new Color3("848260"));
-		Radio.config.Set("ui.palette.delimiter.bg", false);
-		
-		Radio.config.Set("ui.palette.hint.fg", new Color3("918050"));
-		Radio.config.Set("ui.palette.hint.bg", false);
-		
-		Radio.config.Set("ui.palette.info.fg", new Color3("CC7651"));
-		Radio.config.Set("ui.palette.info.bg", false);
-		
-		Radio.config.Set("ui.palette.error.fg", new Color3("D83F3C"));
-		Radio.config.Set("ui.palette.error.bg", false);
-		
-		Radio.config.Set("ui.palette.writing.fg", new Color3("FFFF66"));
-		Radio.config.Set("ui.palette.writing.bg", false);
-		
-		Radio.config.Set("ui.palette.selectedDefault.fg", false);
-		Radio.config.Set("ui.palette.selectedDefault.bg", new Color3("131313"));
-		
-		Radio.config.Set("ui.palette.default.fg", false);
-		Radio.config.Set("ui.palette.default.bg", false);
-		
-		init(); //save happens here
+		Radio.config.Save();
 	}
 	
-	public static void setNeon(){ //Chatgpt made this palette bc i ran out of ideas :/
-		Radio.config.Set("ui.palette.user.fg", new Color3("39FF14"));
-		Radio.config.Set("ui.palette.user.bg", false);
+	public static void setNeon(){ //ChatGPT made this palette bc you ran out of ideas :/
+		Radio.config.Set("ui.palette.user", toArray(new Color3("39FF14"), null));
+		Radio.config.Set("ui.palette.song", toArray(new Color3("00FFFF"), null));
+		Radio.config.Set("ui.palette.author", toArray(new Color3("FF44CC"), null));
+		Radio.config.Set("ui.palette.playlist", toArray(new Color3("FF8800"), null));
+		Radio.config.Set("ui.palette.main", toArray(new Color3("AA00FF"), null));
+		Radio.config.Set("ui.palette.delimiter", toArray(new Color3("00FFAA"), null));
+		Radio.config.Set("ui.palette.hint", toArray(new Color3("FF66FF"), null));
+		Radio.config.Set("ui.palette.info", toArray(new Color3("33CCFF"), null));
+		Radio.config.Set("ui.palette.error", toArray(new Color3("FF0033"), null));
+		Radio.config.Set("ui.palette.writing", toArray(new Color3("96FF82"), null));
 		
-		Radio.config.Set("ui.palette.song.fg", new Color3("00FFFF"));
-		Radio.config.Set("ui.palette.song.bg", false);
+		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("101010")));
+		Radio.config.Set("ui.palette.default", toArray(null, null));
 		
-		Radio.config.Set("ui.palette.author.fg", new Color3("FF44CC"));
-		Radio.config.Set("ui.palette.author.bg", false);
-		
-		Radio.config.Set("ui.palette.playlist.fg", new Color3("FF8800"));
-		Radio.config.Set("ui.palette.playlist.bg", false);
-		
-		Radio.config.Set("ui.palette.main.fg", new Color3("AA00FF"));
-		Radio.config.Set("ui.palette.main.bg", false);
-		
-		Radio.config.Set("ui.palette.delimiter.fg", new Color3("00FFAA"));
-		Radio.config.Set("ui.palette.delimiter.bg", false);
-		
-		Radio.config.Set("ui.palette.hint.fg", new Color3("FF66FF"));
-		Radio.config.Set("ui.palette.hint.bg", false);
-		
-		Radio.config.Set("ui.palette.info.fg", new Color3("33CCFF"));
-		Radio.config.Set("ui.palette.info.bg", false);
-		
-		Radio.config.Set("ui.palette.error.fg", new Color3("FF0033"));
-		Radio.config.Set("ui.palette.error.bg", false);
-		
-		Radio.config.Set("ui.palette.writing.fg", new Color3("96FF82"));
-		Radio.config.Set("ui.palette.writing.bg", false);
-		
-		Radio.config.Set("ui.palette.selectedDefault.fg", false);
-		Radio.config.Set("ui.palette.selectedDefault.bg", new Color3("101010"));
-		
-		Radio.config.Set("ui.palette.default.fg", false);
-		Radio.config.Set("ui.palette.default.bg", false);
-		
-		init(); //save happens here
+		Radio.config.Save();
 	}
 	
-	public static void setLight(){ //Ewwwwww
-		Radio.config.Set("ui.palette.user.fg", new Color3("F17105"));
-		Radio.config.Set("ui.palette.user.bg", false);
+	public static void setLight() { //Ewwwwww
+		Radio.config.Set("ui.palette.user", toArray(new Color3("F17105"), null));
+		Radio.config.Set("ui.palette.song", toArray(new Color3("2C82DD"), null));
+		Radio.config.Set("ui.palette.author", toArray(new Color3("00C900"), null));
+		Radio.config.Set("ui.palette.playlist", toArray(new Color3("CF5C36"), null));
+		Radio.config.Set("ui.palette.main", toArray(new Color3("D8454A"), null));
+		Radio.config.Set("ui.palette.delimiter", toArray(new Color3("7B4E93"), null));
+		Radio.config.Set("ui.palette.hint", toArray(new Color3("8551A3"), null));
+		Radio.config.Set("ui.palette.info", toArray(new Color3("4A608C"), null));
+		Radio.config.Set("ui.palette.error", toArray(new Color3("D83F3C"), null));
+		Radio.config.Set("ui.palette.writing", toArray(new Color3("F99C4A"), null));
 		
-		Radio.config.Set("ui.palette.song.fg", new Color3("2C82DD"));
-		Radio.config.Set("ui.palette.song.bg", false);
+		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("D0D0D0")));
+		Radio.config.Set("ui.palette.default", toArray(new Color3("0C0C0C"), new Color3("E0E0E0")));
 		
-		Radio.config.Set("ui.palette.author.fg", new Color3("00C900"));
-		Radio.config.Set("ui.palette.author.bg", false);
-		
-		Radio.config.Set("ui.palette.playlist.fg", new Color3("CF5C36"));
-		Radio.config.Set("ui.palette.playlist.bg", false);
-		
-		Radio.config.Set("ui.palette.main.fg", new Color3("D8454A"));
-		Radio.config.Set("ui.palette.main.bg", false);
-		
-		Radio.config.Set("ui.palette.delimiter.fg", new Color3("7B4E93"));
-		Radio.config.Set("ui.palette.delimiter.bg", false);
-		
-		Radio.config.Set("ui.palette.hint.fg", new Color3("8551A3"));
-		Radio.config.Set("ui.palette.hint.bg", false);
-		
-		Radio.config.Set("ui.palette.info.fg", new Color3("4A608C"));
-		Radio.config.Set("ui.palette.info.bg", false);
-		
-		Radio.config.Set("ui.palette.error.fg", new Color3("D83F3C"));
-		Radio.config.Set("ui.palette.error.bg", false);
-		
-		Radio.config.Set("ui.palette.writing.fg", new Color3("F99C4A"));
-		Radio.config.Set("ui.palette.writing.bg", false);
-		
-		Radio.config.Set("ui.palette.selectedDefault.fg", false);
-		Radio.config.Set("ui.palette.selectedDefault.bg", new Color3("D0D0D0"));
-		
-		Radio.config.Set("ui.palette.default.fg", new Color3("0C0C0C"));
-		Radio.config.Set("ui.palette.default.bg", new Color3("E0E0E0"));
-		
-		init(); //save happens here
+		Radio.config.Save();
 	}
+
 }
