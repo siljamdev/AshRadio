@@ -26,11 +26,11 @@ public static class Session{
 	
 	public static bool addToPrevList = true; //Needed for going to the previous song without reading the current one
 	
-	public static void init(SessionMode m = SessionMode.Order, SourceType s = SourceType.None, int sx = -1, int[] si = null){
-		mode = m;
-		sourceType = s;
-		sourceIdentifier = sx;
-		sourceSeen = si?.ToList() ?? new List<int>();
+	public static void init(){
+		mode = (SessionMode) Radio.session.GetValue<int>("session.mode");
+		sourceType = (SourceType) Radio.session.GetValue<int>("session.sourceType");
+		sourceIdentifier = Radio.session.GetValue<int>("session.sourceIdentifier");
+		sourceSeen = Radio.session.GetValue<int[]>("session.sourceSeen")?.ToList() ?? new List<int>();
 		
 		queue = new List<int>();
 		rand = new Random();

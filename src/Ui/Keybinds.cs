@@ -52,6 +52,7 @@ public static class Keybinds{
 	public static Keybind playlists {get; private set;}
 	public static Keybind import {get; private set;}
 	public static Keybind stats {get; private set;}
+	public static Keybind errlog {get; private set;}
 	
 	//Session
 	public static Keybind changeMode {get; private set;}
@@ -139,6 +140,7 @@ public static class Keybinds{
 		toggleQueueEmpties,
 		changeDevice,
 		
+		errlog,
 		exit
 	};
 	
@@ -187,6 +189,7 @@ public static class Keybinds{
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.playlists", toArray(ConsoleKey.P, ConsoleModifiers.Control)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.import", toArray()),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.stats", toArray()),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.errlog", toArray()),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.changeMode", toArray(ConsoleKey.M, ConsoleModifiers.Shift)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.seeSource", toArray(ConsoleKey.S, ConsoleModifiers.Shift)),
@@ -242,6 +245,7 @@ public static class Keybinds{
 		playlists = loadKeybind("playlists", "Open playlists");
 		import = loadKeybind("import", "Open import menu");
 		stats = loadKeybind("stats", "Open stats");
+		errlog = loadKeybind("errlog", "Open error log");
 		
 		changeMode = loadKeybind("changeMode", "Change mode");
 		seeSource = loadKeybind("seeSource", "See source");

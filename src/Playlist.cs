@@ -57,7 +57,11 @@ public class Playlist{
 	
 	public static event EventHandler<PlaylistEventArgs> onPlaylistUpdate;
 	
-	public static void init(int li){
+	public static void init(){
+		init(Radio.data.GetValue<int>("playlists.latestId"));
+	}
+	
+	static void init(int li){
 		latestId = Math.Max(li, -1);
 		playlistsFile = new AshFile(Radio.dep.path + "/playlists.ash");
 		saveAll();

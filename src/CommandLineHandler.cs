@@ -107,6 +107,9 @@ public static class CommandLineHandler{
 			report("An error occured while initializing! Details saved to: " + Radio.errorFilePath);
 			report(e.ToString());
 			Radio.reportError(e.ToString());
+			
+			Console.Write("Press enter to exit");
+			Console.Read();
 			return 4;
 		}
 		
@@ -127,6 +130,9 @@ public static class CommandLineHandler{
 			report("An error occured! Details saved to: " + Radio.errorFilePath);
 			report(e.ToString());
 			Radio.reportError(e.ToString());
+			
+			Console.Write("Press enter to exit");
+			Console.Read();
 			return 5;
 		}
 	}

@@ -43,7 +43,11 @@ public class Author{
 	
 	public static event EventHandler onAuthorsUpdate;
 	
-	public static void init(int li){
+	public static void init(){
+		init(Radio.data.GetValue<int>("authors.latestId"));
+	}
+	
+	static void init(int li){
 		latestId = Math.Max(li, -1);
 		authorsFile = new AshFile(Radio.dep.path + "/authors.ash");
 		saveAll();

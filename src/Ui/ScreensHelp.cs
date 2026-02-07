@@ -83,23 +83,24 @@ public partial class Screens{
 				content.Append(" Session", Palette.info);
 				content.AppendLine(": the current options for source, order and queue", null);
 				content.Append(" Source", Palette.info);
-				content.AppendLine(": the 'pool' from where the next song will be chosen", null);
-				content.Append(" Library", Palette.info);
-				content.AppendLine(": the whole collection of songs", null);
+				content.AppendLine(": the 'pool' where the next song will be chosen from", null);
 				content.Append(" Order", Palette.info);
 				content.AppendLine(": the order in which the next song will be chosen: order, shuffle, smart shuffle", null);
 				content.Append(" Queue", Palette.info);
 				content.AppendLine(": if not empty, next song will be chosen from here instead of source. There is an additional option to not empty it (this allows for repetition)", null);
+				content.Append(" Library", Palette.info);
+				content.AppendLine(": the whole collection of songs", null);
 				break;
 			case 1:
 				content.AppendLine("Importing", Palette.info);
 				
-				content.AppendLine(" AshRadio uses ffmpeg to import non .mp3 files, transforming them. Therefore, you can import almost any audio format from files.", null);
+				content.AppendLine(" AshRadio uses ffmpeg to import audio files, transforming them if needed. Therefore, you can import almost any audio format from files.", null);
 				content.AppendLine(" To download from youtube and other websites, AshRadio uses yt-dlp. This program downloads audio files from multiple web pages, allowing for easier importing.", null);
 				content.AppendLine(" Go to the config to change the paths of these executables or auto-download them.", null);
 				break;
 			case 2:
 				content.AppendLine("Keybinds", Palette.info);
+				content.AppendLine(" The Keybinds shown here are the ones configured, not the default ones. To change them, go to Config>Keybinds");
 				
 				content.AppendLine(" Basic movement:", null);
 				foreach(Keybind k in new Keybind[]{Keybinds.up, Keybinds.down, Keybinds.left, Keybinds.right, Keybinds.scrollUp, Keybinds.scrollDown}){
@@ -193,16 +194,16 @@ public partial class Screens{
 				break;
 			case 3:
 				content.AppendLine("Stats", Palette.info);
-				content.AppendLine(" You can check the stats divided into months.", null);
+				content.AppendLine(" You can check your listening statistics divided into months.", null);
 				content.AppendLine(" Every time a song is loaded into the player, it counts as 'song laoded'.", null);
 				content.AppendLine(" Then, the time listening to that song while it is playing is tracked.", null);
-				content.AppendLine(" Also, dividing the time lime listened by the duration gives a much more accurate number of times the song was listened to. This is what is called 'song listened'.", null);
+				content.AppendLine(" Also, dividing the time time listened by the duration gives a much more accurate number of times the song was listened to. This is what is called 'song listened'.", null);
 				content.AppendLine(" When seeing the stats you can filter between these numbers.", null);
 				content.AppendLine(" Additionally, you can see top authors and their top tracks.", null);
 				break;
 			case 4:
 				content.AppendLine("Exporting", Palette.info);
-				content.AppendLine(" You can export songs or whole playlists to folders.", null);
+				content.AppendLine(" You can export songs, whole playlists and all songs by an author to folders.", null);
 				content.AppendLine(" This allows you to have the mp3 files of your songs wherever you want, or share them.", null);
 				break;
 			case 5:
@@ -216,28 +217,6 @@ public partial class Screens{
 				break;
 		}
 		content.ScrollToTop();
-		
-		setMiddleScreen(l3);
-	}
-	
-	void setAbout(){
-		if(currentMiddleScreen.identifier == "about"){
-			setSelectedScreen(currentMiddleScreen);
-			return;
-		}
-		
-		MiddleScreen l3 = generateMiddle(new TuiSelectable[,]{{
-			new TuiButton("Open GitHub repo", Placement.BottomCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
-				openUrl("https://github.com/siljamdev/AshRadio");
-			})
-		}});
-		l3.identifier = "about";
-		
-		l3.screen.Elements.Add(new TuiLabel("About", Placement.TopCenter, 0, 1, Palette.main));
-		l3.screen.Elements.Add(new TuiLabel("AshRadio v" + BuildInfo.Version, Placement.TopCenter, 0, 3));
-		l3.screen.Elements.Add(new TuiLabel("Version built on: " + BuildInfo.BuildDate, Placement.TopCenter, 0, 4));
-		l3.screen.Elements.Add(new TuiTwoLabels("Made by ", "siljam", Placement.TopCenter, 0, 6, null, Palette.author));
-		l3.screen.Elements.Add(new TuiLabel("This software is under the MIT license", Placement.TopCenter, 0, 7, Palette.info));
 		
 		setMiddleScreen(l3);
 	}

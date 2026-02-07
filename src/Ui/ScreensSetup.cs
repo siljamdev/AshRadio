@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using AshLib.Time;
 using AshLib.Formatting;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
@@ -15,7 +16,16 @@ public partial class Screens{
 	TuiScrollingScreenInteractive queueScreen = null!;
 	
 	bool cursorBlinks = true;
+	float cursorPeriod = 1.2f;
 	char cursor = '_';
+	
+	string playingChar = "►";
+	string paused = "‖";
+	
+	float fps = 24f;
+	double dt;
+	
+	DeltaHelper dh;
 	
 	public Screens(bool openConfig = false){
 		init();
@@ -52,12 +62,12 @@ public partial class Screens{
 		};
 		
 		TuiSelectable[,] temp = new TuiSelectable[,]{{
-			new TuiButton("Open GitHub repo", Placement.BottomCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
-				openUrl("https://github.com/siljamdev/AshRadio");
+			new TuiButton("Open Help menu", Placement.BottomCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
+				setHelp();
 			})
 		},{
-			new TuiButton("Open Help menu", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
-				setHelp();
+			new TuiButton("Open GitHub repo", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+				openUrl("https://github.com/siljamdev/AshRadio");
 			})
 		}};
 		
@@ -132,7 +142,7 @@ public partial class Screens{
 		});
 		
 		Keybinds.rewind.subEvent(master, (s, cki) => {
-			Radio.py.elapsed -= Radio.config.GetValue<float>("player.advanceTime");
+			Radio.py.rewind();
 		});
 		
 		Keybinds.restart.subEvent(master, (s, cki) => {
@@ -140,28 +150,26 @@ public partial class Screens{
 		});
 		
 		Keybinds.advance.subEvent(master, (s, cki) => {
-			Radio.py.elapsed += Radio.config.GetValue<float>("player.advanceTime");
+			Radio.py.advance();
 		});
 		
 		//Volume
 		Keybinds.volumeDown.subEvent(master, (s, cki) => {
 			volume.NumberDown(volume, cki);
-			Radio.py.setVolume(volume.Number);
+			Radio.py.setVolume(volume.Number / 100f);
 		});
 		
 		Keybinds.volumeUp.subEvent(master, (s, cki) => {
 			volume.NumberUp(volume, cki);
-			Radio.py.setVolume(volume.Number);
+			Radio.py.setVolume(volume.Number / 100f);
 		});
 		
 		Keybinds.volumeMute.subEvent(master, (s, cki) => {
-			volume.Number = 0;
-			Radio.py.setVolume(volume.Number);
+			Radio.py.setVolume(0f);
 		});
 		
 		Keybinds.volumeMax.subEvent(master, (s, cki) => {
-			volume.Number = 100;
-			Radio.py.setVolume(volume.Number);
+			Radio.py.setVolume(1f);
 		});
 		
 		//Navigation
@@ -191,6 +199,10 @@ public partial class Screens{
 		
 		Keybinds.stats.subEvent(master, (s, cki) => {
 			setStatsSelect();
+		});
+		
+		Keybinds.errlog.subEvent(master, (s, cki) => {
+			setErrorLog();
 		});
 		
 		//session
@@ -235,24 +247,24 @@ public partial class Screens{
 		
 		Stopwatch timer = Stopwatch.StartNew();
 		
-		int maxFps = 24;
-		double dt = 1000d / maxFps;
-		
-		int frameCounter = 0;
+		double cursorTime = 0d;
 		
 		master.OnFinishPlayCycle += (s, a) => { //Wait some time to avoid enourmus cpu usage
 			
 			//Update cursor if neccessary
-			frameCounter++;
-			if(frameCounter >= 20){
-				frameCounter = 0;
+			cursorTime += dh.deltaTime;
+			if(cursorBlinks && cursorTime >= cursorPeriod){
+				cursorTime = 0d;
 				if(cursorBlinks){
 					if(TuiWritable.Cursor != ' '){
 						TuiWritable.Cursor = ' ';
 					}else{
 						TuiWritable.Cursor = cursor;
-					}	
+					}
 				}
+				
+				//Actual console cursor, not this ui cursor
+				hideCursor(); //In conhost.exe, sometimes cursor appears out of the blue
 			}
 			
 			double st = timer.Elapsed.TotalMilliseconds;
@@ -269,6 +281,8 @@ public partial class Screens{
 				
 				Thread.Sleep(1);
 			}
+			
+			dh.Frame();
 		};
 		
 		if(openConfig){
@@ -279,16 +293,30 @@ public partial class Screens{
 	}
 	
 	public void init(){
-		//Load chars
+		//Load selector chars
 		string sels = Radio.config.GetValue<string>("ui.selectors") ?? "><";
 		TuiSelectable.LeftSelector = sels.Length > 1 ? sels[0] : '>';
 		TuiSelectable.RightSelector = sels.Length > 1 ? sels[1] : '<';
 		
+		//Cursor
 		cursorBlinks = Radio.config.GetValue<bool>("ui.cursorBlinks");
+		cursorPeriod = Radio.config.GetValue<float>("ui.cursorBlinkPeriod");
 		
 		string cur = Radio.config.GetValue<string>("ui.cursor") ?? "_";
 		cursor = cur.Length > 0 ? cur[0] : '_';
 		TuiWritable.Cursor = cursor;
+		
+		//Load playing chars
+		sels = Radio.config.GetValue<string>("ui.playingChars") ?? "►‖";
+		playingChar = sels.Length > 1 ? new string(sels[0], 1) : "►";
+		paused = sels.Length > 1 ? new string(sels[1], 1) : "‖";
+		
+		//fps
+		fps = Radio.config.GetValue<float>("ui.updateFrequency");
+		dt = 1000d / fps;
+		
+		dh = new DeltaHelper();
+		dh.Start();
 	}
 	
 	//Method to start it all
@@ -328,7 +356,7 @@ public partial class Screens{
 		
 		totalTime.Text = secondsToMinuteTime(Radio.py.duration);
 		
-		TuiButton play = new TuiButton("‖", Placement.TopCenter, 0, 1, null, Palette.user); //► or ‖
+		TuiButton play = new TuiButton(playingChar, Placement.TopCenter, 0, 1, null, Palette.user); //► or ‖
 		play.SetAction((s, cki) => {
 			Radio.py.togglePause();
 		});
@@ -347,7 +375,7 @@ public partial class Screens{
 		TuiButton back = new TuiButton("▼", Placement.TopCenter, -12, 1, null, Palette.user).SetAction((s, cki) => Radio.py.elapsed -= Radio.config.GetValue<float>("player.advanceTime"));
 		TuiButton advance = new TuiButton("▲", Placement.TopCenter, 12, 1, null, Palette.user).SetAction((s, cki) => Radio.py.elapsed += Radio.config.GetValue<float>("player.advanceTime"));
 		
-		volume = new TuiNumberPicker(0, 100, 2, Radio.py.volume, Placement.Center, 3, 2, Palette.info, Palette.user);
+		volume = new TuiNumberPicker(0, 100, 2, (int) (Radio.py.volume * 100f), Placement.Center, 3, 2, Palette.info, Palette.user);
 		
 		volume.DeleteAllKeyEvents();
 		Keybinds.left.subEvent(volume, (s, cki) => {
@@ -358,6 +386,10 @@ public partial class Screens{
 			volume.NumberUp(s, cki);
 			Radio.py.setVolume(volume.Number);
 		});
+		
+		Radio.py.onChangeVolume += (s, a) => {
+			volume.Number = (int) (Radio.py.volume * 100f);
+		};
 		
 		playing = new TuiScreenInteractive(100, 5, new TuiSelectable[,]{{
 			song, back, prev, play, next, advance
@@ -401,7 +433,7 @@ public partial class Screens{
 		};
 		
 		Radio.py.onChangePlaystate += (se, e) => {
-			play.Text = Radio.py.isPaused ? "‖" : "►";
+			play.Text = Radio.py.isPaused ? playingChar : paused;
 		};
 	}
 	

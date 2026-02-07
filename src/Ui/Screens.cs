@@ -136,6 +136,10 @@ public partial class Screens{
 		MultipleTuiScreenInteractive.StopPlaying(master, default);
 	}
 	
+	public void quitScreens(){
+		MultipleTuiScreenInteractive.StopPlaying(master, default);
+	}
+	
 	//Utilities
 	
 	static void setLooping(TuiOptionPicker top){
@@ -253,6 +257,58 @@ public partial class Screens{
 		int sec = Math.Max(0, (int) Math.Round(seconds));
 		
 		return string.Format("{0}:{1:D2}", sec / 60, sec % 60);
+	}
+	
+	static int compareVersion(string vs){ //-1: older, 0: same, 1: newer
+		if(vs.StartsWith("v")){ //Little correction
+			vs = vs.Substring(1);
+		}
+		
+		int[] c = BuildInfo.Version.Split(".").Select(h => {
+			if(int.TryParse(h, out int v)){
+				return v;
+			}
+			return 0;
+		}).ToArray();
+		
+		int[] n = vs.Split(".").Select(h => {
+			if(int.TryParse(h, out int v)){
+				return v;
+			}
+			return 0;
+		}).ToArray();
+		
+		int i = 0;
+		
+		while(true){
+			if(i >= c.Length && i >= n.Length){
+				return 0; //Equal
+			}
+			
+			int c2 = i < c.Length ? c[i] : 0;
+			int n2 = i < n.Length ? n[i] : 0;
+			
+			if(n2 > c2){
+				return 1; //Newer
+			}
+			if(n2 < c2){
+				return -1; //Older
+			}
+			i++;
+		}
+		return 0;
+	}
+	
+	static bool isVersionNewer(string vs){
+		return compareVersion(vs) == 1;
+	}
+	
+	static bool isVersionOlder(string vs){
+		return compareVersion(vs) == -1;
+	}
+	
+	static bool isVersionEqual(string vs){
+		return compareVersion(vs) == 0;
 	}
 	
 	static void hideCursor(){

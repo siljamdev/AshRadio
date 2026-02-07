@@ -4,6 +4,7 @@ global using AshLib.AshFiles;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.IO.Compression;
 using AshLib.Folders;
 
@@ -25,6 +26,8 @@ public static class Radio{
 	public static AshFileModel configModel;
 	
 	public static bool tryInitScreens;
+	
+	static OSMedia osmedia;
 	
 	//Complete init logic
 	public static void initCore(string directory = null){
@@ -56,14 +59,19 @@ public static class Radio{
 			config.Save();
 		}
 		
-		Song.init(data.GetValue<int>("songs.latestId"));
-		Author.init(data.GetValue<int>("authors.latestId"));
-		Playlist.init(data.GetValue<int>("playlists.latestId"));
+		//Try clear old errors
+		if(config.TryGetValue("capErrorLogs", out bool b2) && b2){
+			clearOldLogs(5);
+		}
 		
-		py = new Player(config.GetValue<int>("player.volume"), config.GetValue<float>("player.volumeExponent"));
-		Session.init((SessionMode) session.GetValue<int>("session.mode"), (SourceType) session.GetValue<int>("session.sourceType"), session.GetValue<int>("session.sourceIdentifier"), session.GetValue<int[]>("session.sourceSeen"));
+		Song.init();
+		Author.init();
+		Playlist.init();
+		
+		py = new Player();
+		Session.init();
 		Stats.init();
-		py.init(session.GetValue<int>("player.song"), session.GetValue<float>("player.elapsed"));
+		py.initSong();
 		
 		Song.subEvents();
 		
@@ -167,8 +175,12 @@ public static class Radio{
 			config.Set("ui.palette.selectedDefault", new Color3[]{c});
 		}
 		
+		if(config.TryGetValue("player.volume", out int v)){
+			config.Set("player.volume", v / 100f);
+		}
+		
 		AshFileModel m = new AshFileModel(
-			new ModelInstance(ModelInstanceOperation.Type, "player.volume", 100),
+			new ModelInstance(ModelInstanceOperation.Type, "player.volume", 1f),
 			new ModelInstance(ModelInstanceOperation.Type, "player.volumeExponent", 2f),
 			new ModelInstance(ModelInstanceOperation.Type, "player.advanceTime", 10f),
 			
@@ -177,11 +189,20 @@ public static class Radio{
 			new ModelInstance(ModelInstanceOperation.Type, "ytdlpPath", "yt-dlp"),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "dcrp", true),
+			new ModelInstance(ModelInstanceOperation.Type, "osmediaintegration", true),
+			#if LINUX
+				new ModelInstance(ModelInstanceOperation.Type, "osmediaintegration.linuxdesktop", "ashradio"),
+			#endif
+			
+			new ModelInstance(ModelInstanceOperation.Type, "capErrorLogs", true),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "ui.useColors", true),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.cursorBlinks", true),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.cursor", "_"),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.selectors", "><"),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.updateFrequency", 24f),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.cursorBlinkPeriod", 0.7f),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.playingChars", "►‖"),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "internal.init", false)
 		);
@@ -213,6 +234,18 @@ public static class Radio{
 			dcrpc = new DiscordPresence();
 		}
 		
+		if(config.TryGetValue("osmediaintegration", out bool b2) && b2){
+			#if WINDOWS
+				if(OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041)){
+					osmedia = new WindowsMedia();
+				}
+			#elif LINUX
+				osmedia = new LinuxMedia();
+			#elif MACOS
+				//cannot get it to fucking work, sorry
+			#endif
+		}
+		
 		#if WINDOWS
 			Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); //WinForms will have better visual quality
 		#endif
@@ -225,24 +258,18 @@ public static class Radio{
 	}
 	
 	public static void resetConfig(){
-		AshFileModel m = new AshFileModel(
-			new ModelInstance(ModelInstanceOperation.Value, "player.volume", 100),
-			new ModelInstance(ModelInstanceOperation.Value, "player.volumeExponent", 2f),
-			new ModelInstance(ModelInstanceOperation.Value, "player.advanceTime", 10f),
-			
-			new ModelInstance(ModelInstanceOperation.Value, "ffmpegPath", "ffmpeg"),
-			new ModelInstance(ModelInstanceOperation.Value, "ffprobePath", "ffprobe"),
-			new ModelInstance(ModelInstanceOperation.Value, "ytdlpPath", "yt-dlp"),
-			
-			new ModelInstance(ModelInstanceOperation.Value, "dcrp", true),
-			
-			new ModelInstance(ModelInstanceOperation.Value, "ui.useColors", true),
-			new ModelInstance(ModelInstanceOperation.Value, "ui.cursorBlinks", true),
-			new ModelInstance(ModelInstanceOperation.Value, "ui.cursor", "_"),
-			new ModelInstance(ModelInstanceOperation.Value, "ui.selectors", "><")
-		);
+		string[] keysToReset = new string[]{
+			"player.volume", "player.volumeExponent", "player.advanceTime",
+			"ffmpegPath", "ffmpegPath", "ytdlpPath",
+			"dcrp", "osmediaintegration", "osmediaintegration.linuxdesktop", "capErrorLogs",
+			"ui.useColors", "ui.cursorBlinks", "ui.cursor", "ui.selectors", "ui.updateFrequency", "ui.cursorBlinkPeriod", "ui.playingChars"
+		};
+		
+		AshFileModel m = new AshFileModel(configModel.instances.Where(h => keysToReset.Contains(h.name)).Select(h => new ModelInstance(ModelInstanceOperation.Value, h.name, h.value)).ToArray());
 		
 		config *= m;
+		
+		py.init();
 		
 		Palette.reset();
 		Keybinds.reset();
@@ -533,8 +560,14 @@ public static class Radio{
 		
 		using Process proc = Process.Start(psi);
 		
+		proc.EnableRaisingEvents = true;
+		
 		proc.Exited += (s, e) => {
 			updatingYtdlp = false;
+			
+			if(proc.ExitCode != 0){
+				reportError(proc.StandardError.ReadToEnd());
+			}
 		};
 	}
 	
@@ -794,6 +827,18 @@ public static class Radio{
 	}
 	#endregion
 	
+	static void clearOldLogs(int n){
+		string[] filesToDelete = Directory.GetFiles(appDataPath, "error_*.log").OrderByDescending(Path.GetFileName).Skip(n).ToArray();
+		
+		foreach(string file in filesToDelete){
+			try{
+				File.Delete(file);
+			}catch(Exception e){
+				reportError(e.ToString());
+			}
+		}
+	}
+	
 	//Save on exit the current song and time left
 	static void onExit(object sender, EventArgs e){
 		session.Set("player.elapsed", py.elapsed);
@@ -821,6 +866,28 @@ public static class Radio{
 		
 		if(onComplete != null){
 			await onComplete(); //Lambda executed after file is saved
+		}
+	}
+	
+	public static async Task fetchUpdate(Func<string, Task> onComplete){
+		using var client = new HttpClient();
+		client.DefaultRequestHeaders.UserAgent.ParseAdd("AshRadioUpdateCheck");
+	
+		try{
+			string url = $"https://api.github.com/repos/siljamdev/AshRadio/releases/latest";
+			string json = await client.GetStringAsync(url);
+			var doc = JsonDocument.Parse(json);
+			string latestTag = doc.RootElement.GetProperty("tag_name").GetString()!;
+			
+			if(onComplete != null){
+				await onComplete(latestTag);
+			}
+		}catch(Exception e){
+			reportError(e.ToString());
+			
+			if(onComplete != null){
+				await onComplete(null);
+			}
 		}
 	}
 	

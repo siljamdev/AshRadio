@@ -2,7 +2,6 @@
   <PropertyGroup>
 	<OutputType>Exe</OutputType>
 	
-    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<LangVersion>preview</LangVersion>
@@ -13,7 +12,7 @@
     <PackageDescription>Lightweight music player in your terminal</PackageDescription>
 	
 	<ApplicationIcon>res/icon.ico</ApplicationIcon>
-<!--@propertyGr-->
+	<!--@propertyGr-->
 	
 	<PublishSingleFile>true</PublishSingleFile>
 	<SelfContained>true</SelfContained>
@@ -33,18 +32,23 @@
   <PropertyGroup Condition="('$(Configuration)' == 'Debug' and '$(OS)' == 'Windows_NT') or '$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-x86' or '$(RuntimeIdentifier)' == 'win-arm64'">
 	<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
 	
-	<TargetFramework>net9.0-windows</TargetFramework>
+	<TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   
   <!-- Linux -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x86' or '$(RuntimeIdentifier)' == 'linux-x64' or '$(RuntimeIdentifier)' == 'linux-arm' or '$(RuntimeIdentifier)' == 'linux-arm64'">
 	<DefineConstants>$(DefineConstants);LINUX</DefineConstants>
+	
+	<TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   
   <!-- MacOS -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
 	<DefineConstants>$(DefineConstants);MACOS</DefineConstants>
+	
+	<TargetFramework>net9.0</TargetFramework>
+	<!-- <TargetFramework>net9.0-macos</TargetFramework> -->
   </PropertyGroup>
   
   <!-- Windows -->
@@ -54,6 +58,11 @@
 	  <Link>%(Filename)%(Extension)</Link>
 	  <TargetPath>%(Filename)%(Extension)</TargetPath>
 	</None>
+  </ItemGroup>
+  
+  <!-- Linux General -->
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x86' or '$(RuntimeIdentifier)' == 'linux-x64' or '$(RuntimeIdentifier)' == 'linux-arm' or '$(RuntimeIdentifier)' == 'linux-arm64'">
+	<PackageReference Include="Tmds.DBus" Version="0.90.2" />
   </ItemGroup>
   
   <!-- Linux -->
@@ -102,13 +111,7 @@
   </ItemGroup>
   
   <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
-    <WriteLinesToFile
-    	File="$(IntermediateOutputPath)BuildInfo.g.cs"
-    	Lines='public static class BuildInfo{
-    	public const string Version = "$(Version)"%3B
-    	public const string BuildDate = "$(BuildDate)"%3B
-    }'
-    Overwrite="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="public static class BuildInfo{&#xD;&#xA;    	public const string Version = &quot;$(Version)&quot;%3B&#xD;&#xA;		public const string BuildDate = &quot;$(BuildDate)&quot;%3B&#xD;&#xA;    }" Overwrite="true" />
 	
 	<ItemGroup>
       <Compile Include="$(IntermediateOutputPath)BuildInfo.g.cs" />

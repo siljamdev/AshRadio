@@ -76,6 +76,10 @@ public class Song{
 		new ModelInstance(ModelInstanceOperation.Type, "d", -1f) //duration
 	);
 	
+	public static void init(){
+		init(Radio.data.GetValue<int>("songs.latestId"));
+	}
+	
 	public static void init(int li){
 		latestId = Math.Max(li, -1);
 		songModel.deleteNotMentioned = true;
@@ -375,11 +379,9 @@ public class Song{
 	}
 	
 	static string safePath(string p){
-		foreach(char c in Path.GetInvalidFileNameChars()){
-			p = p.Replace(c, '_');
-		}
+		char[] invalid = Path.GetInvalidFileNameChars();
 		
-		return p;
+		return new string(p.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
 	}
 }
 

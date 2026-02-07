@@ -9,6 +9,8 @@ using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
 
 public partial class Screens{
+	TuiMultipleLabels creditsLabel = new TuiMultipleLabels(new string[]{"AshRadio", " made by ", "siljam"}, Placement.BottomRight, 0, 0, new CharFormat?[]{Palette.hint, null, Palette.hint});
+	
 	void setConfig(){
 		if(currentMiddleScreen.identifier == "config"){
 			setSelectedScreen(currentMiddleScreen);
@@ -48,7 +50,8 @@ public partial class Screens{
 				setConfirmScreen("Do you want to reset the whole config?", () => {
 					Radio.resetConfig();
 					
-					init();
+					Radio.py.init();
+					Radio.py.setVolume(Radio.py.volume);
 					
 					if(Radio.config.GetValue<bool>("dcrp")){
 						if(Radio.dcrpc == null){
@@ -58,6 +61,8 @@ public partial class Screens{
 						Radio.dcrpc?.Dispose();
 						Radio.dcrpc = null;
 					}
+					
+					reinitScreens();
 				});
 			})
 		}};
@@ -66,7 +71,7 @@ public partial class Screens{
 		l.identifier = "config";
 		
 		l.interactive.Elements.Add(new TuiLabel("Config", Placement.TopCenter, 0, 1, Palette.main));
-		l.interactive.Elements.Add(new TuiTwoLabels("AshRadio v" + BuildInfo.Version, " made by siljam", Placement.BottomRight, 0, 0, Palette.hint, null));
+		l.interactive.Elements.Add(creditsLabel);
 		
 		setMiddleScreen(l);
 	}
@@ -114,9 +119,12 @@ public partial class Screens{
 	void setUiConfig(){
 		setMiddleScreen(generateConfigScreen("UI", 8, new (string, ConfigType, string, int)[]{
 				("ui.useColors", ConfigType.Bool, "Use colors", 0),
-				("ui.cursorBlinks", ConfigType.Bool, "Cursor blinks", 1),
 				("ui.cursor", ConfigType.String, "Cursor char", 1),
+				("ui.cursorBlinks", ConfigType.Bool, "Cursor blinks", 1),
+				("ui.cursorBlinkPeriod", ConfigType.Ufloat, "Cursor blik period", 6),
+				("ui.playingChars", ConfigType.String, "Playing/Paused chars", 2),
 				("ui.selectors", ConfigType.String, "Selector chars", 2),
+				("ui.updateFrequency", ConfigType.Ufloat, "Update frequency", 6),
 			},
 			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[0],
 			() => {
@@ -132,7 +140,8 @@ public partial class Screens{
 			},
 			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[0],
 			() => {
-				Radio.py.volumeExponent = Radio.config.GetValue<float>("player.advanceTime");
+				Radio.py.init();
+				Radio.py.setVolume(Radio.py.volume);
 			}
 		));
 	}
@@ -155,8 +164,8 @@ public partial class Screens{
 					MiddleScreen midsc = currentMiddleScreen;
 					if(Radio.downloadFfmpeg(() => {
 						if(currentMiddleScreen == midsc){
-							closeMiddleScreen();
 							setPathConfig();
+							updateMiddleScreen(midsc, () => null);
 						}
 					})){
 						b.Text = "Downloading…";
@@ -167,8 +176,8 @@ public partial class Screens{
 					MiddleScreen midsc = currentMiddleScreen;
 					if(Radio.downloadYtdlp(() => {
 						if(currentMiddleScreen == midsc){
-							closeMiddleScreen();
 							setPathConfig();
+							updateMiddleScreen(midsc, () => null);
 						}
 					})){
 						b.Text = "Downloading…";
@@ -179,15 +188,15 @@ public partial class Screens{
 					MiddleScreen midsc = currentMiddleScreen;
 					bool b1 = Radio.downloadFfmpeg(() => {
 						if(currentMiddleScreen == midsc){
-							closeMiddleScreen();
 							setPathConfig();
+							updateMiddleScreen(midsc, () => null);
 						}
 					});
 					
 					bool b2 = Radio.downloadYtdlp(() => {
 						if(currentMiddleScreen == midsc){
-							closeMiddleScreen();
 							setPathConfig();
+							updateMiddleScreen(midsc, () => null);
 						}
 					});
 					
@@ -204,8 +213,13 @@ public partial class Screens{
 	}
 	
 	void setMiscConfig(){
-		setMiddleScreen(generateConfigScreen("Miscellaneous", 8, new (string, ConfigType, string, int)[]{
-				("dcrp", ConfigType.Bool, "Use Discord RPC", 0)
+		setMiddleScreen(generateConfigScreen("Miscellaneous", 16, new (string, ConfigType, string, int)[]{
+				("dcrp", ConfigType.Bool, "Use Discord RPC", 0),
+				("osmediaintegration", ConfigType.Bool, "Use OS Media integration", 0),
+				#if LINUX
+					("osmediaintegration.linuxdesktop", ConfigType.String, "AshRadio .desktop file name", 256),
+				#endif
+				("capErrorLogs", ConfigType.Bool, "Cap error logs at 5", 0)
 			},
 			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[]{
 				("Attempt id repair", (s, ck) => {
@@ -219,6 +233,9 @@ public partial class Screens{
 				("Open config directory", (s, ck) => {
 					openFolder(Radio.appDataPath);
 				}),
+				("See error log", (s, ck) => {
+					setErrorLog();
+				})
 			},
 			() => {
 				if(Radio.config.GetValue<bool>("dcrp")){
@@ -232,8 +249,17 @@ public partial class Screens{
 			}
 		));
 	}
+	
+	void setKeybindsConfig(){
+		setMiddleScreen(generateControlsScreen(Keybinds.configurables,
+			() => {
+				reinitScreens();
+			}
+		));
+	}
+	
 											//config .ash name, type, description, length		//Right actions
-	MiddleScreen generateConfigScreen(string title, int fieldsize, (string, ConfigType, string, int)[] configs, (string, Action<TuiSelectable, ConsoleKeyInfo>)[] actions, Action onSave){
+	MiddleScreen generateConfigScreen(string title, int fieldsize, (string, ConfigType, string, int)[] configs, (string, Action<TuiSelectable, ConsoleKeyInfo>)[] actions, Action onSave, bool renderFocused = false){
 		//Helper method
 		string getColorFgString(string key){
 			if(Radio.config.TryGetValue(key, out Color3 cf)){
@@ -337,7 +363,7 @@ public partial class Screens{
 			Radio.config.Save();
 			
 			updateMiddleScreen(midsc, () => {
-				return generateConfigScreen(title, fieldsize, configs, actions, onSave);
+				return generateConfigScreen(title, fieldsize, configs, actions, onSave, true);
 			});
 		});
 		
@@ -463,7 +489,7 @@ public partial class Screens{
 		//Inner screen
 		TuiScrollingScreenInteractive l = new TuiScrollingScreenInteractive(Math.Max(backg.Xsize - 6, 0),
 			Math.Max(backg.Ysize - 6, 0),
-			t, 0, 0,
+			t, (uint) (renderFocused ? 1 : 0), (uint) (renderFocused ? actionButtons.Length - 1 : 0),
 			Placement.TopLeft, 3, 4,
 			null
 		);
@@ -486,6 +512,7 @@ public partial class Screens{
 		});
 		
 		backg.Elements.Add(errorLabel);
+		backg.Elements.Add(creditsLabel);
 		
 		l.Elements.AddRange(configDescriptions);
 		
@@ -493,14 +520,6 @@ public partial class Screens{
 		l.FixedElements.Add(done);
 		
 		return midsc;
-	}
-	
-	void setKeybindsConfig(){
-		setMiddleScreen(generateControlsScreen(Keybinds.configurables,
-			() => {
-				reinitScreens();
-			}
-		));
 	}
 	
 	MiddleScreen generateControlsScreen(Keybind[] configs, Action onSave){
@@ -568,6 +587,7 @@ public partial class Screens{
 		);
 		
 		backg.Elements.Add(l);
+		backg.Elements.Add(creditsLabel);
 		
 		prepareScreen(l);
 		
@@ -595,6 +615,98 @@ public partial class Screens{
 		l.FixedElements.Add(done);
 		
 		return midsc;
+	}
+	
+	void setAbout(){
+		if(currentMiddleScreen.identifier == "about"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
+		bool b2 = false;
+		
+		MiddleScreen l3 = generateMiddle(new TuiSelectable[,]{{
+			new TuiButton("Check for updates", Placement.BottomCenter, 0, 4, null, Palette.user).SetAction((s, ck) => {
+				if(b2){
+					return;
+				}
+				TuiButton b = ((TuiButton) s);
+				b.Text = "Checking…";
+				b2 = true;
+				Radio.fetchUpdate(async newVersion => {
+					if(newVersion == null){
+						b.TextFormat = Palette.error;
+						b.SelectedTextFormat = Palette.error;
+						b.Text = "An error occured!";
+					}else if(isVersionEqual(newVersion)){
+						b.Text = "Up to date";
+					}else if(isVersionOlder(newVersion)){
+						b.TextFormat = Palette.main;
+						b.SelectedTextFormat = Palette.main;
+						b.Text = "ARE YOU A TIME TRAVELER?!?!?!?";
+					}else{
+						b.Text = "New version available: " + newVersion;
+					}
+				});
+			})
+		},{
+			new TuiButton("Open GitHub repo", Placement.BottomCenter, 0, 2, null, Palette.user).SetAction((s, ck) => {
+				openUrl("https://github.com/siljamdev/AshRadio");
+			})
+		}});
+		l3.identifier = "about";
+		
+		l3.screen.Elements.Add(new TuiLabel("About", Placement.TopCenter, 0, 1, Palette.main));
+		l3.screen.Elements.Add(new TuiLabel("AshRadio v" + BuildInfo.Version, Placement.TopCenter, 0, 3));
+		l3.screen.Elements.Add(new TuiLabel("Version built on: " + BuildInfo.BuildDate, Placement.TopCenter, 0, 4));
+		l3.screen.Elements.Add(new TuiTwoLabels("Made by ", "siljam", Placement.TopCenter, 0, 6, null, Palette.author));
+		l3.screen.Elements.Add(new TuiLabel("This software is under the MIT license", Placement.TopCenter, 0, 7, Palette.info));
+		
+		setMiddleScreen(l3);
+	}
+	
+	void setErrorLog(){
+		if(currentMiddleScreen.identifier == "errorlog"){
+			setSelectedScreen(currentMiddleScreen);
+			return;
+		}
+		
+		MiddleScreen l3 = generateMiddle(null);
+		l3.identifier = "errorlog";
+		TuiScreenInteractive l = l3.interactive;
+		
+		TuiLog content = new TuiLog(l.Xsize - 4, l.Ysize - 7, Placement.TopLeft, 2, 5, Palette.error);
+		
+		content.OnParentResize += (s, a) => {
+			content.Xsize = l.Xsize - 4;
+			content.Ysize = l.Ysize - 7;
+			
+			content.ScrollToTop();
+		};
+		
+		Keybinds.scrollUp.subEvent(l3, true, (s, ck) => {
+			content.Scroll++;
+		});
+		
+		Keybinds.scrollDown.subEvent(l3, true, (s, ck) => {
+			content.Scroll--;
+		});
+		
+		try{
+			if(File.Exists(Radio.errorFilePath)){
+				content.Append(File.ReadAllText(Radio.errorFilePath));
+			}
+		}catch(Exception e){
+			Radio.reportError(e.ToString());
+		}
+		
+		content.ScrollToTop();
+		
+		l.Elements.Add(new TuiLabel("Error log", Placement.TopCenter, 0, 1, Palette.main));
+		l.Elements.Add(new TuiLabel(Radio.errorFilePath, Placement.TopCenter, 0, 3));
+		l.Elements.Add(content);
+		
+		setMiddleScreen(l3);
 	}
 	
 	//Prepare textbox

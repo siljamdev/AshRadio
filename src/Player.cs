@@ -5,9 +5,11 @@ using ManagedBass;
 public class Player : IDisposable{	
 	public DeviceInfo currentDevice{get; private set;}
 	
-	public int volume{get; private set;} //0 to 100
+	public float volume{get; private set;} //0 to 1
 	
-	public float volumeExponent;
+	public float volumeExponent{get; private set;}
+	
+	public float advanceTime;
 	
 	public int playingSong{get; private set;}
 	
@@ -40,15 +42,15 @@ public class Player : IDisposable{
 	
 	public event EventHandler onChangePlaystate;
 	public event EventHandler onChangeDevice;
+	public event EventHandler onChangeVolume;
 	
 	int stream;
 	int finishSync;
 	
 	bool isStoping;
 	
-	public Player(int vol = 100, float volxp = 2f){
-		volume = vol;
-		volumeExponent = volxp;
+	public Player(){
+		init();
 		
 		playingSong = -1;
 		
@@ -61,10 +63,17 @@ public class Player : IDisposable{
 		currentDevice = t1;
 	}
 	
-	public void init(int song = -1, float el = 0f){
-		loadSong(song);
-		elapsed = el;
+	public void init(){
+		volume = Radio.config.GetValue<float>("player.volume");
+		volumeExponent = Radio.config.GetValue<float>("player.volumeExponent");
+		advanceTime = Radio.config.GetValue<float>("player.advanceTime");
+	}
+	
+	public void initSong(){
+		loadSong(Radio.session.GetValue<int>("player.song"));
+		elapsed = Radio.session.GetValue<float>("player.elapsed");
 		
+		//Save because what was in session might make no sense
 		Radio.session.Set("player.elapsed", elapsed);
 		Radio.session.Save();
 	}
@@ -137,6 +146,14 @@ public class Player : IDisposable{
 		}
 	}
 	
+	public void rewind(){
+		elapsed -= advanceTime;
+	}
+	
+	public void advance(){
+		elapsed += advanceTime;
+	}
+	
 	public void skip(){
 		//Console.WriteLine("Song ended");
 		
@@ -153,15 +170,22 @@ public class Player : IDisposable{
 		play(j);
 	} */
 	
-	public void setVolume(int v){
-		v = Math.Clamp(v, 0, 100);
+	public void setVolume(float v){
+		v = Math.Clamp(v, 0f, 1f);
 		if(volume != v){
 			volume = v;
 			Radio.config.Set("player.volume", volume);
 			Radio.config.Save();
 		}
 		
-		Bass.ChannelSetAttribute(stream, ChannelAttribute.Volume, (float) Math.Pow((float) volume / 100f, volumeExponent));
+		Bass.ChannelSetAttribute(stream, ChannelAttribute.Volume, (float) Math.Pow(volume, volumeExponent));
+		
+		onChangeVolume?.Invoke(this, EventArgs.Empty);
+	}
+	
+	public void setVolumeExp(float vx){
+		volumeExponent = vx;
+		setVolume(volume);
 	}
 	
 	void attachFinish(){
