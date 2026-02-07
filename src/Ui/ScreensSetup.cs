@@ -246,6 +246,9 @@ public partial class Screens{
 		});
 		
 		Stopwatch timer = Stopwatch.StartNew();
+		double st = 0d;
+		
+		double consoleTime = 0d;
 		
 		double cursorTime = 0d;
 		
@@ -262,12 +265,16 @@ public partial class Screens{
 						TuiWritable.Cursor = cursor;
 					}
 				}
+			}
+			
+			consoleTime += dh.deltaTime;
+			if(consoleTime >= 30000){
+				consoleTime = 0d;
 				
 				//Actual console cursor, not this ui cursor
 				hideCursor(); //In conhost.exe, sometimes cursor appears out of the blue
 			}
 			
-			double st = timer.Elapsed.TotalMilliseconds;
 			while(true){
 				if(Console.KeyAvailable){
 					ConsoleKeyInfo k = Console.ReadKey(true);
@@ -282,6 +289,7 @@ public partial class Screens{
 				Thread.Sleep(1);
 			}
 			
+			st = timer.Elapsed.TotalMilliseconds;
 			dh.Frame();
 		};
 		
