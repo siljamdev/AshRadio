@@ -6,6 +6,12 @@ abstract class OSMedia{
 		};
 		
 		Radio.py.onChangePlaystate += (_, _) => updateState(Radio.py.isPaused);
+		
+		Session.onModeChange += (_, _) => updateMode(Session.mode);
+		
+		Radio.py.onChangeElapsed += (_, _) => updateElapsed(Radio.py.elapsed);
+		
+		Radio.py.onChangeVolume += (_, _) => updateVolume(Radio.py.volume);
 	}
 	
 	//To be called at the end of the construtor
@@ -14,6 +20,12 @@ abstract class OSMedia{
 		updateSong(s?.id ?? -1, s?.title ?? Song.nullTitle, s?.authors?.Select(n => (Author.get(n)?.name ?? Author.nullName)).ToArray(), Radio.py.duration);
 		
 		updateState(Radio.py.isPaused);
+		
+		updateMode(Session.mode);
+		
+		updateElapsed(Radio.py.elapsed);
+		
+		updateVolume(Radio.py.volume);
 	}
 	
 	protected string authorsToString(string[] s){
@@ -23,6 +35,8 @@ abstract class OSMedia{
 	protected abstract void updateSong(int id, string title, string[] authors, float duration);
 	protected abstract void updateState(bool paused);
 	protected abstract void updateMode(SessionMode mode);
+	protected abstract void updateElapsed(float seconds);
+	protected abstract void updateVolume(float volume);
 	
 	//To be called
 	protected void togglePause(){
@@ -57,10 +71,6 @@ abstract class OSMedia{
 	
 	protected void setElapsed(float seconds){
 		Radio.py.elapsed = seconds;
-	}
-	
-	protected float getElapsed(){
-		return Radio.py.elapsed;
 	}
 	
 	protected void setVolume(float volume){

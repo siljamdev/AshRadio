@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 	<LangVersion>preview</LangVersion>
     
-    <Version>1.6.0</Version>
+    <Version>1.6.1</Version>
     <Authors>siljam</Authors>
     <Company>AshProject</Company>
     <PackageDescription>Lightweight music player in your terminal</PackageDescription>
@@ -110,6 +110,7 @@
     </None>
   </ItemGroup>
   
+  <!-- BuildInfo -->
   <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
     <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="public static class BuildInfo{&#xD;&#xA;    	public const string Version = &quot;$(Version)&quot;%3B&#xD;&#xA;		public const string BuildDate = &quot;$(BuildDate)&quot;%3B&#xD;&#xA;    }" Overwrite="true" />
 	

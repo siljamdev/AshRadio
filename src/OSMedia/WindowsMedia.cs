@@ -65,6 +65,14 @@ class WindowsMedia : OSMedia{
 	}
 	
 	protected override void updateMode(SessionMode mode){
+		smtc.ShuffleEnabled = mode == SessionMode.Shuffle || mode == SessionMode.SmartShuffle;
+	}
+	
+	protected override void updateElapsed(float seconds){
+		
+	}
+	
+	protected override void updateVolume(float volume){
 		
 	}
 }

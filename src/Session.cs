@@ -21,6 +21,7 @@ public static class Session{
 	
 	static Random rand;
 	
+	public static event EventHandler onModeChange; //UI changes
 	public static event EventHandler onSourceChange; //UI changes
 	public static event EventHandler onQueueChange; //UI changes
 	
@@ -212,6 +213,8 @@ public static class Session{
 		
 		Radio.session.Set("session.mode", (int) mode);
 		Radio.session.Save();
+		
+		onModeChange?.Invoke(null, EventArgs.Empty);
 	}
 	
 	//Update pool

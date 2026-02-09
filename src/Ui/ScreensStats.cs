@@ -215,7 +215,7 @@ public partial class Screens{
 				Radio.py.play(s.id);
 			});
 			
-			Keybinds.addToQueue.subEvent(b, (s2, ck) => {
+			Keybinds.addToPlaylist.subEvent(b, (s2, ck) => {
 				setSelectPlaylistToAddTo(s.id);
 			});
 			

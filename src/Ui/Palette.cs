@@ -97,6 +97,7 @@ public static class Palette{
 		AshFileModel m = new AshFileModel(getPaletteModel().instances.Select(h => new ModelInstance(ModelInstanceOperation.Value, h.name, h.value)).ToArray());
 		
 		Radio.config.ApplyModel(m);
+		Radio.config.Save();
 	}
 	
 	public static void setSubtle(){

@@ -89,6 +89,10 @@ public class Keybind{
 		return keybindToString(primary);
 	}
 	
+	public string ToStringFull(){
+		return keybindToString(primary) + (secondary != null ? (", " + keybindToString(secondary)) : "");
+	}
+	
 	//Static
 	
 	public static string keybindToString((ConsoleKey, ConsoleModifiers)? b){

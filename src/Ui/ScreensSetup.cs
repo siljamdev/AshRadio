@@ -503,6 +503,10 @@ public partial class Screens{
 		
 		setLooping(mode);
 		
+		Session.onModeChange += (s, a) => {
+			mode.SelectedOptionIndex = (uint) Session.mode;
+		};
+		
 		TuiButton modifyQueue = new TuiButton("Modify queue", Placement.BottomLeft, 3, 6, null, Palette.user).SetAction((s, cki) => {
 			if(Session.getQueue().Count > 0){
 				setSelectedScreen(queueScreen);

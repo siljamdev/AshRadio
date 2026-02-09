@@ -25,8 +25,10 @@ public class Player : IDisposable{
 			skip();
 		}else if(value < 0f){
 			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, 0f));
+			onChangeElapsed?.Invoke(this, EventArgs.Empty);
 		}else{
 			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, value));
+			onChangeElapsed?.Invoke(this, EventArgs.Empty);
 		}
 	}}
 	
@@ -39,6 +41,8 @@ public class Player : IDisposable{
 	public event EventHandler onBeforeSongLoad;
 	public event EventHandler onSongLoad;
 	public event EventHandler onSongFinish;
+	
+	public event EventHandler onChangeElapsed;
 	
 	public event EventHandler onChangePlaystate;
 	public event EventHandler onChangeDevice;
@@ -70,8 +74,9 @@ public class Player : IDisposable{
 	}
 	
 	public void initSong(){
+		float el = Radio.session.GetValue<float>("player.elapsed");
 		loadSong(Radio.session.GetValue<int>("player.song"));
-		elapsed = Radio.session.GetValue<float>("player.elapsed");
+		elapsed = el;
 		
 		//Save because what was in session might make no sense
 		Radio.session.Set("player.elapsed", elapsed);

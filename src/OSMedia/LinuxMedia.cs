@@ -6,81 +6,54 @@ using System.Threading.Tasks;
 using Tmds.DBus;
 
 [DBusInterface("org.mpris.MediaPlayer2")]
-interface IMediaPlayer2 : IDBusObject{
+public interface IMediaPlayer2 : IDBusObject{
+	//Methods
 	Task QuitAsync();
 	Task RaiseAsync();
 	
-	Task<string> IdentityAsync{get;}
-	Task<string> DesktopEntryAsync{get;}
-	
-	Task<bool> CanQuitAsync{get;}
-	Task<bool> CanRaiseAsync{get;}
-	Task<bool> HasTrackListAsync{get;}
+	//Properties
+	Task<object> GetAsync(string prop);
+    Task<IDictionary<string, object>> GetAllAsync();
+    Task SetAsync(string prop, object val);
+    Task<IDisposable> WatchPropertiesAsync(Action<PropertyChanges> handler);
 }
 
 [DBusInterface("org.mpris.MediaPlayer2.Player")]
-interface IPlayer : IDBusObject{
+public interface IPlayer : IDBusObject{
+	//Methods
 	Task PlayAsync();
 	Task PauseAsync();
 	Task PlayPauseAsync();
+	Task StopAsync();
 	Task NextAsync();
 	Task PreviousAsync();
 	Task SeekAsync(long offset); //in microseconds
 	Task SetPositionAsync(ObjectPath trackId, long position);
-
-	Task<string> PlaybackStatusAsync { get; }
-	Task<long> PositionAsync { get; }
-	Task<IDictionary<string, object>> MetadataAsync { get; }
-	Task<double> MinimumRateAsync { get; }
-	Task<double> MaximumRateAsync { get; }
+	Task OpenUriAsync(string uri);
 	
-	Task<bool> ShuffleAsync { get; }
-	Task<double> VolumeAsync { get;}
-	Task SetVolumeAsync(double value);
-	Task<double> RateAsync { get; } //Speed
-	Task<string> LoopStatusAsync { get; }
+	//Signals
+	Task<IDisposable> WatchSeekedAsync(Action<long> handler, Action<Exception>? onError = null);
 	
-	Task<bool> CanGoNextAsync { get; }
-	Task<bool> CanGoPreviousAsync { get; }
-	Task<bool> CanPlayAsync { get; }
-	Task<bool> CanPauseAsync { get; }
-	Task<bool> CanSeekAsync { get; }
-	Task<bool> CanControlAsync { get; }
+	//Properties
+	Task<object> GetAsync(string prop);
+    Task<IDictionary<string, object>> GetAllAsync();
+    Task SetAsync(string prop, object val);
+    Task<IDisposable> WatchPropertiesAsync(Action<PropertyChanges> handler);
 }
 
-class MediaPlayer2Impl : IMediaPlayer2{
-	string desktopName;
-	
-	public MediaPlayer2Impl(){
-		desktopName = Radio.config.GetValue<string>("osmediaintegration.linuxdesktop") ?? "ashradio";
-	}
-	
-	public ObjectPath ObjectPath => new ObjectPath("/org/mpris/MediaPlayer2");
-	
-	public Task QuitAsync(){
-		Radio.sc?.quitScreens();
-		return Task.CompletedTask;
-	}
-	
-	public Task RaiseAsync() => Task.CompletedTask;
-	
-	public Task<string> IdentityAsync => Task.FromResult("AshRadio");
-	public Task<string> DesktopEntryAsync => Task.FromResult(desktopName);
-	
-	public Task<bool> CanQuitAsync => Task.FromResult(true);
-	public Task<bool> CanRaiseAsync => Task.FromResult(true);
-	public Task<bool> HasTrackListAsync => Task.FromResult(false);
-}
-
-class LinuxMedia : OSMedia, IPlayer{
+class LinuxMedia : OSMedia, IMediaPlayer2, IPlayer{
 	bool paused;
 	bool shuffle;
 	
 	Connection _dbusConnection;
-	MediaPlayer2Impl _mediaPlayer2;
+	
+	public ObjectPath ObjectPath => new ObjectPath("/org/mpris/MediaPlayer2");
 	
 	public LinuxMedia() : base(){
 		InitializeDBusAsync().GetAwaiter().GetResult();
+		
+		initMetadata();
+		initProperties();
 		
 		base.init();
 	}
@@ -91,20 +64,29 @@ class LinuxMedia : OSMedia, IPlayer{
 			_dbusConnection = new Connection(Address.Session);
 			await _dbusConnection.ConnectAsync();
 			
-			// Create and register implementations
-			_mediaPlayer2 = new MediaPlayer2Impl();
-			
-			await _dbusConnection.RegisterObjectAsync(_mediaPlayer2);
-			await _dbusConnection.RegisterObjectAsync(this);
-			
 			// Request the service name
 			await _dbusConnection.RegisterServiceAsync("org.mpris.MediaPlayer2.ashradio");
+			
+			await _dbusConnection.RegisterObjectAsync(this);
 		}catch(Exception e){
 			Radio.reportError(e.ToString());
 		}
 	}
 	
-	public ObjectPath ObjectPath => new ObjectPath("/org/mpris/MediaPlayer2/Player");
+	#region MediaPlayer2
+	
+	public Task QuitAsync(){
+		Radio.sc?.quitScreens();
+		return Task.CompletedTask;
+	}
+	
+	public Task RaiseAsync() => Task.CompletedTask;
+	
+	#endregion
+	
+	#region MediaPlayer2.Player
+	
+	#region Methods
 	
 	public Task PlayAsync(){
 		base.togglePause();
@@ -143,45 +125,162 @@ class LinuxMedia : OSMedia, IPlayer{
 		return Task.CompletedTask;
 	}
 	
-	public Task<string> PlaybackStatusAsync => Task.FromResult(paused ? "Paused" : "Playing");
-	public Task<long> PositionAsync => Task.FromResult((long) (base.getElapsed() * 1000000));
+	public Task OpenUriAsync(string uri) => Task.CompletedTask;
 	
-	Dictionary<string, object> Metadata = new();
-	public Task<IDictionary<string, object>> MetadataAsync {get => Task.FromResult((IDictionary<string, object>) Metadata);}
+	#endregion
 	
-	public Task<bool> ShuffleAsync => Task.FromResult(shuffle);
+	#region signals
+	private event Action<long>? _seeked;
 	
-	public Task<double> VolumeAsync {get => Task.FromResult(Radio.py.volume / 100d);}
-	public async Task SetVolumeAsync(double value){
-		base.setVolume((float) value);
+	public Task<IDisposable> WatchSeekedAsync(Action<long> handler, Action<Exception>? onError = null){
+		_seeked += handler;
+
+		return Task.FromResult<IDisposable>(
+			new Unsubscriber(() => _seeked -= handler)
+		);
 	}
 	
-	public Task<double> RateAsync => Task.FromResult(1d);
-	public Task<double> MinimumRateAsync => Task.FromResult(1d);
-	public Task<double> MaximumRateAsync => Task.FromResult(1d);
+	#endregion
 	
-	public Task<string> LoopStatusAsync => Task.FromResult("None");
+	#region properties
+	Dictionary<string, object> properties = new();
 	
-	public Task<bool> CanGoNextAsync => Task.FromResult(true);
-	public Task<bool> CanGoPreviousAsync => Task.FromResult(true);
-	public Task<bool> CanPlayAsync => Task.FromResult(true);
-	public Task<bool> CanPauseAsync => Task.FromResult(true);
-	public Task<bool> CanSeekAsync => Task.FromResult(true);
-	public Task<bool> CanControlAsync => Task.FromResult(true);
+	public Task<object> GetAsync(string prop){
+		return Task.FromResult(properties[prop]);
+	}
 	
+    public Task<IDictionary<string, object>> GetAllAsync(){
+		return Task.FromResult<IDictionary<string, object>>(properties);
+	}
+	
+    public Task SetAsync(string prop, object val){
+		if(prop == "Volume"){
+			properties[prop] = val;
+			base.setVolume(Convert.ToSingle(val));
+		}
+		
+		return Task.CompletedTask;
+	}
+	
+	private event Action<PropertyChanges>? _properties;
+	
+    public Task<IDisposable> WatchPropertiesAsync(Action<PropertyChanges> handler){
+		_properties += handler;
+
+		return Task.FromResult<IDisposable>(
+			new Unsubscriber(() => _properties -= handler)
+		);
+	}
+	
+	void initProperties(){
+		//MediaPlayer2
+		properties["CanQuit"] = true;
+		properties["CanSetFullscreen"] = true;
+		properties["CanRaise"] = false;
+		properties["HasTrackList"] = false;
+		properties["Identity"] = "AshRadio";
+		properties["DesktopEntry"] = Radio.config.GetValue<string>("osmediaintegration.linuxdesktop") ?? "ashradio";
+		
+		//MediaPlayer2.Player
+		properties["PlaybackStatus"] = "Stopped";
+		properties["LoopStatus"] = "None";
+		properties["Rate"] = 1d;
+		properties["Shuffle"] = false;
+		properties["Volume"] = 1d;
+		properties["Position"] = (long) 0;
+		properties["MinimumRate"] = 1d;
+		properties["MaximumRate"] = 1d;
+		properties["CanGoNext"] = true;
+		properties["CanGoPrevious"] = true;
+		properties["CanPlay"] = true;
+		properties["CanPause"] = true;
+		properties["CanSeek"] = true;
+		properties["CanControl"] = true;
+		
+		properties["Metadata"] = metadata;
+	}
+	
+	void changeProperties(params (string, object)[] props){
+		foreach((string p, object v) in props){
+			properties[p] = v;
+		}
+		
+		_properties?.Invoke(new PropertyChanges(props.Select(t => new KeyValuePair<string, object>(t.Item1, t.Item2)).ToArray()));
+	}
+	#endregion
+	
+	#region Metadata
+	Dictionary<string, object> metadata = new();
+	
+	void initMetadata(){
+		metadata["mpris:trackid"] = new ObjectPath("/org/mpris/MediaPlayer2/Track/" + getId(-1));
+		metadata["mpris:length"] = Time_In_Us(0f);
+		metadata["xesam:artist"] = Array.Empty<string>();
+		metadata["xesam:title"] = Song.nullTitle;
+	}
+	
+	void changeMetadata(params (string, object)[] mets){
+		foreach((string m, object v) in mets){
+			metadata[m] = v;
+		}
+		
+		_properties?.Invoke(PropertyChanges.ForProperty("Metadata", metadata));
+	}
+	#endregion
+	
+	#endregion
+	
+	#region OSMedia
 	protected override void updateSong(int id, string title, string[] authors, float duration){
-		Metadata["xesam:title"] = title;
-		Metadata["xesam:artist"] = authors;
-		Metadata["xesam:length"] = (long) (duration * 1000000d);
-		Metadata["xesam:trackid"] = new ObjectPath("/org/mpris/MediaPlayer2/Track/" + id);
+		changeMetadata(
+			("mpris:trackid", new ObjectPath("/org/mpris/MediaPlayer2/Track/" + getId(id))),
+			("mpris:length", Time_In_Us(duration)),
+			("xesam:artist", authors),
+			("xesam:title", title)
+		);
+		
+		changeProperties(("Position", (long) 0));
 	}
 	
 	protected override void updateState(bool isPaused){
-		paused = isPaused;
+		changeProperties(("PlaybackStatus", Playback_Status(isPaused)));
 	}
 	
 	protected override void updateMode(SessionMode mode){
-		shuffle = mode == SessionMode.Shuffle || mode == SessionMode.SmartShuffle;
+		changeProperties(("Shuffle", mode == SessionMode.Shuffle || mode == SessionMode.SmartShuffle));
+	}
+	
+	protected override void updateElapsed(float seconds){
+		changeProperties(("Position", Time_In_Us(seconds)));
+		
+		_seeked?.Invoke(Time_In_Us(seconds));
+	}
+	
+	protected override void updateVolume(float volume){
+		changeProperties(("Volume", (double) volume));
+	}
+	#endregion
+	
+	//Helper type
+	static string Playback_Status(bool isPaused){
+		return isPaused ? "Paused" : "Playing";
+	}
+	
+	//Helper type
+	static long Time_In_Us(float seconds){
+		return (long) (seconds * 1000000);
+	}
+	
+	//Helper
+	static string getId(int id){
+		return id > 0 ? id.ToString() : ("n" + (-id));
 	}
 }
+
+sealed class Unsubscriber : IDisposable{
+    private readonly Action _dispose;
+    public Unsubscriber(Action dispose) => _dispose = dispose;
+    public void Dispose() => _dispose();
+}
+
 #endif

@@ -39,6 +39,8 @@ class MacosMedia : OSMedia{
     }
 
     protected override void updateMode(SessionMode mode){}
+    protected override void updateElapsed(float seconds){}
+    protected override void updateVolume(float volume){}
 
     private void RegisterCommands(){
         commandCenter.PlayCommand.Enabled = true;

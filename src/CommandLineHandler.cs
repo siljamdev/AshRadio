@@ -452,6 +452,24 @@ public static class CommandLineHandler{
 			return 0;
 		}).setDescription("Reset the config");
 		
+		root.chain("config").chain("palette").chain("reset").setAction(args => {
+			Palette.reset();
+			return 0;
+		}).setDescription("Reset the palette");
+		
+		root.chain("config").chain("keybinds").chain("list").setAction(args => {
+			Keybinds.init();
+			foreach(Keybind k in Keybinds.configurables){
+				Console.WriteLine(k.description + ": " + k.ToStringFull());
+			}
+			return 0;
+		}).setDescription("List all keybinds");
+		
+		root.chain("config").chain("keybinds").chain("reset").setAction(args => {
+			Keybinds.reset();
+			return 0;
+		}).setDescription("Reset keybinds");
+		
 		return root;
 	}
 	

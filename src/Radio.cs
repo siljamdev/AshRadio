@@ -261,7 +261,11 @@ public static class Radio{
 		string[] keysToReset = new string[]{
 			"player.volume", "player.volumeExponent", "player.advanceTime",
 			"ffmpegPath", "ffmpegPath", "ytdlpPath",
-			"dcrp", "osmediaintegration", "osmediaintegration.linuxdesktop", "capErrorLogs",
+			"dcrp", "osmediaintegration",
+			#if LINUX
+				"osmediaintegration.linuxdesktop",
+			#endif
+			"capErrorLogs",
 			"ui.useColors", "ui.cursorBlinks", "ui.cursor", "ui.selectors", "ui.updateFrequency", "ui.cursorBlinkPeriod", "ui.playingChars"
 		};
 		
