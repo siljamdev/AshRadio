@@ -111,8 +111,12 @@
   </ItemGroup>
   
   <!-- BuildInfo -->
-  <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="public static class BuildInfo{&#xD;&#xA;    	public const string Version = &quot;$(Version)&quot;%3B&#xD;&#xA;		public const string BuildDate = &quot;$(BuildDate)&quot;%3B&#xD;&#xA;    }" Overwrite="true" />
+  <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile" Inputs="$(MSBuildProjectFile)" Outputs="$(IntermediateOutputPath)BuildInfo.g.cs">
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="
+public static class BuildInfo{
+    public const string Version = &quot;$(Version)&quot;%3B
+	public const string BuildDate = &quot;$(BuildDate)&quot;%3B
+}" Overwrite="true" />
 	
 	<ItemGroup>
       <Compile Include="$(IntermediateOutputPath)BuildInfo.g.cs" />

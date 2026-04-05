@@ -141,7 +141,7 @@ public static class CommandLineHandler{
 		Console.WriteLine("AshRadio v" + BuildInfo.Version);
 		Console.WriteLine("Version built on: " + BuildInfo.BuildDate);
 		Console.WriteLine("Made by siljam");
-		Console.WriteLine("Go to https://github.com/siljamdev/AshRadio for more ");
+		Console.WriteLine("Go to https://github.com/siljamdev/AshRadio for more");
 	}
 	
 	static void printHelp(){

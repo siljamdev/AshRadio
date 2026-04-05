@@ -876,9 +876,9 @@ public static class Radio{
 	public static async Task fetchUpdate(Func<string, Task> onComplete){
 		using var client = new HttpClient();
 		client.DefaultRequestHeaders.UserAgent.ParseAdd("AshRadioUpdateCheck");
-	
+		
 		try{
-			string url = $"https://api.github.com/repos/siljamdev/AshRadio/releases/latest";
+			string url = "https://api.github.com/repos/siljamdev/AshRadio/releases/latest";
 			string json = await client.GetStringAsync(url);
 			var doc = JsonDocument.Parse(json);
 			string latestTag = doc.RootElement.GetProperty("tag_name").GetString()!;
