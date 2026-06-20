@@ -2,7 +2,7 @@ using System.IO;
 using System.Diagnostics;
 using ManagedBass;
 
-public class Player : IDisposable{	
+public class Player : IDisposable{
 	public DeviceInfo currentDevice{get; private set;}
 	
 	public float volume{get; private set;} //0 to 1
