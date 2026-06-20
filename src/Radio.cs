@@ -154,7 +154,10 @@ public static class Radio{
 			new ModelInstance(ModelInstanceOperation.Type, "session.mode", 0),
 			new ModelInstance(ModelInstanceOperation.Type, "session.sourceType", 0),
 			new ModelInstance(ModelInstanceOperation.Type, "session.sourceIdentifier", -1),
-			new ModelInstance(ModelInstanceOperation.Type, "session.sourceSeen", Array.Empty<int>())
+			new ModelInstance(ModelInstanceOperation.Type, "session.sourceSeen", Array.Empty<int>()),
+			
+			new ModelInstance(ModelInstanceOperation.Type, "preferences.exportIndex", false),
+			new ModelInstance(ModelInstanceOperation.Type, "preferences.exportPath", "")
 		);
 		
 		m.deleteNotMentioned = true;
@@ -219,7 +222,7 @@ public static class Radio{
 		//Set current version and path. Might be needed by someone (maybe)
 		config.Set("version", BuildInfo.Version);
 		try{ //Might not work on linux
-			config.Set("path", System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+			config.Set("path", Environment.ProcessPath);
 		}catch{}
 		
 		config.Save();

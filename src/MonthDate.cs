@@ -17,6 +17,14 @@ public record struct MonthDate(short month, short year){
 		}
 	}
 	
+	public MonthDate PreviousMonth(){
+		if(month < 2){
+			return new MonthDate(12, (short) (year - 1));
+		}else{
+			return new MonthDate((short) (month - 1), year);
+		}
+	}
+	
 	public static MonthDate[] Range(MonthDate s, MonthDate e){
 		if(s > e){
 			return Array.Empty<MonthDate>();

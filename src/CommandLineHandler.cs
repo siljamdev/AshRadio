@@ -197,8 +197,8 @@ public static class CommandLineHandler{
 			List<Song> lib = Song.getLibrary();
 			bool anyBad = false;
 			
-			foreach(Song s in lib){
-				bool succ = Song.export(s.id, args[0], out string err);
+			for(int i = 0; i < lib.Count; i++){
+				bool succ = Song.export(lib[i].id, args[0], i, out string err);
 				if(!succ){
 					report(err);
 					anyBad = true;
@@ -267,7 +267,7 @@ public static class CommandLineHandler{
 				return 2;
 			}
 			
-			if(!Song.export(id, args[1], out string err)){
+			if(!Song.export(id, args[1], null, out string err)){
 				report(err);
 				
 				return 10;
@@ -328,8 +328,8 @@ public static class CommandLineHandler{
 				List<Song> lib = p.getSongs();
 				bool anyBad = false;
 				
-				foreach(Song s in lib){
-					bool succ = Song.export(s.id, args[1], out string err);
+				for(int i = 0; i < lib.Count; i++){
+					bool succ = Song.export(lib[i].id, args[1], i, out string err);
 					if(!succ){
 						report(err);
 						anyBad = true;
@@ -433,8 +433,8 @@ public static class CommandLineHandler{
 				List<Song> lib = p.getSongs();
 				bool anyBad = false;
 				
-				foreach(Song s in lib){
-					bool succ = Song.export(s.id, args[1], out string err);
+				for(int i = 0; i < lib.Count; i++){
+					bool succ = Song.export(lib[i].id, args[1], i, out string err);
 					if(!succ){
 						report(err);
 						anyBad = true;

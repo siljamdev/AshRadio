@@ -9,7 +9,7 @@ using AshConsoleGraphics.Interactive;
 
 public partial class Screens{	
 	void setExportSong(Song s){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox(Radio.session.GetValue<string>("preferences.exportPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		path.OnParentResize += (s, a) => {
 			path.BoxXsize = Math.Max(0, a.X - 4);
@@ -20,12 +20,15 @@ public partial class Screens{
 		TuiScreenInteractive l = null;
 		
 		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
-			bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+			bool succ = Song.export(s.id, removeQuotesSingle(path.Text), null, out string err);
 			if(!succ){
 				foreach(TuiLabel a in error){
 					l.Elements.Remove(a);
 				}
 				error.Clear();
+				
+				Radio.session.Set("preferences.exportPath", path.Text);
+				Radio.session.Save();
 				
 				string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
 				
@@ -81,7 +84,7 @@ public partial class Screens{
 	}
 	
 	void setExportPlaylist(Playlist p){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox(Radio.session.GetValue<string>("preferences.exportPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		path.OnParentResize += (s, a) => {
 			path.BoxXsize = Math.Max(0, a.X - 4);
@@ -92,6 +95,8 @@ public partial class Screens{
 		TuiScreenInteractive l = null;
 		
 		bool b = false;
+		
+		TuiFramedCheckBox includeIndex = new TuiFramedCheckBox(' ', 'X', Radio.session.GetValue<bool>("preferences.exportIndex"), Placement.TopCenter, 4, 10, null, null, null, Palette.writing, Palette.user);
 		
 		TuiButton export = null!;
 		export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
@@ -106,14 +111,19 @@ public partial class Screens{
 			}
 			error.Clear();
 			
+			Radio.session.Set("preferences.exportIndex", includeIndex.Checked);
+			Radio.session.Set("preferences.exportPath", path.Text);
+			Radio.session.Save();
+			
 			List<Song> lib = p.getSongs();
 			
 			bool anyBad = false;
 			int j = 10;
 			
 			Task task = Task.Run(() => {
+				int i = 0;
 				foreach(Song s in lib){
-					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), includeIndex.Checked ? i : null, out string err);
 					if(!succ){
 						string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
 						
@@ -126,6 +136,7 @@ public partial class Screens{
 						
 						anyBad = true;
 					}
+					i++;
 				}
 			});
 			
@@ -159,11 +170,15 @@ public partial class Screens{
 			},{
 				search
 			},{
+				includeIndex
+			},{
 				export
 			}};
 		#else
 			TuiSelectable[,] t = new TuiSelectable[,]{{
 				path
+			},{
+				includeIndex
 			},{
 				export
 			}};
@@ -173,12 +188,13 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiTwoLabels("Export ", p.title, Placement.TopCenter, 0, 1, null, Palette.playlist));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
+		l.Elements.Add(new TuiLabel("Add index:", Placement.TopCenter, -3, 11));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setExportAuthor(Author p){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox(Radio.session.GetValue<string>("preferences.exportPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		path.OnParentResize += (s, a) => {
 			path.BoxXsize = Math.Max(0, a.X - 4);
@@ -189,6 +205,8 @@ public partial class Screens{
 		TuiScreenInteractive l = null;
 		
 		bool b = false;
+		
+		TuiFramedCheckBox includeIndex = new TuiFramedCheckBox(' ', 'X', Radio.session.GetValue<bool>("preferences.exportIndex"), Placement.TopCenter, 4, 10, null, null, null, Palette.writing, Palette.user);
 		
 		TuiButton export = null!;
 		export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
@@ -203,14 +221,19 @@ public partial class Screens{
 			}
 			error.Clear();
 			
+			Radio.session.Set("preferences.exportIndex", includeIndex.Checked);
+			Radio.session.Set("preferences.exportPath", path.Text);
+			Radio.session.Save();
+			
 			List<Song> lib = p.getSongs();
 			
 			bool anyBad = false;
 			int j = 10;
 			
 			Task task = Task.Run(() => {
+				int i = 0;
 				foreach(Song s in lib){
-					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), includeIndex.Checked ? i : null, out string err);
 					if(!succ){
 						string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
 						
@@ -223,6 +246,7 @@ public partial class Screens{
 						
 						anyBad = true;
 					}
+					i++;
 				}
 			});
 			
@@ -256,11 +280,15 @@ public partial class Screens{
 			},{
 				search
 			},{
+				includeIndex
+			},{
 				export
 			}};
 		#else
 			TuiSelectable[,] t = new TuiSelectable[,]{{
 				path
+			},{
+				includeIndex
 			},{
 				export
 			}};
@@ -270,12 +298,13 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiTwoLabels("Export ", p.name, Placement.TopCenter, 0, 1, null, Palette.author));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
+		l.Elements.Add(new TuiLabel("Add index:", Placement.TopCenter, -3, 11));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	void setExportLibrary(){
-		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox(Radio.session.GetValue<string>("preferences.exportPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		path.OnParentResize += (s, a) => {
 			path.BoxXsize = Math.Max(0, a.X - 4);
@@ -286,6 +315,8 @@ public partial class Screens{
 		TuiScreenInteractive l = null;
 		
 		bool b = false;
+		
+		TuiFramedCheckBox includeIndex = new TuiFramedCheckBox(' ', 'X', Radio.session.GetValue<bool>("preferences.exportIndex"), Placement.TopCenter, 4, 10, null, null, null, Palette.writing, Palette.user);
 		
 		TuiButton export = null!;
 		export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
@@ -300,14 +331,19 @@ public partial class Screens{
 			}
 			error.Clear();
 			
+			Radio.session.Set("preferences.exportIndex", includeIndex.Checked);
+			Radio.session.Set("preferences.exportPath", path.Text);
+			Radio.session.Save();
+			
 			List<Song> lib = Song.getLibrary();
 			
 			bool anyBad = false;
 			int j = 10;
 			
 			Task task = Task.Run(() => {
+				int i = 0;
 				foreach(Song s in lib){
-					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), out string err);
+					bool succ = Song.export(s.id, removeQuotesSingle(path.Text), includeIndex.Checked ? i : null, out string err);
 					if(!succ){
 						string[] r = err.Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
 						
@@ -320,6 +356,7 @@ public partial class Screens{
 						
 						anyBad = true;
 					}
+					i++;
 				}
 			});
 			
@@ -353,11 +390,15 @@ public partial class Screens{
 			},{
 				search
 			},{
+				includeIndex
+			},{
 				export
 			}};
 		#else
 			TuiSelectable[,] t = new TuiSelectable[,]{{
 				path
+			},{
+				includeIndex
 			},{
 				export
 			}};
@@ -367,6 +408,7 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Export library", Placement.TopCenter, 0, 1, Palette.info));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
+		l.Elements.Add(new TuiLabel("Add index:", Placement.TopCenter, -3, 11));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}

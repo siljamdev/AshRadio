@@ -144,14 +144,20 @@ public class Song{
 	}
 	
 	//True if succesful
-	public static bool export(int id, string dirPath, out string err){
+	public static bool export(int id, string dirPath, int? index, out string err){
 		if(!exists(id)){
 			err = "Song does not exist";
 			return false;
 		}
 		
 		try{
-			string path = dirPath + "/" + safePath(get(id)?.title ?? nullTitle) + ".mp3";
+			string path;
+			if(index != null){
+				path = dirPath + "/" + index + ". " + safePath(get(id)?.title ?? nullTitle) + ".mp3";
+			}else{
+				path = dirPath + "/" + safePath(get(id)?.title ?? nullTitle) + ".mp3";
+			}
+			
 			File.Copy(getAudioPath(id), path);
 			File.SetLastWriteTime(path, DateTime.Now);
 			

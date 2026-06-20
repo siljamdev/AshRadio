@@ -37,6 +37,38 @@ public partial class Screens{
 			return null;
 		};
 		
+		TuiButton sp = new TuiButton("-", Placement.TopCenter, -12, 6, null, Palette.user).SetAction((s2, ck) => {
+			if(MonthDate.TryParse(start.Text, out MonthDate s)){
+				start.Text = s.PreviousMonth().ToNumbers2();
+			}else{
+				start.Text = MonthDate.Now.PreviousMonth().ToNumbers2();
+			}
+		});
+		
+		TuiButton sn = new TuiButton("+", Placement.TopCenter, 11, 6, null, Palette.user).SetAction((s2, ck) => {
+			if(MonthDate.TryParse(start.Text, out MonthDate s)){
+				start.Text = s.NextMonth().ToNumbers2();
+			}else{
+				start.Text = MonthDate.Now.NextMonth().ToNumbers2();
+			}
+		});
+		
+		TuiButton ep = new TuiButton("-", Placement.TopCenter, -12, 11, null, Palette.user).SetAction((s2, ck) => {
+			if(MonthDate.TryParse(end.Text, out MonthDate s)){
+				end.Text = s.PreviousMonth().ToNumbers2();
+			}else{
+				end.Text = MonthDate.Now.PreviousMonth().ToNumbers2();
+			}
+		});
+		
+		TuiButton en = new TuiButton("+", Placement.TopCenter, 11, 11, null, Palette.user).SetAction((s2, ck) => {
+			if(MonthDate.TryParse(end.Text, out MonthDate s)){
+				end.Text = s.NextMonth().ToNumbers2();
+			}else{
+				end.Text = MonthDate.Now.NextMonth().ToNumbers2();
+			}
+		});
+		
 		TuiButton wrapped = new TuiButton("Set last year", Placement.TopCenter, 0, 14, null, Palette.user).SetAction((s2, ck) => {
 			MonthDate n = MonthDate.Now;
 			MonthDate p = new MonthDate(n.month, (short) (n.year - 1)).NextMonth();
@@ -156,15 +188,15 @@ public partial class Screens{
 		});
 		
 		TuiSelectable[,] t = new TuiSelectable[,]{{
-			start, start
+			sp, start, sn
 		},{
-			end, end
+			ep, end, en
 		},{
-			wrapped, wrapped
+			wrapped, wrapped, wrapped
 		},{
-			seeSongs, seeAuthors
+			seeSongs, seeSongs, seeAuthors
 		},{
-			flashcard, flashcard
+			flashcard, flashcard, flashcard
 		}};
 		
 		l = generateMiddleInteractive(t);
@@ -173,6 +205,8 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Start (mm/yyyy):", Placement.TopCenter, 0, 4));
 		l.Elements.Add(new TuiLabel("End (mm/yyyy):", Placement.TopCenter, 0, 9));
 		l.Elements.Add(error);
+		
+		l.MatrixPointerX = 1;
 		
 		c2 = new MiddleScreen(l, "statsSelect");
 		

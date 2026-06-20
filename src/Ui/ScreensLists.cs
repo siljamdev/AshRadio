@@ -239,7 +239,7 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiLabel("Library", Placement.TopCenter, 0, 1, Palette.main));
 		if(query != null){
-			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
+			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 2, null, Palette.info));
 		}
 		
 		if(lib.Count == 1){
@@ -509,7 +509,7 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiLabel("Authors", Placement.TopCenter, 0, 1, Palette.main));
 		if(query != null){
-			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
+			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 2, null, Palette.info));
 		}
 		
 		if(lib.Count == 1){
@@ -837,7 +837,7 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiLabel("Playlists", Placement.TopCenter, 0, 1, Palette.main));
 		if(query != null){
-			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
+			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 2, null, Palette.info));
 		}
 		
 		if(lib.Count == 1){
@@ -929,7 +929,7 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiTwoLabels("Select playlist where to add ", Song.get(sindex)?.title ?? Song.nullTitle, Placement.TopCenter, 0, 1, null, Palette.song));
 		if(query != null){
-			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
+			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 2, null, Palette.info));
 		}
 		
 		if(lib.Count == 1){
@@ -1015,7 +1015,7 @@ public partial class Screens{
 		
 		backg.Elements.Add(new TuiTwoLabels("Select song to add to ", p?.title ?? Playlist.nullTitle, Placement.TopCenter, 0, 1, null, Palette.playlist));
 		if(query != null){
-			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 3, null, Palette.info));
+			backg.Elements.Add(new TuiTwoLabels("Search results for: ", query, Placement.TopCenter, 0, 2, null, Palette.info));
 		}
 		
 		if(lib.Count == 1){

@@ -1,4 +1,4 @@
-public class Playlist{
+public class Playlist : IDisposable{
 	
 	//INSTANCE
 	
@@ -6,6 +6,18 @@ public class Playlist{
 	List<int> songs = new List<int>();
 	
 	public int id{get; private set;}
+	
+	public Playlist(){
+		Song.onLibraryUpdate += onLibChange;
+	}
+	
+	void onLibChange(object sender, LibraryEventArgs a){
+		List<Song> n = getSongs();
+		if(n.Count != songs.Count){
+			songs = n.Select(s => s.id).ToList();
+			save();
+		}
+	}
 	
 	public void setTitle(string n){
 		title = n?.Trim() ?? nullTitle;
@@ -43,6 +55,10 @@ public class Playlist{
 		playlistsFile.Save();
 		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
+	}
+	
+	public void Dispose(){
+		Song.onLibraryUpdate -= onLibChange;
 	}
 	
 	//STATIC
@@ -132,6 +148,7 @@ public class Playlist{
 		playlistsFile.Remove(id.ToString() + ".s");
 		playlistsFile.Save();
 		
+		playlists[id]?.Dispose();
 		playlists[id] = null;
 		
 		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
