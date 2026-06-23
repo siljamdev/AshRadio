@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using AshLib.Dates;
+using AshLib.Formatting;
 
-public class Song{
+public class Song : IDisposable, INotes{
 	
 	//INSTANCE
 	
@@ -11,11 +13,30 @@ public class Song{
 	
 	public float duration{get; private set;}
 	
+	public string notes{get; private set;}
+	
+	public Date added{get; private set;}
+	
+	private Song(){
+		Author.onAuthorDeleted += onAuthorsChange;
+	}
+	
+	//used to delete deleted authors
+	void onAuthorsChange(Author a){
+		if(authors.Contains(a.id)){
+			authors = authors.Where(id => Author.exists(id)).ToArray();
+			save();
+			
+			onSongDetailsUpdate?.Invoke(this);
+		}
+	}
+	
 	public void setTitle(string t){
 		title = t?.Trim() ?? nullTitle;
 		save();
 		
-		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
+		onSongDetailsUpdate?.Invoke(this);
+		onSongTitleUpdate?.Invoke(this);
 	}
 	
 	public void setAuthors(int[] auth){
@@ -24,7 +45,11 @@ public class Song{
 		authors = auth;
 		save();
 		
-		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(p.Union(authors).ToArray()));
+		onSongDetailsUpdate?.Invoke(this);
+		
+		foreach(int aid in p.Union(authors)){
+			Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)
+		}
 	}
 	
 	//Will also set if needed
@@ -46,11 +71,36 @@ public class Song{
 		save();
 	}
 	
+	//INOTES interface
+	public void setNotes(string n){
+		notes = n.Trim();
+		if(string.IsNullOrEmpty(notes)){
+			notes = null;
+		}
+		save();
+	}
+	
+	//INOTES interface
+	public string getTitle(){
+		return title;
+	}
+	
+	//INOTES interface
+	public CharFormat? getStyle(){
+		return Palette.song;
+	}
+	
 	void save(){
 		AshFile s2 = new AshFile();
 		s2.Set("t", title);
 		s2.Set("a", authors);
 		s2.Set("d", duration);
+		s2.Set("c", added);
+		if(notes != null){
+			s2.Set("n", notes);
+		}else{
+			s2.Remove("n");
+		}
 		s2.Save(getDataPath(id));
 	}
 	
@@ -60,20 +110,29 @@ public class Song{
 			(authors.Length == 1 ? "Author: " + (Author.get(authors[0])?.name ?? Author.nullName) : "Authors: " + string.Join(", ", authors.Select(n => (Author.get(n)?.name ?? Author.nullName)))));
 	}
 	
+	public void Dispose(){
+		Author.onAuthorDeleted -= onAuthorsChange;
+	}
+	
 	//STATIC
 	
 	public const string nullTitle = "Untitled song";
 	
 	static int latestId;
 	
-	public static event EventHandler<LibraryEventArgs> onLibraryUpdate;
+	//In order of being called
+	public static event Action onLibraryUpdate; //Song added or deleted
+	public static event Action<Song> onSongDeleted; //Song title change
+	public static event Action<Song> onSongDetailsUpdate; //Song title or song authors change or song deleted
+	public static event Action<Song> onSongTitleUpdate; //Song title change
 	
 	static List<Song> library;
 	
 	static AshFileModel songModel = new AshFileModel(
 		new ModelInstance(ModelInstanceOperation.Type, "t", nullTitle), //title
 		new ModelInstance(ModelInstanceOperation.Type, "a", Array.Empty<int>()), //authors
-		new ModelInstance(ModelInstanceOperation.Type, "d", -1f) //duration
+		new ModelInstance(ModelInstanceOperation.Type, "d", -1f), //duration
+		new ModelInstance(ModelInstanceOperation.Type, "c", (Date) DateTime.Now) //Date of creation
 	);
 	
 	public static void init(){
@@ -89,7 +148,7 @@ public class Song{
 	}
 	
 	public static void subEvents(){
-		Radio.py.onSongLoad += (s, a) => {
+		Radio.py.onSongLoad += () => {
 			Song t = get(Radio.py.playingSong);
 			if(t != null){
 				t.setDuration(Radio.py.duration);
@@ -118,14 +177,31 @@ public class Song{
 		}
 		
 		AshFile f = new AshFile(getDataPath(s));
+		string nts = f.GetValue<string>("n"); //Notes
+		
+		bool save = false;
+		
+		if(!f.ContainsKey("c") || f.GetValueType("c") != typeof(Date)){
+			f.Set("c", (Date) File.GetCreationTime(getDataPath(s)));
+			save = true;
+		}
+		
 		f *= songModel;
 		
-		return new Song(){
+		Song s2 = new Song(){
 			title = f.GetValue<string>("t"),
 			authors = f.GetValue<int[]>("a"),
 			duration = f.GetValue<float>("d"),
+			added = f.GetValue<Date>("c"),
+			notes = nts,
 			id = s
 		};
+		
+		if(save){
+			s2.save();
+		}
+		
+		return s2;
 	}
 	
 	public static bool exists(int s){
@@ -183,9 +259,16 @@ public class Song{
 			
 		}
 		
+		s.Dispose();
 		library[id] = null;
 		
-		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(s.authors));
+		onLibraryUpdate?.Invoke();
+		onSongDeleted?.Invoke(s);
+		onSongDetailsUpdate?.Invoke(s);
+		
+		foreach(int aid in s.authors){
+			Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)
+		}
 	}
 	
 	public static string getAudioPath(int s){
@@ -234,6 +317,7 @@ public class Song{
 			Song s2 = new Song(){
 				title = title,
 				authors = authors,
+				added = (Date) DateTime.Now,
 				id = latestId
 			};
 			
@@ -244,7 +328,11 @@ public class Song{
 			
 			saveAll();
 			
-			onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
+			onLibraryUpdate?.Invoke();
+			
+			foreach(int aid in authors){
+				Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)
+			}
 			
 			err = null;
 			return latestId;
@@ -276,7 +364,11 @@ public class Song{
 		
 		saveAll();
 		
-		onLibraryUpdate?.Invoke(null, new LibraryEventArgs(authors));
+		onLibraryUpdate?.Invoke();
+		
+		foreach(int aid in authors){
+			Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)
+		}
 		
 		return latestId;
 	}
@@ -388,13 +480,5 @@ public class Song{
 		char[] invalid = Path.GetInvalidFileNameChars();
 		
 		return new string(p.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
-	}
-}
-
-public class LibraryEventArgs : EventArgs{
-	public int[] auth;
-	
-	public LibraryEventArgs(int[] a){
-		auth = a;
 	}
 }

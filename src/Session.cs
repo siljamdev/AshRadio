@@ -9,11 +9,11 @@ public static class Session{
 	
 	static List<int> pool;
 	
-	static List<int> queue;
+	public static List<int> queue;
 	public static bool queueEmpties {get; set{
 		field = value;
 		queueIndex = 0;
-		onQueueChange?.Invoke(null, EventArgs.Empty);
+		onQueueChange?.Invoke();
 	}} = true;
 	public static int queueIndex {get; private set;} = 0;
 	
@@ -21,9 +21,9 @@ public static class Session{
 	
 	static Random rand;
 	
-	public static event EventHandler onModeChange; //UI changes
-	public static event EventHandler onSourceChange; //UI changes
-	public static event EventHandler onQueueChange; //UI changes
+	public static event Action onModeChange; //UI changes
+	public static event Action onSourceChange; //UI changes
+	public static event Action onQueueChange; //UI changes
 	
 	public static bool addToPrevList = true; //Needed for going to the previous song without reading the current one
 	
@@ -36,13 +36,13 @@ public static class Session{
 		queue = new List<int>();
 		rand = new Random();
 		
-		Radio.py.onBeforeSongLoad += (s, a) => {
+		Radio.py.onBeforeSongLoad += () => {
 			if(addToPrevList){
 				addPrevPlayed(Radio.py.playingSong);
 			}
 		};
 		
-		Radio.py.onSongLoad += (s, a) => {
+		Radio.py.onSongLoad += () => {
 			if(!sourceSeen.Contains(Radio.py.playingSong)){
 				sourceSeen.Add(Radio.py.playingSong);
 			}
@@ -54,50 +54,59 @@ public static class Session{
 			Radio.session.Set("session.sourceSeen", sourceSeen.ToArray());
 		};
 		
-		Radio.py.onSongFinish += (s, a) => {
+		Radio.py.onSongFinish += () => {
 			Radio.py.play(serveNext());
 		};
 		
-		Song.onLibraryUpdate += (s, a) => {
-			if(sourceType == SourceType.Library || (sourceType == SourceType.Author && a.auth.Contains(sourceIdentifier))){
+		Song.onLibraryUpdate += () => {
+			if(sourceType == SourceType.Library){
 				update();
 			}
 		};
 		
-		Playlist.onPlaylistUpdate += (s, a) => {
-			if(sourceType == SourceType.Playlist && sourceIdentifier == a.id){
+		Song.onSongDeleted += (s) => {
+			if(queue.Contains(s.id)){
+				queue = queue.Where(id => Song.exists(id)).ToList();
+				onQueueChange?.Invoke();
+			}
+		};
+		
+		Author.onAuthorDetailsUpdate += (a) => {
+			if(sourceType == SourceType.Author && sourceIdentifier == a.id){
 				update();
 			}
 		};
 		
-		update();
-	}
-	
-	public static List<int> getQueue(){
-		return queue.ToList();
+		Playlist.onPlaylistDetailsUpdate += (p) => {
+			if(sourceType == SourceType.Playlist && sourceIdentifier == p.id){
+				update();
+			}
+		};
+		
+		update(); //saves session.ash
 	}
 	
 	public static void addToQueue(int s){
 		queue.Add(s);
-		onQueueChange?.Invoke(null, EventArgs.Empty);
+		onQueueChange?.Invoke();
 	}
 	
 	public static void removeFromQueue(int index){
 		queue.RemoveAt(index);
 		queueIndex = 0;
-		onQueueChange?.Invoke(null, EventArgs.Empty);
+		onQueueChange?.Invoke();
 	}
 	
 	public static void moveInQueue(int index, int newIndex){
 		int t = queue[index];
 		queue.RemoveAt(index);
 		queue.Insert(newIndex, t);
-		onQueueChange?.Invoke(null, EventArgs.Empty);
+		onQueueChange?.Invoke();
 	}
 	
 	public static void clearQueue(){
 		queue.Clear();
-		onQueueChange?.Invoke(null, EventArgs.Empty);
+		onQueueChange?.Invoke();
 	}
 	
 	public static int serveNext(){
@@ -111,7 +120,7 @@ public static class Session{
 					queueIndex = 0;
 				}
 			}
-			onQueueChange?.Invoke(null, EventArgs.Empty);
+			onQueueChange?.Invoke();
 			return s;
 		}
 		
@@ -205,7 +214,7 @@ public static class Session{
 			Radio.py.play(Session.serveNext());
 		}
 		
-		onSourceChange?.Invoke(null, EventArgs.Empty);
+		onSourceChange?.Invoke();
 	}
 	
 	public static void setMode(SessionMode m){
@@ -214,18 +223,29 @@ public static class Session{
 		Radio.session.Set("session.mode", (int) mode);
 		Radio.session.Save();
 		
-		onModeChange?.Invoke(null, EventArgs.Empty);
+		onModeChange?.Invoke();
 	}
 	
 	//Update pool
 	static void update(){
+		
+		//Avoid deleted playlists
+		switch(sourceType){
+			case SourceType.Author:
+				if(!Author.exists(sourceIdentifier)){
+					sourceType = SourceType.Library;
+				}
+				break;
+			
+			case SourceType.Playlist:
+				if(!Playlist.exists(sourceIdentifier)){
+					sourceType = SourceType.Library;
+				}
+				break;
+		}
+		
 		switch(sourceType){
 			default:
-			case SourceType.None:
-				sourceSeen = new List<int>();
-				pool = new List<int>();
-				break;
-				
 			case SourceType.Library:
 				pool = Song.getLibrary().Select(h => h.id).ToList();
 				break;
@@ -265,20 +285,6 @@ public static class Session{
 		Radio.session.Save();
 	}
 	
-	public static string name(this SourceType s){
-		switch(s){
-			default:
-			case SourceType.None:
-				return "None";
-			case SourceType.Library:
-				return "Library";
-			case SourceType.Author:
-				return "Author";
-			case SourceType.Playlist:
-				return "Playlist";
-		}
-	}
-	
 	public static string name(this SessionMode s){
 		switch(s){
 			default:
@@ -298,5 +304,5 @@ public enum SessionMode{
 }
 
 public enum SourceType{
-	None, Library, Author, Playlist
+	Library, Author, Playlist
 }

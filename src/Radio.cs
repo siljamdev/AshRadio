@@ -206,6 +206,8 @@ public static class Radio{
 			new ModelInstance(ModelInstanceOperation.Type, "ui.updateFrequency", 24f),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.cursorBlinkPeriod", 0.7f),
 			new ModelInstance(ModelInstanceOperation.Type, "ui.playingChars", "►‖"),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.showHints", true),
+			new ModelInstance(ModelInstanceOperation.Type, "ui.showPlayerHints", false),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "internal.init", false)
 		);

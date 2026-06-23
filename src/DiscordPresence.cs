@@ -29,7 +29,7 @@ public class DiscordPresence : IDisposable{
 		Radio.py.onSongLoad += update;
 	}
 	
-	void update(object sender, EventArgs a){
+	void update(){
 		Song s = Song.get(Radio.py.playingSong);
 		
 		client.UpdateDetails(s?.title ?? "Nothing playing yet");

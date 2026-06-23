@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AshLib.Formatting;
+using AshLib.Dates;
 using AshConsoleGraphics;
 using AshConsoleGraphics.Interactive;
 
@@ -87,6 +88,32 @@ public partial class Screens{
 		
 		sc.interactive.Elements.Add(new TuiLabel("Search", Placement.TopCenter, 0, 1, Palette.main));
 		sc.interactive.Elements.Add(new TuiLabel(question, Placement.TopCenter, 0, 3));
+		
+		setMiddleScreen(sc);
+	}
+	
+	void setNotes(INotes s){
+		MiddleScreen sc = null!;
+		
+		TuiMultiLineScrollingFramedTextBox input = new TuiMultiLineScrollingFramedTextBox(s?.notes ?? "", 1024, 34, 7, Placement.TopCenter, 0, 4, null, null, null, Palette.writing, Palette.user, Palette.user);
+		
+		input.OnParentResize += (s, a) => {
+			input.BoxXsize = Math.Max(0, a.X - 4);
+		};
+		
+		TuiSelectable[,] t = new TuiSelectable[,]{{
+			input
+		}};
+		
+		sc = generateMiddle(t);
+		
+		Keybinds.enter.subEvent(sc, "Save notes", (_, _) => {
+			s?.setNotes(input.Text);
+			closeMiddleScreen();
+		});
+		
+		sc.interactive.Elements.Add(new TuiLabel("Notes", Placement.TopCenter, 0, 1, Palette.main));
+		sc.interactive.Elements.Add(new TuiTwoLabels("Notes for: ", s?.getTitle() ?? "", Placement.TopCenter, 0, 2, null, s?.getStyle() ?? null));
 		
 		setMiddleScreen(sc);
 	}
@@ -259,12 +286,46 @@ public partial class Screens{
 		return string.Format("{0}:{1:D2}", sec / 60, sec % 60);
 	}
 	
-	static int compareVersion(string vs){ //-1: older, 0: same, 1: newer
+	//Allows v1.0-beta, v1.0-beta-1, v1.0-beta.1
+	public static int compareVersion(string vs){ //-1: older, 0: same, 1: newer
+		string appVersion;
+		string[] avp = BuildInfo.Version.Split("-");
+		if(avp.Length == 3){
+			appVersion = avp[0] + "." + getPreCode(avp[1]) + "." + avp[2];
+		}else if(avp.Length == 2){
+			string[] d = avp[1].Split(".");
+			if(d.Length > 1){
+				appVersion = avp[0] + "." + getPreCode(d[0]) + "." + string.Join(".", d.Skip(1));
+			}else{
+				appVersion = avp[0] + "." + getPreCode(d[0]);
+			}
+		}else{
+			appVersion = avp[0] + "." + getPreCode("");
+		}
+		
+		if(appVersion.StartsWith("v")){ //Little correction
+			appVersion = appVersion.Substring(1);
+		}
+		
+		string[] vp = vs.Split("-");
+		if(vp.Length == 3){
+			vs = vp[0] + "." + getPreCode(vp[1]) + "." + vp[2];
+		}else if(vp.Length == 2){
+			string[] d = vp[1].Split(".");
+			if(d.Length > 1){
+				vs = vp[0] + "." + getPreCode(d[0]) + "." + string.Join(".", d.Skip(1));
+			}else{
+				vs = vp[0] + "." + getPreCode(d[0]);
+			}
+		}else{
+			vs = vp[0] + "." + getPreCode("");
+		}
+		
 		if(vs.StartsWith("v")){ //Little correction
 			vs = vs.Substring(1);
 		}
 		
-		int[] c = BuildInfo.Version.Split(".").Select(h => {
+		int[] c = appVersion.Split(".").Select(h => {
 			if(int.TryParse(h, out int v)){
 				return v;
 			}
@@ -297,6 +358,15 @@ public partial class Screens{
 			i++;
 		}
 		return 0;
+	}
+	
+	static int getPreCode(string pre){
+		return pre switch{
+			"alpha" => 0,
+			"beta" => 1,
+			"pre" => 2,
+			_ => 3
+		};
 	}
 	
 	static bool isVersionNewer(string vs){

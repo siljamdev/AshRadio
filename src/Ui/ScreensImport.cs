@@ -139,7 +139,7 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Import song from file", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Path:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 9));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 13));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
@@ -220,7 +220,7 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Import song from youtube", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Url:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Title:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 12));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
@@ -302,7 +302,7 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Import songs from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 9));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 9));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
@@ -374,7 +374,7 @@ public partial class Screens{
 		
 		l.Elements.Add(new TuiLabel("Import songs from youtube playlist", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Url:", Placement.TopLeft, 2, 4));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 8));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 8));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
@@ -467,7 +467,7 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Import playlist from folder", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 9));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 13));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 13));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}
@@ -548,7 +548,7 @@ public partial class Screens{
 		l.Elements.Add(new TuiLabel("Import playlist from youtube playlist", Placement.TopCenter, 0, 1, Palette.main));
 		l.Elements.Add(new TuiLabel("Yt playlist url:", Placement.TopLeft, 2, 4));
 		l.Elements.Add(new TuiLabel("Playlist title:", Placement.TopLeft, 2, 8));
-		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 1, 12));
+		l.Elements.Add(new TuiLabel("Authors (separated by commas):", Placement.TopLeft, 2, 12));
 		
 		setMiddleScreen(new MiddleScreen(l));
 	}

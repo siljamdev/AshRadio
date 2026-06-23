@@ -5,6 +5,7 @@ using AshConsoleGraphics;
 public static class Palette{
 	public static CharFormat? user {get; private set;}
 	public static CharFormat? song {get; private set;}
+	public static CharFormat? selected {get; private set;} //Selected song
 	public static CharFormat? author {get; private set;}
 	public static CharFormat? playlist {get; private set;}
 	public static CharFormat? main {get; private set;}
@@ -21,6 +22,7 @@ public static class Palette{
 		return new AshFileModel(
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.user", toArray(new Color3("FFFF00"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.song", toArray(new Color3("3295FF"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.selected", toArray(new Color3("110FFF"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.author", toArray(new Color3("00FF00"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.playlist", toArray(new Color3("FFA811"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.main", toArray(new Color3("E7484B"), null)),
@@ -44,6 +46,7 @@ public static class Palette{
 		
 		user = loadColor("user");
 		song = loadColor("song");
+		selected = loadColor("selected");
 		author = loadColor("author");
 		playlist = loadColor("playlist");
 		main = loadColor("main");
@@ -103,6 +106,7 @@ public static class Palette{
 	public static void setSubtle(){
 		Radio.config.Set("ui.palette.user", toArray(new Color3("FFFF00"), null));
 		Radio.config.Set("ui.palette.song", toArray(new Color3("BEDD58"), null));
+		Radio.config.Set("ui.palette.selected", toArray(new Color3("80F100"), null));
 		Radio.config.Set("ui.palette.author", toArray(new Color3("8CD0D3"), null));
 		Radio.config.Set("ui.palette.playlist", toArray(new Color3("966DD3"), null));
 		Radio.config.Set("ui.palette.main", toArray(new Color3("E5AA62"), null));
@@ -120,6 +124,7 @@ public static class Palette{
 	public static void setNeon(){ //ChatGPT made this palette bc you ran out of ideas :/
 		Radio.config.Set("ui.palette.user", toArray(new Color3("39FF14"), null));
 		Radio.config.Set("ui.palette.song", toArray(new Color3("00FFFF"), null));
+		Radio.config.Set("ui.palette.selected", toArray(new Color3("007DFF"), null));
 		Radio.config.Set("ui.palette.author", toArray(new Color3("FF44CC"), null));
 		Radio.config.Set("ui.palette.playlist", toArray(new Color3("FF8800"), null));
 		Radio.config.Set("ui.palette.main", toArray(new Color3("AA00FF"), null));
@@ -138,6 +143,7 @@ public static class Palette{
 	public static void setLight() { //Ewwwwww
 		Radio.config.Set("ui.palette.user", toArray(new Color3("F17105"), null));
 		Radio.config.Set("ui.palette.song", toArray(new Color3("2C82DD"), null));
+		Radio.config.Set("ui.palette.selected", toArray(new Color3("1726DD"), null));
 		Radio.config.Set("ui.palette.author", toArray(new Color3("00C900"), null));
 		Radio.config.Set("ui.palette.playlist", toArray(new Color3("CF5C36"), null));
 		Radio.config.Set("ui.palette.main", toArray(new Color3("D8454A"), null));

@@ -1,13 +1,43 @@
-public class Author{
+using AshLib.Formatting;
+
+public class Author : INotes{
 	
 	//INSTANCE
 	public string name{get; private set;}
 	
 	public int id{get; private set;}
 	
+	public string notes{get; private set;}
+	
 	public void setName(string n){
 		name = n?.Trim() ?? nullName;
 		save();
+		
+		onAuthorDetailsUpdate?.Invoke(this);
+		onAuthorNameUpdate?.Invoke(this);
+	}
+	
+	//INOTES interface
+	public void setNotes(string n){
+		notes = n.Trim();
+		if(string.IsNullOrEmpty(notes)){
+			notes = null;
+		}
+		save();
+	}
+	
+	//INOTES interface
+	public string getTitle(){
+		return name;
+	}
+	
+	//INOTES interface
+	public CharFormat? getStyle(){
+		return Palette.author;
+	}
+	
+	public void songsChanged(){
+		onAuthorDetailsUpdate?.Invoke(this);
 	}
 	
 	public List<Song> getSongs(){
@@ -21,10 +51,13 @@ public class Author{
 	}
 	
 	void save(){
-		authorsFile.Set(id.ToString(), name);
+		authorsFile.Set(id + ".t", name);
+		if(notes != null){
+			authorsFile.Set(id + ".n", notes);
+		}else{
+			authorsFile.Remove(id + ".n");
+		}
 		authorsFile.Save();
-		
-		onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
 	}
 	
 	public override string ToString(){
@@ -41,7 +74,10 @@ public class Author{
 	
 	static List<Author> authors;
 	
-	public static event EventHandler onAuthorsUpdate;
+	public static event Action onAuthorsUpdate; //Author added or deleted
+	public static event Action<Author> onAuthorDeleted; //Deletion
+	public static event Action<Author> onAuthorDetailsUpdate; //Deletion, Name and songs
+	public static event Action<Author> onAuthorNameUpdate; //Name change
 	
 	public static void init(){
 		init(Radio.data.GetValue<int>("authors.latestId"));
@@ -58,15 +94,32 @@ public class Author{
 	static void loadAuthors(){
 		authors = new List<Author>(authorsFile.Count);
 		
+		//MIGRATE
+		if(!authorsFile.TryGetValue("migrated", out bool b) || !b){
+			foreach(string k in authorsFile.Keys.ToList()){
+				if(int.TryParse(k, out int id) && !authorsFile.ContainsKey(id + ".t")){
+					authorsFile.Rename(k, id + ".t");
+				}
+			}
+			
+			authorsFile.Set("migrated", true);
+			authorsFile.Save();
+		}
+		
 		for(int i = 0; i <= latestId; i++){
 			authors.Add(load(i));
 		}
 	}
 	
 	static Author load(int id2){
-		if(authorsFile.TryGetValue(id2.ToString(), out string n)){
+		if(authorsFile.TryGetValue(id2 + ".t", out string n)){
+			string nts = null;
+			if(authorsFile.TryGetValue(id2 + ".n", out string ng)){
+				nts = ng;
+			}
 			return new Author(){
 				name = n,
+				notes = nts,
 				id = id2
 			};
 		}
@@ -106,12 +159,16 @@ public class Author{
 			return;
 		}
 		
+		Author u = get(id);
+		
 		authorsFile.Remove(id.ToString());
 		authorsFile.Save();
 		
 		authors[id] = null;
 		
-		onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
+		onAuthorsUpdate?.Invoke();
+		onAuthorDeleted?.Invoke(u);
+		onAuthorDetailsUpdate?.Invoke(u);
 	}
 	
 	//List of names to list of authors
@@ -139,7 +196,7 @@ public class Author{
 				
 				saveAll();
 				
-				onAuthorsUpdate?.Invoke(null, EventArgs.Empty);
+				onAuthorsUpdate?.Invoke();
 				
 				r.Add(latestId);
 			}else{

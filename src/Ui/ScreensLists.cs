@@ -51,12 +51,20 @@ public partial class Screens{
 			setSelectPlaylistToAddTo(s.id);
 		});
 		
-		TuiButton exp = new TuiButton("Export song", Placement.TopRight, 7, 17, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton exp = new TuiButton("Export song", Placement.TopRight, 7, 16, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
 			
 			setExportSong(s);
+		});
+		
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 7, 17, null, Palette.user).SetAction((s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setNotes(s);
 		});
 		
 		TuiButton del = new TuiButton("Delete song", Placement.TopRight, 7, 19, null, Palette.user).SetAction((s2, ck) => {
@@ -70,19 +78,20 @@ public partial class Screens{
 		});
 		
 		//Selectables
-		TuiSelectable[,] temp = new TuiSelectable[Math.Max((s?.authors.Length ?? 0) + 1, 5), 2];
+		TuiSelectable[,] temp = new TuiSelectable[Math.Max((s?.authors.Length ?? 0) + 1, 6), 2];
 		
 		temp[0, 1] = titleInput;
 		temp[1, 1] = authorsInput;
 		temp[2, 1] = addPlaylist;
 		temp[3, 1] = exp;
-		temp[4, 1] = del;
+		temp[4, 1] = notes;
+		temp[5, 1] = del;
 		
 		//Add authors
 		if(s?.authors != null){
 			for(int i = 0; i < s.authors.Length; i++){
 				int tt3 = s.authors[i];
-				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? Author.nullName, Placement.TopLeft, 4, 8 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
+				TuiButton ar = new TuiButton(Author.get(tt3)?.name ?? Author.nullName, Placement.TopLeft, 4, 9 + i, Palette.author, Palette.user).SetAction((s2, ck) => {
 					setAuthorDetails(tt3);
 				});
 				
@@ -107,15 +116,22 @@ public partial class Screens{
 		c.Elements.Add(new TuiLabel("Set authors:", Placement.TopRight, 12, 9));
 		c.Elements.Add(new TuiLabel("(separated by commas)", Placement.TopRight, 3, 10));
 		
+		TuiLabel playingNow = new TuiLabel("Playing now", Placement.TopLeft, 12, 3, Palette.main);
+		
+		if(Radio.py.playingSong == s?.id){
+			c.Elements.Add(playingNow);
+		}
+		
 		c.Elements.Add(new TuiLabel(secondsToMinuteTime(s.duration), Placement.TopLeft, 4, 5, Palette.info));
+		c.Elements.Add(new TuiLabel(s.added.ToString(), Placement.TopLeft, 4, 6, Palette.info));
 		
 		if(s?.authors != null){
 			if(s.authors.Length == 1){
-				c.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 2, 7));
+				c.Elements.Add(new TuiLabel("Author", Placement.TopLeft, 2, 8));
 			}else if(s.authors.Length > 1){
-				c.Elements.Add(new TuiLabel("Authors", Placement.TopLeft, 2, 7));
+				c.Elements.Add(new TuiLabel("Authors", Placement.TopLeft, 2, 8));
 			}else{
-				c.Elements.Add(new TuiLabel("Unknown authors", Placement.TopLeft, 2, 7));
+				c.Elements.Add(new TuiLabel("Unknown authors", Placement.TopLeft, 2, 8));
 			}
 		}
 		
@@ -151,20 +167,55 @@ public partial class Screens{
 			setExportSong(s);
 		});
 		
-		void onLibChange(object sender, LibraryEventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onSongChange(Song sender){
+			if(sender != s){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
 				if(Song.exists(s.id)){
 					return songDetails(Song.get(s.id));
 				}
 				
 				return null;
-			})){
-				Song.onLibraryUpdate -= onLibChange;
+			});
+		}
+		
+		Song.onSongDetailsUpdate += onSongChange;
+		
+		void onAuthorChange(Author sender){
+			if(!(s?.authors?.Contains(sender.id) ?? false)){
 				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return songDetails(Song.get(s.id));
+			});
+		}
+		
+		Author.onAuthorNameUpdate += onAuthorChange;
+		Author.onAuthorDeleted += onAuthorChange;
+		
+		void onSongLoaded(){
+			if(Radio.py.playingSong == s?.id){
+				if(!c.Elements.Contains(playingNow)){
+					c.Elements.Add(playingNow);
+				}
+			}else{
+				if(c.Elements.Contains(playingNow)){
+					c.Elements.Remove(playingNow);
+				}
 			}
 		}
 		
-		Song.onLibraryUpdate += onLibChange;
+		Radio.py.onSongLoad += onSongLoaded;
+		
+		c2.OnDispose = () => {
+			Song.onSongDetailsUpdate -= onSongChange;
+			Author.onAuthorNameUpdate -= onAuthorChange;
+			Author.onAuthorDeleted -= onAuthorChange;
+			Radio.py.onSongLoad -= onSongLoaded;
+		};
 		
 		return c2;
 	}
@@ -290,16 +341,30 @@ public partial class Screens{
 			setExportLibrary();
 		});
 		
-		void onLibChange(object sender, LibraryEventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onLibChange(){
+			updateMiddleScreen(c2, () => {
 				return library(query, l.MatrixPointerY);
-			})){
-				Song.onLibraryUpdate -= onLibChange;
-				return;
-			}
+			});
 		}
 		
 		Song.onLibraryUpdate += onLibChange;
+		
+		void onSongChange(Song sender){
+			if(!lib.Contains(sender)){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return library(query, l.MatrixPointerY);
+			});
+		}
+		
+		Song.onSongTitleUpdate += onSongChange;
+		
+		c2.OnDispose = () => {
+			Song.onSongTitleUpdate -= onSongChange;
+			Song.onLibraryUpdate -= onLibChange;
+		};
 		
 		return c2;
 	}
@@ -313,7 +378,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen authorDetails(Author s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.name ?? Author.nullName, 256, 16, Placement.TopRight, 1, 1, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		Keybinds.enter.subEvent(name, (s2, ck) => {
 			s?.setName(name.Text);
@@ -323,7 +388,7 @@ public partial class Screens{
 			name.BoxXsize = Math.Clamp(a.X - 32, 16, 38);
 		};
 		
-		TuiButton export = new TuiButton("Export songs", Placement.TopRight, 2, 4, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton export = new TuiButton("Export songs", Placement.TopRight, 2, 5, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -331,7 +396,15 @@ public partial class Screens{
 			setExportAuthor(s);
 		});
 		
-		TuiButton del = new TuiButton("Delete author", Placement.TopRight, 2, 6, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 6, null, Palette.user).SetAction((s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setNotes(s);
+		});
+		
+		TuiButton del = new TuiButton("Delete author", Placement.TopRight, 2, 8, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -341,13 +414,16 @@ public partial class Screens{
 			});
 		});
 		
+		TuiLabel lab = new TuiLabel("Set name:", Placement.TopRight, 12, 0);
+		
 		List<Song> songs = s?.getSongs();
 		
-		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 3), 2];
+		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 4), 2];
 		
 		temp[0, 1] = name;
 		temp[1, 1] = export;
-		temp[2, 1] = del;
+		temp[2, 1] = notes;
+		temp[3, 1] = del;
 		
 		if(songs != null){
 			for(int i = 0; i < songs.Count; i++){
@@ -370,10 +446,12 @@ public partial class Screens{
 				});
 				
 				temp[i, 0] = b;
-				if(i % 3 == 0){
+				if(i % 4 == 0){
 					temp[i, 1] = name;
-				}else if(i % 3 == 1){
+				}else if(i % 4 == 1){
 					temp[i, 1] = export;
+				}else if(i % 4 == 2){
+					temp[i, 1] = notes;
 				}else{
 					temp[i, 1] = del;
 				}
@@ -403,7 +481,8 @@ public partial class Screens{
 			Math.Max(backg.Ysize - 8, 0),
 			temp, (uint) ((songs?.Count > 0) ? 0 : 1), inex ?? 0,
 			Placement.TopLeft, 4, 6,
-			null
+			null,
+			lab
 		);
 		
 		backg.Elements.Add(l);
@@ -415,7 +494,10 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 8, 0);
 		};
 		
+		l.FixedElements.Add(lab);
 		l.FixedElements.Add(name);
+		l.FixedElements.Add(export);
+		l.FixedElements.Add(notes);
 		l.FixedElements.Add(del);
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l);
@@ -436,31 +518,25 @@ public partial class Screens{
 			setExportAuthor(s);
 		});
 		
-		void onLibChange(object sender, LibraryEventArgs a){
-			if(updateMiddleScreen(c2, () => {
-				return authorDetails(Author.get(s?.id ?? -1), l.MatrixPointerY);
-			})){
-				Song.onLibraryUpdate -= onLibChange;
+		void onAuthorChange(Author sender){
+			if(s != sender){
 				return;
 			}
-		}
-		
-		Song.onLibraryUpdate += onLibChange;
-		
-		void onAuthorsChange(object sender, EventArgs a){
-			if(updateMiddleScreen(c2, () => {
+			
+			updateMiddleScreen(c2, () => {
 				if(Author.exists(s.id)){
 					return authorDetails(Author.get(s?.id ?? -1), l.MatrixPointerY);
 				}
 				
 				return null;
-			})){
-				Author.onAuthorsUpdate -= onAuthorsChange;
-				return;
-			}
+			});
 		}
 		
-		Author.onAuthorsUpdate += onAuthorsChange;
+		Author.onAuthorDetailsUpdate += onAuthorChange;
+		
+		c2.OnDispose = () => {
+			Author.onAuthorDetailsUpdate -= onAuthorChange;
+		};
 		
 		return c2;
 	}
@@ -547,16 +623,30 @@ public partial class Screens{
 			}
 		});
 		
-		void onAuthorsChange(object sender, EventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onAuthorsChange(){
+			updateMiddleScreen(c2, () => {
 				return authors(query, l.MatrixPointerY);
-			})){
-				Author.onAuthorsUpdate -= onAuthorsChange;
-				return;
-			}
+			});
 		}
 		
 		Author.onAuthorsUpdate += onAuthorsChange;
+		
+		void onAuthorChange(Author sender){
+			if(!lib.Contains(sender)){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return authors(query, l.MatrixPointerY);
+			});
+		}
+		
+		Author.onAuthorNameUpdate += onAuthorChange;
+		
+		c2.OnDispose = () => {
+			Author.onAuthorsUpdate -= onAuthorsChange;
+			Author.onAuthorNameUpdate -= onAuthorChange;
+		};
 		
 		return c2;
 	}
@@ -570,7 +660,7 @@ public partial class Screens{
 	}
 	
 	MiddleScreen playlistDetails(Playlist s, uint? inex = null){
-		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 0, null, null, null, Palette.writing, Palette.user, Palette.user);
+		TuiFramedScrollingTextBox name = new TuiFramedScrollingTextBox(s?.title ?? Playlist.nullTitle, 256, 16, Placement.TopRight, 1, 1, null, null, null, Palette.writing, Palette.user, Palette.user);
 		
 		Keybinds.enter.subEvent(name, (s2, ck) => {
 			s?.setTitle(name.Text);
@@ -580,7 +670,7 @@ public partial class Screens{
 			name.BoxXsize = Math.Clamp(a.X - 32, 16, 38);
 		};
 		
-		TuiButton add = new TuiButton("Add song", Placement.TopRight, 2, 4, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton add = new TuiButton("Add song", Placement.TopRight, 2, 5, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -596,7 +686,15 @@ public partial class Screens{
 			setExportPlaylist(s);
 		});
 		
-		TuiButton del = new TuiButton("Delete playlist", Placement.TopRight, 2, 8, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 7, null, Palette.user).SetAction((s2, ck) => {
+			if(s == null){
+				return;
+			}
+			
+			setNotes(s);
+		});
+		
+		TuiButton del = new TuiButton("Delete playlist", Placement.TopRight, 2, 9, null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -606,16 +704,19 @@ public partial class Screens{
 			});
 		});
 		
+		TuiLabel lab = new TuiLabel("Set title:", Placement.TopRight, 11, 0);
+		
 		List<Song> songs = s?.getSongs();
 		
 		TuiScrollingScreenInteractive l = null!;
 		
-		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 4), 2];
+		TuiSelectable[,] temp = new TuiSelectable[Math.Max(songs?.Count ?? 0, 5), 2];
 		
 		temp[0, 1] = name;
 		temp[1, 1] = add;
 		temp[2, 1] = exp;
-		temp[3, 1] = del;
+		temp[3, 1] = notes;
+		temp[4, 1] = del;
 		
 		if(songs != null){
 			for(int i = 0; i < songs.Count; i++){
@@ -658,12 +759,14 @@ public partial class Screens{
 				});
 				
 				temp[i, 0] = b;
-				if(i % 4 == 0){
+				if(i % 5 == 0){
 					temp[i, 1] = name;
-				}else if(i % 4 == 1){
+				}else if(i % 5 == 1){
 					temp[i, 1] = add;
-				}else if(i % 4 == 2){
+				}else if(i % 5 == 2){
 					temp[i, 1] = exp;
+				}else if(i % 5 == 3){
+					temp[i, 1] = notes;
 				}else{
 					temp[i, 1] = del;
 				}
@@ -693,7 +796,8 @@ public partial class Screens{
 			Math.Max(backg.Ysize - 8, 0),
 			temp, (uint) ((songs?.Count > 0) ? 0 : 1), inex ?? 0,
 			Placement.TopLeft, 4, 6,
-			null
+			null,
+			lab
 		);
 		
 		backg.Elements.Add(l);
@@ -705,9 +809,11 @@ public partial class Screens{
 			l.Ysize = Math.Max(backg.Ysize - 8, 0);
 		};
 		
+		l.FixedElements.Add(lab);
 		l.FixedElements.Add(name);
 		l.FixedElements.Add(add);
 		l.FixedElements.Add(del);
+		l.FixedElements.Add(notes);
 		l.FixedElements.Add(exp);
 		
 		MiddleScreen c2 = new MiddleScreen(backg, l);
@@ -728,35 +834,40 @@ public partial class Screens{
 			setExportPlaylist(s);
 		});
 		
-		void onLibChange(object sender, LibraryEventArgs a){
-			if(updateMiddleScreen(c2, () => {
-				return playlistDetails(Playlist.get(s?.id ?? -1), l.MatrixPointerY);
-			})){
-				Song.onLibraryUpdate -= onLibChange;
-				return;
-			}
-		}
-		
-		Song.onLibraryUpdate += onLibChange;
-		
-		void onPlaylistChange(object sender, PlaylistEventArgs a){
-			if(a.id != s?.id){
+		void onSongChange(Song sender){
+			if(!songs.Contains(sender)){
 				return;
 			}
 			
-			if(updateMiddleScreen(c2, () => {
+			updateMiddleScreen(c2, () => {
+				return playlistDetails(Playlist.get(s?.id ?? -1), l.MatrixPointerY);
+			});
+		}
+		
+		Song.onSongTitleUpdate += onSongChange;
+		Song.onSongDeleted += onSongChange;
+		
+		void onPlaylistChange(Playlist sender){
+			if(sender != s){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
 				if(Playlist.exists(s.id)){
 					return playlistDetails(Playlist.get(s?.id ?? -1), l.MatrixPointerY);
 				}
 				
 				return null;
-			})){
-				Playlist.onPlaylistUpdate -= onPlaylistChange;
-				return;
-			}
+			});
 		}
 		
-		Playlist.onPlaylistUpdate += onPlaylistChange;
+		Playlist.onPlaylistDetailsUpdate += onPlaylistChange;
+		
+		c2.OnDispose = () => {
+			Song.onSongTitleUpdate -= onSongChange;
+			Song.onSongDeleted -= onSongChange;
+			Playlist.onPlaylistDetailsUpdate -= onPlaylistChange;
+		};
 		
 		return c2;
 	}
@@ -782,7 +893,7 @@ public partial class Screens{
 		TuiButton create = new TuiButton("Create playlist", Placement.TopRight, 3, 0, null, Palette.user);
 		
 		create.SetAction((s, ck) => {
-			setPlaylistDetails(Playlist.create("New playlist"));
+			setPlaylistDetails(Playlist.create("New playlist #${id}"));
 		});
 		
 		TuiButton import = new TuiButton("Import from folder", Placement.TopRight, 3, 2, null, Palette.user);
@@ -881,16 +992,30 @@ public partial class Screens{
 			}
 		});
 		
-		void onPlaylistChange(object sender, PlaylistEventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onPlaylistsChange(){
+			updateMiddleScreen(c2, () => {
 				return playlists(query, l.MatrixPointerY);
-			})){
-				Playlist.onPlaylistUpdate -= onPlaylistChange;
-				return;
-			}
+			});
 		}
 		
-		Playlist.onPlaylistUpdate += onPlaylistChange;
+		Playlist.onPlaylistsUpdate += onPlaylistsChange;
+		
+		void onPlaylistChange(Playlist sender){
+			if(!lib.Contains((Playlist) sender)){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return playlists(query, l.MatrixPointerY);
+			});
+		}
+		
+		Playlist.onPlaylistTitleUpdate += onPlaylistChange;
+		
+		c2.OnDispose = () => {
+			Playlist.onPlaylistsUpdate -= onPlaylistsChange;
+			Playlist.onPlaylistTitleUpdate -= onPlaylistChange;
+		};
 		
 		return c2;
 	}
@@ -965,16 +1090,30 @@ public partial class Screens{
 			removeMiddleScreen(c2);
 		});
 		
-		void onPlaylistChange(object sender, PlaylistEventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onPlaylistsChange(){
+			updateMiddleScreen(c2, () => {
 				return selectPlaylistToAddTo(sindex, query, l.MatrixPointerY);
-			})){
-				Playlist.onPlaylistUpdate -= onPlaylistChange;
-				return;
-			}
+			});
 		}
 		
-		Playlist.onPlaylistUpdate += onPlaylistChange;
+		Playlist.onPlaylistsUpdate += onPlaylistsChange;
+		
+		void onPlaylistChange(Playlist sender){
+			if(!lib.Contains(sender)){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return selectPlaylistToAddTo(sindex, query, l.MatrixPointerY);
+			});
+		}
+		
+		Playlist.onPlaylistTitleUpdate += onPlaylistChange;
+		
+		c2.OnDispose = () => {
+			Playlist.onPlaylistsUpdate -= onPlaylistsChange;
+			Playlist.onPlaylistTitleUpdate -= onPlaylistChange;
+		};
 		
 		return c2;
 	}
@@ -1051,16 +1190,30 @@ public partial class Screens{
 			removeMiddleScreen(c2);
 		});
 		
-		void onLibChange(object sender, LibraryEventArgs a){
-			if(updateMiddleScreen(c2, () => {
+		void onLibChange(){
+			updateMiddleScreen(c2, () => {
 				return selectSongToAdd(p, query, l.MatrixPointerY);
-			})){
-				Song.onLibraryUpdate -= onLibChange;
-				return;
-			}
+			});
 		}
 		
 		Song.onLibraryUpdate += onLibChange;
+		
+		void onSongChange(Song sender){
+			if(!lib.Contains(sender)){
+				return;
+			}
+			
+			updateMiddleScreen(c2, () => {
+				return selectSongToAdd(p, query, l.MatrixPointerY);
+			});
+		}
+		
+		Song.onSongTitleUpdate += onSongChange;
+		
+		c2.OnDispose = () => {
+			Song.onLibraryUpdate -= onLibChange;
+			Song.onSongTitleUpdate -= onSongChange;
+		};
 		
 		return c2;
 	}

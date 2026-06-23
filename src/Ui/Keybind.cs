@@ -31,7 +31,7 @@ public class Keybind{
 		if(primary is (ConsoleKey k, ConsoleModifiers m)){
 			s.interactive.SubKeyEvent(k, m, act);
 			
-			if(addHint){
+			if(addHint && Radio.config.GetValue<bool>("ui.showHints")){
 				s.screen.Elements.Add(new TuiTwoLabels(keybindToString(primary), " " + description, Placement.BottomRight, 0, s.hintPos, Palette.hint, null));
 				s.hintPos++;
 			}
@@ -46,8 +46,10 @@ public class Keybind{
 		if(primary is (ConsoleKey k, ConsoleModifiers m)){
 			s.interactive.SubKeyEvent(k, m, act);
 			
-			s.screen.Elements.Add(new TuiTwoLabels(keybindToString(primary), " " + hint, Placement.BottomRight, 0, s.hintPos, Palette.hint, null));
-			s.hintPos++;
+			if(Radio.config.GetValue<bool>("ui.showHints")){
+				s.screen.Elements.Add(new TuiTwoLabels(keybindToString(primary), " " + hint, Placement.BottomRight, 0, s.hintPos, Palette.hint, null));
+				s.hintPos++;
+			}
 		}
 		
 		if(secondary is (ConsoleKey k2, ConsoleModifiers m2)){

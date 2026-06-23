@@ -1,17 +1,17 @@
 abstract class OSMedia{
 	public OSMedia(){
-		Radio.py.onSongLoad += (_, _) => {
+		Radio.py.onSongLoad += () => {
 			Song s = Song.get(Radio.py.playingSong);
 			updateSong(s?.id ?? -1, s?.title ?? Song.nullTitle, s?.authors?.Select(n => (Author.get(n)?.name ?? Author.nullName)).ToArray(), Radio.py.duration);
 		};
 		
-		Radio.py.onChangePlaystate += (_, _) => updateState(Radio.py.isPaused);
+		Radio.py.onChangePlaystate += () => updateState(Radio.py.isPaused);
 		
-		Session.onModeChange += (_, _) => updateMode(Session.mode);
+		Session.onModeChange += () => updateMode(Session.mode);
 		
-		Radio.py.onChangeElapsed += (_, _) => updateElapsed(Radio.py.elapsed);
+		Radio.py.onChangeElapsed += () => updateElapsed(Radio.py.elapsed);
 		
-		Radio.py.onChangeVolume += (_, _) => updateVolume(Radio.py.volume);
+		Radio.py.onChangeVolume += () => updateVolume(Radio.py.volume);
 	}
 	
 	//To be called at the end of the construtor

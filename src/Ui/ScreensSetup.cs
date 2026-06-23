@@ -75,6 +75,17 @@ public partial class Screens{
 		MiddleScreen mid = generateMiddle(temp);
 		
 		mid.interactive.Elements.Add(new TuiTwoLabels("Welcome to ", "AshRadio", Placement.Center, 0, -5, null, Palette.main));
+		float tt = Stats.getTotalTime(MonthDate.Now);
+		mid.interactive.Elements.Add(new TuiLabel("Time listened this month:", Placement.Center, 0, 2, null));
+		mid.interactive.Elements.Add(new TuiLabel(secondsToReadable(tt) + " (" + (tt / 60f).ToString("F0") + " mins)", Placement.Center, 0, 3, Palette.info));
+		
+		Task.Run(() => {
+			Radio.fetchUpdate(async newVersion => {
+				if(isVersionNewer(newVersion)){
+					mid.interactive.Elements.Add(new TuiTwoLabels("New version available: ", newVersion, Placement.Center, 0, -2, null, Palette.info));
+				}
+			});
+		});
 		
 		middle.Add(mid);
 		
@@ -105,7 +116,7 @@ public partial class Screens{
 		});
 		
 		Keybinds.selectQueue.subEvent(master, (s, cki) => {
-			if(Session.getQueue().Count > 0){
+			if(Session.queue.Count > 0){
 				setSelectedScreen(queueScreen);
 			}
 		});
@@ -395,7 +406,7 @@ public partial class Screens{
 			Radio.py.setVolume(volume.Number);
 		});
 		
-		Radio.py.onChangeVolume += (s, a) => {
+		Radio.py.onChangeVolume += () => {
 			volume.Number = (int) (Radio.py.volume * 100f);
 		};
 		
@@ -408,10 +419,24 @@ public partial class Screens{
 			new TuiLabel("Authors:", Placement.BottomLeft, 2, 1),
 			new TuiLabel("v" + BuildInfo.Version, Placement.BottomRight, 0, 0, Palette.delimiter),
 			new TuiLabel("Volume", Placement.Center, -2, 2),
-			new TuiLabel(Keybinds.selectPlaying.ToString(), Placement.TopRight, 0, 0, Palette.hint),
 			authors,
 			progress, elapsedTime, totalTime
 		);
+		
+		if(Radio.config.GetValue<bool>("ui.showHints")){
+			playing.Elements.Add(new TuiLabel(Keybinds.selectPlaying.ToString(), Placement.TopRight, 0, 0, Palette.hint));
+		}
+		
+		if(Radio.config.GetValue<bool>("ui.showPlayerHints")){
+			playing.Elements.Add(new TuiLabel(Keybinds.previous.ToString(), Placement.TopCenter, -6, 0, Palette.hint));
+			playing.Elements.Add(new TuiLabel(Keybinds.skip.ToString(), Placement.TopCenter, 6, 0, Palette.hint));
+			playing.Elements.Add(new TuiLabel(Keybinds.rewind.ToString(), Placement.TopCenter, -12, 0, Palette.hint));
+			playing.Elements.Add(new TuiLabel(Keybinds.advance.ToString(), Placement.TopCenter, 12, 0, Palette.hint));
+			playing.Elements.Add(new TuiLabel(Keybinds.pause.ToString(), Placement.TopCenter, 0, 0, Palette.hint));
+			
+			playing.Elements.Add(new TuiLabel(Keybinds.volumeDown.ToString(), Placement.Center, -8, 2, Palette.hint));
+			playing.Elements.Add(new TuiLabel(Keybinds.volumeUp.ToString(), Placement.Center, 7, 2, Palette.hint));
+		}
 		
 		playing.OnParentResize += (s, a) => {
 			playing.Xsize = a.X;
@@ -431,17 +456,23 @@ public partial class Screens{
 		
 		prepareScreen(playing);
 		
-		Radio.py.onSongLoad += (se, e) => {
+		Radio.py.onSongLoad += () => {
 			Song s = Song.get(Radio.py.playingSong);
 			
-			song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
+			
 			authors.RightText = s == null ? "" : (s.authors.Length == 0 ? Author.nullName : string.Join(", ", s.authors.Select(n => (Author.get(n)?.name ?? Author.nullName))));
 			
 			totalTime.Text = secondsToMinuteTime(Radio.py.duration);
 		};
 		
-		Radio.py.onChangePlaystate += (se, e) => {
+		Radio.py.onChangePlaystate += () => {
 			play.Text = Radio.py.isPaused ? playingChar : paused;
+		};
+		
+		Song.onSongTitleUpdate += (s) => {
+			if(s.id = Radio.py.playingSong){
+				song.Text = crop(s?.title ?? "", playing.Xsize / 2 - 25);
+			}
 		};
 	}
 	
@@ -474,7 +505,7 @@ public partial class Screens{
 		
 		TuiTwoLabels sourceType = new TuiTwoLabels("Source: ", name, Placement.TopLeft, 1, 3, null, f);
 		
-		Session.onSourceChange += (s, a) => {
+		Session.onSourceChange += () => {
 			string nam = "";
 			string nam2 = "";
 			CharFormat? f2 = null;
@@ -503,12 +534,12 @@ public partial class Screens{
 		
 		setLooping(mode);
 		
-		Session.onModeChange += (s, a) => {
+		Session.onModeChange += () => {
 			mode.SelectedOptionIndex = (uint) Session.mode;
 		};
 		
 		TuiButton modifyQueue = new TuiButton("Modify queue", Placement.BottomLeft, 3, 6, null, Palette.user).SetAction((s, cki) => {
-			if(Session.getQueue().Count > 0){
+			if(Session.queue.Count > 0){
 				setSelectedScreen(queueScreen);
 			}
 		});
@@ -534,9 +565,12 @@ public partial class Screens{
 			new TuiLabel("Mode:", Placement.TopLeft, 1, 5),
 			new TuiLabel("Queue:", Placement.TopLeft, 1, 7),
 			new TuiLabel("Queue empties:", Placement.BottomLeft, 3, 4),
-			new TuiLabel("Session", Placement.TopCenter, 0, 1, Palette.main),
-			new TuiLabel(Keybinds.selectSession.ToString(), Placement.BottomLeft, 0, 0, Palette.hint)
+			new TuiLabel("Session", Placement.TopCenter, 0, 1, Palette.main)
 		);
+		
+		if(Radio.config.GetValue<bool>("ui.showHints")){
+			session.Elements.Add(new TuiLabel(Keybinds.selectSession.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
+		}
 		
 		void updateQueueScreen(){
 			bool b = master?.SelectedScreen == queueScreen;
@@ -550,7 +584,7 @@ public partial class Screens{
 			session.Elements.Remove(queueScreen);
 			master?.ScreenList.Remove(queueScreen);
 			
-			List<int> queue = Session.getQueue();
+			List<int> queue = Session.queue;
 			TuiSelectable[,] temp = null;
 			if(queue.Count != 0){
 				temp = new TuiSelectable[queue.Count, 1];
@@ -620,9 +654,13 @@ public partial class Screens{
 		
 		updateQueueScreen();
 		
-		Song.onLibraryUpdate += (s, a) => updateQueueScreen();
+		Session.onQueueChange += updateQueueScreen;
 		
-		Session.onQueueChange += (s, a) => updateQueueScreen();
+		Song.onSongTitleUpdate += (s) => {
+			if(Session.queue.Contains(s.id)){
+				updateQueueScreen();
+			}
+		};
 		
 		session.OnParentResize += (s, a) => {
 			session.Xsize = Math.Min(30, a.X);
@@ -631,7 +669,7 @@ public partial class Screens{
 		
 		prepareScreen(session);
 		
-		Radio.py.onChangeDevice += (s, a) => {
+		Radio.py.onChangeDevice += () => {
 			device.Text = Radio.py.currentDevice.Name;
 		};
 	}
@@ -680,9 +718,12 @@ public partial class Screens{
 		},{
 			config
 		}}, 0, 0, Placement.TopLeft, 0, 0, null,
-			new TuiLabel("Navigation", Placement.TopCenter, 0, 1, Palette.main),
-			new TuiLabel(Keybinds.selectNavigation.ToString(), Placement.BottomRight, 0, 0, Palette.hint)
+			new TuiLabel("Navigation", Placement.TopCenter, 0, 1, Palette.main)
 		);
+		
+		if(Radio.config.GetValue<bool>("ui.showHints")){
+			navigation.Elements.Add(new TuiLabel(Keybinds.selectNavigation.ToString(), Placement.BottomRight, 0, 0, Palette.hint));
+		}
 		
 		navigation.OnParentResize += (s, a) => {
 			navigation.Xsize = Math.Min(30, a.X);

@@ -28,8 +28,11 @@ public partial class Screens{
 	TuiScreenInteractive generateMiddleInteractive(TuiSelectable[,] b){
 		TuiScreenInteractive te = new TuiScreenInteractive(Math.Max((master?.Xsize ?? 100) - 62, 0),
 			Math.Max((master?.Ysize ?? 20) - 6, 0),
-			b, 0, 0, Placement.TopCenter, 0, 0, null,
-			new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
+			b, 0, 0, Placement.TopCenter, 0, 0, null);
+		
+		if(Radio.config.GetValue<bool>("ui.showHints")){
+			te.Elements.Add(new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
+		}
 		
 		te.OnParentResize += (s, a) => {
 			te.Xsize = Math.Max(a.X - 62, 0);
@@ -44,8 +47,11 @@ public partial class Screens{
 	TuiScreen generateMiddleStatic(){
 		TuiScreen te = new TuiScreen(Math.Max((master?.Xsize ?? 100) - 62, 0),
 			Math.Max((master?.Ysize ?? 20) - 6, 0),
-			Placement.TopCenter, 0, 0, null,
-			new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
+			Placement.TopCenter, 0, 0, null);
+		
+		if(Radio.config.GetValue<bool>("ui.showHints")){
+			te.Elements.Add(new TuiLabel(Keybinds.selectMiddle.ToString(), Placement.BottomLeft, 0, 0, Palette.hint));
+		}
 		
 		te.OnParentResize += (s, a) => {
 			te.Xsize = Math.Max(a.X - 62, 0);
@@ -83,15 +89,18 @@ public partial class Screens{
 		master.Elements.Remove(toDel.screen);
 		master.Elements.Add(currentMiddleScreen.screen);
 		
+		toDel.Dispose();
+		
 		master.Xsize = master.Xsize; //Triggers a resize to make sure the middle screen is the correct size
 		
 		setSelectedScreen(currentMiddleScreen);
 	}
 	
 	//Returns true if the hook to update can be destroyed
-	bool updateMiddleScreen(MiddleScreen sc, Func<MiddleScreen> func){
+	void updateMiddleScreen(MiddleScreen sc, Func<MiddleScreen> func){
 		if(!middle.Contains(sc)){
-			return true;
+			sc.Dispose();
+			return;
 		}
 		
 		MiddleScreen up = func?.Invoke();
@@ -100,9 +109,10 @@ public partial class Screens{
 				closeMiddleScreen();
 			}else{
 				middle.Remove(sc);
+				sc.Dispose();
 			}
 			
-			return true;
+			return;
 		}
 		
 		if(currentMiddleScreen == sc){
@@ -125,12 +135,9 @@ public partial class Screens{
 			if(index != -1){
 				middle[index] = up;
 			}
-			
-			sc.screen = up.screen;
-			sc.interactive = up.interactive;
 		}
 		
-		return true;
+		sc.Dispose();
 	}
 	
 	//used to avoid extra work. instead of closecurrent + opennewscreen, opennewscreen + removeprevious
@@ -139,15 +146,17 @@ public partial class Screens{
 			closeMiddleScreen();
 		}else{
 			middle.Remove(sc);
+			sc.Dispose();
 		}
 	}
 }
 
-public class MiddleScreen{
+public class MiddleScreen : IDisposable{
 	public TuiScreen screen;
 	public TuiScreenInteractive interactive;
 	public string identifier;
 	public int hintPos = 0;
+	public Action? OnDispose {private get; set;}
 	
 	public MiddleScreen(TuiScreen s, TuiScreenInteractive i, string id = null){
 		screen = s;
@@ -159,5 +168,23 @@ public class MiddleScreen{
 		screen = i;
 		interactive = i;
 		identifier = id;
+	}
+	
+	public void Dispose(){
+		OnDispose?.Invoke();
+		
+		foreach(TuiElement e in screen.Elements){
+			if(e is IDisposable d){
+				d.Dispose();
+			}
+		}
+		
+		if(interactive != screen){
+			foreach(TuiElement e in interactive.Elements){
+				if(e is IDisposable d){
+					d.Dispose();
+				}
+			}
+		}
 	}
 }

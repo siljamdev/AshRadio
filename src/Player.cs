@@ -25,10 +25,10 @@ public class Player : IDisposable{
 			skip();
 		}else if(value < 0f){
 			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, 0f));
-			onChangeElapsed?.Invoke(this, EventArgs.Empty);
+			onChangeElapsed?.Invoke();
 		}else{
 			Bass.ChannelSetPosition(stream, Bass.ChannelSeconds2Bytes(stream, value));
-			onChangeElapsed?.Invoke(this, EventArgs.Empty);
+			onChangeElapsed?.Invoke();
 		}
 	}}
 	
@@ -38,15 +38,15 @@ public class Player : IDisposable{
 	
 	public Stopwatch timer {get;} = new Stopwatch();
 	
-	public event EventHandler onBeforeSongLoad;
-	public event EventHandler onSongLoad;
-	public event EventHandler onSongFinish;
+	public event Action onBeforeSongLoad;
+	public event Action onSongLoad;
+	public event Action onSongFinish;
 	
-	public event EventHandler onChangeElapsed;
+	public event Action onChangeElapsed;
 	
-	public event EventHandler onChangePlaystate;
-	public event EventHandler onChangeDevice;
-	public event EventHandler onChangeVolume;
+	public event Action onChangePlaystate;
+	public event Action onChangeDevice;
+	public event Action onChangeVolume;
 	
 	int stream;
 	int finishSync;
@@ -84,7 +84,7 @@ public class Player : IDisposable{
 	}
 	
 	public void loadSong(int song){
-		onBeforeSongLoad?.Invoke(this, EventArgs.Empty);
+		onBeforeSongLoad?.Invoke();
 		
 		stop();
 		
@@ -94,7 +94,7 @@ public class Player : IDisposable{
 		if(!Song.exists(playingSong)){
 			playingSong = -1;
 			
-			onSongLoad?.Invoke(this, EventArgs.Empty);
+			onSongLoad?.Invoke();
 			Radio.session.Set("player.song", playingSong);
 			Radio.session.Set("player.elapsed", 0f);
 			Radio.session.Save();
@@ -105,7 +105,7 @@ public class Player : IDisposable{
 		if(path == null){
 			playingSong = -1;
 			
-			onSongLoad?.Invoke(this, EventArgs.Empty);
+			onSongLoad?.Invoke();
 			Radio.session.Set("player.song", playingSong);
 			Radio.session.Set("player.elapsed", 0f);
 			Radio.session.Save();
@@ -118,7 +118,7 @@ public class Player : IDisposable{
 		
 		attachFinish();
 		
-		onSongLoad?.Invoke(this, EventArgs.Empty);
+		onSongLoad?.Invoke();
 		Radio.session.Set("player.song", playingSong);
 		Radio.session.Set("player.elapsed", 0f);
 		Radio.session.Save();
@@ -131,14 +131,14 @@ public class Player : IDisposable{
 	
 	public void pause(){
 		if(Bass.ChannelPause(stream)){
-			onChangePlaystate?.Invoke(this, EventArgs.Empty);
+			onChangePlaystate?.Invoke();
 			timer.Stop();
 		}
 	}
 	
 	public void resume(){
 		if(Bass.ChannelPlay(stream)){
-			onChangePlaystate?.Invoke(this, EventArgs.Empty);
+			onChangePlaystate?.Invoke();
 			timer.Start();
 		}
 	}
@@ -164,7 +164,7 @@ public class Player : IDisposable{
 		
 		//play(Session.serveNext());
 		
-		onSongFinish?.Invoke(this, EventArgs.Empty);
+		onSongFinish?.Invoke();
 	}
 	
 	/* public void prev(){
@@ -185,7 +185,7 @@ public class Player : IDisposable{
 		
 		Bass.ChannelSetAttribute(stream, ChannelAttribute.Volume, (float) Math.Pow(volume, volumeExponent));
 		
-		onChangeVolume?.Invoke(this, EventArgs.Empty);
+		onChangeVolume?.Invoke();
 	}
 	
 	public void setVolumeExp(float vx){
@@ -202,8 +202,9 @@ public class Player : IDisposable{
 			return;
 		}
 		
+		//Cant block the audio thread
 		Task.Run(() => {
-			onSongFinish?.Invoke(this, EventArgs.Empty);
+			onSongFinish?.Invoke();
 		});
 	}
 	
@@ -241,7 +242,7 @@ public class Player : IDisposable{
 		loadSong(playingSong);
 		elapsed = el;
 		
-		onChangeDevice?.Invoke(this, EventArgs.Empty);
+		onChangeDevice?.Invoke();
 	}
 	
 	public static Dictionary<string, int> getDeviceList(){

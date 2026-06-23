@@ -1,4 +1,6 @@
-public class Playlist : IDisposable{
+using AshLib.Formatting;
+
+public class Playlist : IDisposable, INotes{
 	
 	//INSTANCE
 	
@@ -7,21 +9,47 @@ public class Playlist : IDisposable{
 	
 	public int id{get; private set;}
 	
-	public Playlist(){
-		Song.onLibraryUpdate += onLibChange;
+	public string notes{get; private set;}
+	
+	private Playlist(){
+		Song.onSongDeleted += onLibChange;
 	}
 	
-	void onLibChange(object sender, LibraryEventArgs a){
-		List<Song> n = getSongs();
-		if(n.Count != songs.Count){
-			songs = n.Select(s => s.id).ToList();
+	//used to delete deleted songs
+	void onLibChange(Song s){
+		if(songs.Contains(s.id)){
+			songs = songs.Where(id => Song.exists(id)).ToList();
 			save();
+			
+			onPlaylistDetailsUpdate?.Invoke(this);
 		}
 	}
 	
 	public void setTitle(string n){
 		title = n?.Trim() ?? nullTitle;
 		save();
+		
+		onPlaylistDetailsUpdate?.Invoke(this);
+		onPlaylistTitleUpdate?.Invoke(this);
+	}
+	
+	//INOTES interface
+	public void setNotes(string n){
+		notes = n.Trim();
+		if(string.IsNullOrEmpty(notes)){
+			notes = null;
+		}
+		save();
+	}
+	
+	//INOTES interface
+	public string getTitle(){
+		return title;
+	}
+	
+	//INOTES interface
+	public CharFormat? getStyle(){
+		return Palette.playlist;
 	}
 	
 	public List<int> getSongsIds(){
@@ -35,11 +63,15 @@ public class Playlist : IDisposable{
 	public void addSong(int s){
 		songs.Add(s);
 		save();
+		
+		onPlaylistDetailsUpdate?.Invoke(this);
 	}
 	
 	public void deleteSong(int index){
 		songs.RemoveAt(index);
 		save();
+		
+		onPlaylistDetailsUpdate?.Invoke(this);
 	}
 	
 	public void moveSong(int index, int newIndex){
@@ -47,18 +79,23 @@ public class Playlist : IDisposable{
 		songs.RemoveAt(index);
 		songs.Insert(newIndex, t);
 		save();
+		
+		onPlaylistDetailsUpdate?.Invoke(this);
 	}
 	
 	void save(){
 		playlistsFile.Set(id.ToString() + ".t", title);
 		playlistsFile.Set(id.ToString() + ".s", songs.ToArray());
+		if(notes != null){
+			playlistsFile.Set(id.ToString() + ".n", notes);
+		}else{
+			playlistsFile.Remove(id.ToString() + ".n");
+		}
 		playlistsFile.Save();
-		
-		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
 	}
 	
 	public void Dispose(){
-		Song.onLibraryUpdate -= onLibChange;
+		Song.onSongDeleted -= onLibChange;
 	}
 	
 	//STATIC
@@ -71,7 +108,10 @@ public class Playlist : IDisposable{
 	
 	static List<Playlist> playlists;
 	
-	public static event EventHandler<PlaylistEventArgs> onPlaylistUpdate;
+	public static event Action onPlaylistsUpdate; //Created, deleted
+	public static event Action<Playlist> onPlaylistDeleted; //deleted
+	public static event Action<Playlist> onPlaylistDetailsUpdate; //Deletion, Name change, song contents
+	public static event Action<Playlist> onPlaylistTitleUpdate; //Name change
 	
 	public static void init(){
 		init(Radio.data.GetValue<int>("playlists.latestId"));
@@ -122,6 +162,8 @@ public class Playlist : IDisposable{
 	public static int create(string title){
 		latestId++;
 		
+		title = title.Trim().Replace("${id}", latestId.ToString());
+		
 		playlistsFile.Set(latestId.ToString() + ".t", title);
 		playlistsFile.Set(latestId.ToString() + ".s", Array.Empty<int>());
 		playlistsFile.Save();
@@ -134,7 +176,7 @@ public class Playlist : IDisposable{
 		
 		saveAll();
 		
-		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(latestId));
+		onPlaylistsUpdate?.Invoke();
 		
 		return latestId;
 	}
@@ -144,6 +186,8 @@ public class Playlist : IDisposable{
 			return;
 		}
 		
+		Playlist p = get(id);
+		
 		playlistsFile.Remove(id.ToString() + ".t");
 		playlistsFile.Remove(id.ToString() + ".s");
 		playlistsFile.Save();
@@ -151,7 +195,9 @@ public class Playlist : IDisposable{
 		playlists[id]?.Dispose();
 		playlists[id] = null;
 		
-		onPlaylistUpdate?.Invoke(null, new PlaylistEventArgs(id));
+		onPlaylistsUpdate?.Invoke();
+		onPlaylistDeleted?.Invoke(p);
+		onPlaylistDetailsUpdate?.Invoke(p);
 	}
 	
 	public static List<Playlist> getAllPlaylists(){
@@ -177,13 +223,5 @@ public class Playlist : IDisposable{
 	static void saveAll(){
 		Radio.data.Set("playlists.latestId", latestId);
 		Radio.data.Save();
-	}
-}
-
-public class PlaylistEventArgs : EventArgs{
-	public int id;
-	
-	public PlaylistEventArgs(int i){
-		id = i;
 	}
 }

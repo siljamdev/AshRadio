@@ -234,7 +234,7 @@ public static class CommandLineHandler{
 			
 			if(Song.exists(id)){
 				bool canExit = false;
-				Radio.py.onSongFinish += (s, a) => {
+				Radio.py.onSongFinish += () => {
 					canExit = true;
 				};
 				

@@ -82,6 +82,7 @@ public partial class Screens{
 				("ui.palette.writing", ConfigType.Color, "Writing color", 0),
 				("ui.palette.main", ConfigType.Color, "Main color", 0),
 				("ui.palette.song", ConfigType.Color, "Song color", 0),
+				("ui.palette.selected", ConfigType.Color, "Selected song color", 0),
 				("ui.palette.author", ConfigType.Color, "Author color", 0),
 				("ui.palette.playlist", ConfigType.Color, "Playlist color", 0),
 				("ui.palette.info", ConfigType.Color, "Info color", 0),
@@ -119,8 +120,10 @@ public partial class Screens{
 	void setUiConfig(){
 		setMiddleScreen(generateConfigScreen("UI", 8, new (string, ConfigType, string, int)[]{
 				("ui.useColors", ConfigType.Bool, "Use colors", 0),
+				("ui.showHints", ConfigType.Bool, "Show hints", 0),
+				("ui.showPlayerHints", ConfigType.Bool, "Show player hints", 0),
+				("ui.cursorBlinks", ConfigType.Bool, "Cursor blinks", 0),
 				("ui.cursor", ConfigType.String, "Cursor char", 1),
-				("ui.cursorBlinks", ConfigType.Bool, "Cursor blinks", 1),
 				("ui.cursorBlinkPeriod", ConfigType.Ufloat, "Cursor blik period", 6),
 				("ui.playingChars", ConfigType.String, "Playing/Paused chars", 2),
 				("ui.selectors", ConfigType.String, "Selector chars", 2),
@@ -128,7 +131,7 @@ public partial class Screens{
 			},
 			new (string, Action<TuiSelectable, ConsoleKeyInfo>)[0],
 			() => {
-				init();
+				reinitScreens();
 			}
 		));
 	}
@@ -165,7 +168,7 @@ public partial class Screens{
 					if(Radio.downloadFfmpeg(() => {
 						if(currentMiddleScreen == midsc){
 							setPathConfig();
-							updateMiddleScreen(midsc, () => null);
+							removeMiddleScreen(midsc);
 						}
 					})){
 						b.Text = "Downloading…";
@@ -177,7 +180,7 @@ public partial class Screens{
 					if(Radio.downloadYtdlp(() => {
 						if(currentMiddleScreen == midsc){
 							setPathConfig();
-							updateMiddleScreen(midsc, () => null);
+							removeMiddleScreen(midsc);
 						}
 					})){
 						b.Text = "Downloading…";
@@ -189,14 +192,14 @@ public partial class Screens{
 					bool b1 = Radio.downloadFfmpeg(() => {
 						if(currentMiddleScreen == midsc){
 							setPathConfig();
-							updateMiddleScreen(midsc, () => null);
+							removeMiddleScreen(midsc);
 						}
 					});
 					
 					bool b2 = Radio.downloadYtdlp(() => {
 						if(currentMiddleScreen == midsc){
 							setPathConfig();
-							updateMiddleScreen(midsc, () => null);
+							removeMiddleScreen(midsc);
 						}
 					});
 					

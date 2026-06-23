@@ -170,17 +170,17 @@ public static class Keybinds{
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selectMiddle", toArray(ConsoleKey.G, ConsoleModifiers.Control)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selectQueue", toArray(ConsoleKey.Q, ConsoleModifiers.Control)),
 			
-			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.pause", toArray(ConsoleKey.Spacebar, ConsoleKey.K)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.pause", toArray(ConsoleKey.K, ConsoleKey.Spacebar)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.previous", toArray(ConsoleKey.N)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.skip", toArray(ConsoleKey.M)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.rewind", toArray(ConsoleKey.J)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.advance", toArray(ConsoleKey.L)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.player.restart", toArray(ConsoleKey.J, ConsoleModifiers.Shift)),
 			
-			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.down", toArray(ConsoleKey.Subtract, ConsoleKey.OemMinus)),
-			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.up", toArray(ConsoleKey.Add, ConsoleKey.OemPlus)),
-			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.mute", toArray(ConsoleKey.Subtract, ConsoleModifiers.Shift, ConsoleKey.OemMinus, ConsoleModifiers.Shift)),
-			new ModelInstance(ModelInstanceOperation.Value, "keybinds.volume.max", toArray(ConsoleKey.Add, ConsoleModifiers.Shift, ConsoleKey.OemPlus, ConsoleModifiers.Shift)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.down", toArray(ConsoleKey.OemMinus, ConsoleKey.Subtract)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.up", toArray(ConsoleKey.OemPlus, ConsoleKey.Add)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.volume.mute", toArray(ConsoleKey.OemMinus, ConsoleModifiers.Shift, ConsoleKey.Subtract, ConsoleModifiers.Shift)),
+			new ModelInstance(ModelInstanceOperation.Value, "keybinds.volume.max", toArray(ConsoleKey.OemPlus, ConsoleModifiers.Shift, ConsoleKey.Add, ConsoleModifiers.Shift)),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.help", toArray(ConsoleKey.F1)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.config", toArray(ConsoleKey.OemComma, ConsoleModifiers.Control)),

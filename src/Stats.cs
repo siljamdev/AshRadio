@@ -6,7 +6,7 @@ public static class Stats{
 		currentDate = MonthDate.Now;
 		currentFile = new AshFile(getPath(currentDate));
 		
-		Radio.py.onSongLoad += (s, a) => {
+		Radio.py.onSongLoad += () => {
 			tryUpdateFile();
 			
 			if(Radio.py.playingSong < 0){
@@ -22,7 +22,7 @@ public static class Stats{
 			currentFile.Save();
 		};
 		
-		Radio.py.onBeforeSongLoad += (s, a) => setTime();
+		Radio.py.onBeforeSongLoad += () => setTime();
 	}
 	
 	public static void setTime(){
@@ -45,6 +45,16 @@ public static class Stats{
 		}
 		
 		currentFile.Save();
+	}
+	
+	public static float getTotalTime(MonthDate d){
+		if(!File.Exists(getPath(d))){
+			return 0f;
+		}
+		
+		AshFile stats = new AshFile(getPath(d));
+		
+		return stats.GetOrDefault("totalTime", 0f);
 	}
 	
 	//totalTime, Song id, number of times, time
