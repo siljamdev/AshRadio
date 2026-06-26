@@ -126,10 +126,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.up, Keybinds.down, Keybinds.left, Keybinds.right, Keybinds.scrollUp, Keybinds.scrollDown}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -139,10 +139,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.addToQueue, Keybinds.play, Keybinds.addToPlaylist, Keybinds.export, Keybinds.listRemove, Keybinds.listUp, Keybinds.listDown}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -152,10 +152,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.setSource, Keybinds.search, Keybinds.export}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -165,10 +165,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.volumeUp, Keybinds.volumeDown, Keybinds.volumeMute, Keybinds.volumeMax}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -178,10 +178,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.pause, Keybinds.previous, Keybinds.skip, Keybinds.restart, Keybinds.rewind, Keybinds.advance, Keybinds.seePlaying}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -191,10 +191,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.library, Keybinds.authors, Keybinds.playlists, Keybinds.selected, Keybinds.import, Keybinds.stats, Keybinds.selectQueue, Keybinds.help, Keybinds.config}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -204,10 +204,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.changeMode, Keybinds.seeSource, Keybinds.toggleQueueEmpties, Keybinds.clearQueue, Keybinds.changeDevice}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}
@@ -217,10 +217,10 @@ public partial class Screens{
 				foreach(Keybind k in new Keybind[]{Keybinds.select, Keybinds.selectAll, Keybinds.selectionClear, Keybinds.selectionAddToQueue, Keybinds.selectionAddToPlaylist, Keybinds.selectionExport}){
 					if(k.primary != null){
 						content.Append(k.ToString(), Palette.hint);
-						content.AppendLine(k.description, null);
+						content.AppendLine(" " + k.description, null);
 						if(k.secondary != null){
 							content.Append(Keybind.keybindToString(k.secondary), Palette.hint);
-							content.AppendLine(k.description, null);
+							content.AppendLine(" " + k.description, null);
 						}
 					}
 				}

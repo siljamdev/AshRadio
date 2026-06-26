@@ -17,9 +17,8 @@
 	<SelfContained>true</SelfContained>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	
-	<!-- <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 	<InvariantGlobalization>true</InvariantGlobalization>
-	<PublishReadyToRun>false</PublishReadyToRun> -->
 	
 	<BuildDate>$([System.DateTime]::UtcNow.ToString("dd/MM/yyyy"))</BuildDate>
   </PropertyGroup>
