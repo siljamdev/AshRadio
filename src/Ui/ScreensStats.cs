@@ -235,7 +235,7 @@ public partial class Screens{
 		TuiSelectable[,] t = new TuiSelectable[songs.Count, 1];
 		for(int i = 0; i < songs.Count; i++){
 			Song s = songs[i];
-			TuiButton b = new TuiButton("", Placement.TopLeft, 2 + (i + 1).ToString().Length, 3 * i, Palette.song, Palette.user);
+			TuiButton b = new TuiSongButton(s.id, Placement.TopLeft, 2 + (i + 1).ToString().Length, 3 * i, Palette.user);
 			
 			b.SetAction((s2, ck) => {
 				setSongDetails(s);
@@ -250,7 +250,7 @@ public partial class Screens{
 			});
 			
 			Keybinds.addToPlaylist.subEvent(b, (s2, ck) => {
-				setSelectPlaylistToAddTo(s.id);
+				setSelectPlaylistToAddTo(new int[]{s.id});
 			});
 			
 			t[i, 0] = b;

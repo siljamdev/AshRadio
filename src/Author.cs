@@ -13,8 +13,8 @@ public class Author : INotes{
 		name = n?.Trim() ?? nullName;
 		save();
 		
-		onAuthorDetailsUpdate?.Invoke(this);
-		onAuthorNameUpdate?.Invoke(this);
+		onAuthorDetailsUpdate?.Invoke(this.id);
+		onAuthorNameUpdate?.Invoke(this.id);
 	}
 	
 	//INOTES interface
@@ -37,7 +37,7 @@ public class Author : INotes{
 	}
 	
 	public void songsChanged(){
-		onAuthorDetailsUpdate?.Invoke(this);
+		onAuthorDetailsUpdate?.Invoke(this.id);
 	}
 	
 	public List<Song> getSongs(){
@@ -75,9 +75,9 @@ public class Author : INotes{
 	static List<Author> authors;
 	
 	public static event Action onAuthorsUpdate; //Author added or deleted
-	public static event Action<Author> onAuthorDeleted; //Deletion
-	public static event Action<Author> onAuthorDetailsUpdate; //Deletion, Name and songs
-	public static event Action<Author> onAuthorNameUpdate; //Name change
+	public static event Action<int> onAuthorDeleted; //Deletion
+	public static event Action<int> onAuthorDetailsUpdate; //Deletion, Name and songs
+	public static event Action<int> onAuthorNameUpdate; //Name change
 	
 	public static void init(){
 		init(Radio.data.GetValue<int>("authors.latestId"));
@@ -167,8 +167,8 @@ public class Author : INotes{
 		authors[id] = null;
 		
 		onAuthorsUpdate?.Invoke();
-		onAuthorDeleted?.Invoke(u);
-		onAuthorDetailsUpdate?.Invoke(u);
+		onAuthorDeleted?.Invoke(id);
+		onAuthorDetailsUpdate?.Invoke(u.id);
 	}
 	
 	//List of names to list of authors

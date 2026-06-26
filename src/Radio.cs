@@ -170,6 +170,7 @@ public static class Radio{
 	static void initConfig(){
 		config = new AshFile(appDataPath + "/config.ash");
 		
+		//Attempts to migrate values
 		if(config.TryGetValue("init", out bool b)){
 			config.Set("internal.init", b);
 		}
@@ -181,6 +182,8 @@ public static class Radio{
 		if(config.TryGetValue("player.volume", out int v)){
 			config.Set("player.volume", v / 100f);
 		}
+		
+		Palette.attemptMigration();
 		
 		AshFileModel m = new AshFileModel(
 			new ModelInstance(ModelInstanceOperation.Type, "player.volume", 1f),
@@ -739,11 +742,9 @@ public static class Radio{
 			
 			Playlist p = Playlist.get(Playlist.create(title));
 			
-			foreach(int s in added){
-				p?.addSong(s);
-			}
+			p?.addSongs(added);
 			
-			return p.id;
+			return p?.id ?? -1;
 		}catch(Exception e){
 			err += e.Message;
 			return -1;
@@ -796,11 +797,9 @@ public static class Radio{
 		if(s.Count > 0){
 			Playlist p = Playlist.get(Playlist.create(title));
 			
-			foreach(int s2 in s){
-				p?.addSong(s2);
-			}
+			p?.addSongs(s);
 			
-			return p.id;
+			return p?.id ?? -1;
 		}
 		
 		return -1;

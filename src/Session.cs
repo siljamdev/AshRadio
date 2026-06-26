@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AshLib.Lists;
 
 public static class Session{
 	public static SessionMode mode{get; private set;}
@@ -9,7 +10,7 @@ public static class Session{
 	
 	static List<int> pool;
 	
-	public static List<int> queue;
+	public static ReactiveList<int> queue;
 	public static bool queueEmpties {get; set{
 		field = value;
 		queueIndex = 0;
@@ -33,7 +34,7 @@ public static class Session{
 		sourceIdentifier = Radio.session.GetValue<int>("session.sourceIdentifier");
 		sourceSeen = Radio.session.GetValue<int[]>("session.sourceSeen")?.ToList() ?? new List<int>();
 		
-		queue = new List<int>();
+		queue = new ReactiveList<int>(() => onQueueChange?.Invoke());
 		rand = new Random();
 		
 		Radio.py.onBeforeSongLoad += () => {
@@ -65,20 +66,19 @@ public static class Session{
 		};
 		
 		Song.onSongDeleted += (s) => {
-			if(queue.Contains(s.id)){
-				queue = queue.Where(id => Song.exists(id)).ToList();
-				onQueueChange?.Invoke();
+			if(queue.Contains(s)){
+				queue.RemoveAll(id => !Song.exists(id));
 			}
 		};
 		
 		Author.onAuthorDetailsUpdate += (a) => {
-			if(sourceType == SourceType.Author && sourceIdentifier == a.id){
+			if(sourceType == SourceType.Author && sourceIdentifier == a){
 				update();
 			}
 		};
 		
 		Playlist.onPlaylistDetailsUpdate += (p) => {
-			if(sourceType == SourceType.Playlist && sourceIdentifier == p.id){
+			if(sourceType == SourceType.Playlist && sourceIdentifier == p){
 				update();
 			}
 		};
@@ -88,25 +88,23 @@ public static class Session{
 	
 	public static void addToQueue(int s){
 		queue.Add(s);
-		onQueueChange?.Invoke();
+	}
+	
+	public static void addMultipleToQueue(IEnumerable<int> ids){
+		queue.AddRange(ids);
 	}
 	
 	public static void removeFromQueue(int index){
 		queue.RemoveAt(index);
 		queueIndex = 0;
-		onQueueChange?.Invoke();
 	}
 	
 	public static void moveInQueue(int index, int newIndex){
-		int t = queue[index];
-		queue.RemoveAt(index);
-		queue.Insert(newIndex, t);
-		onQueueChange?.Invoke();
+		queue.Move(index, newIndex);
 	}
 	
 	public static void clearQueue(){
 		queue.Clear();
-		onQueueChange?.Invoke();
 	}
 	
 	public static int serveNext(){
@@ -119,8 +117,8 @@ public static class Session{
 				if(queueIndex >= queue.Count){
 					queueIndex = 0;
 				}
+				onQueueChange?.Invoke();
 			}
-			onQueueChange?.Invoke();
 			return s;
 		}
 		

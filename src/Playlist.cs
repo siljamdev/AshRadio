@@ -16,12 +16,12 @@ public class Playlist : IDisposable, INotes{
 	}
 	
 	//used to delete deleted songs
-	void onLibChange(Song s){
-		if(songs.Contains(s.id)){
+	void onLibChange(int s){
+		if(songs.Contains(s)){
 			songs = songs.Where(id => Song.exists(id)).ToList();
 			save();
 			
-			onPlaylistDetailsUpdate?.Invoke(this);
+			onPlaylistDetailsUpdate?.Invoke(this.id);
 		}
 	}
 	
@@ -29,8 +29,8 @@ public class Playlist : IDisposable, INotes{
 		title = n?.Trim() ?? nullTitle;
 		save();
 		
-		onPlaylistDetailsUpdate?.Invoke(this);
-		onPlaylistTitleUpdate?.Invoke(this);
+		onPlaylistDetailsUpdate?.Invoke(this.id);
+		onPlaylistTitleUpdate?.Invoke(this.id);
 	}
 	
 	//INOTES interface
@@ -64,14 +64,32 @@ public class Playlist : IDisposable, INotes{
 		songs.Add(s);
 		save();
 		
-		onPlaylistDetailsUpdate?.Invoke(this);
+		onPlaylistDetailsUpdate?.Invoke(this.id);
 	}
 	
-	public void deleteSong(int index){
+	public void addSongs(IEnumerable<int> ids){
+		songs.AddRange(ids);
+		save();
+		
+		onPlaylistDetailsUpdate?.Invoke(this.id);
+	}
+	
+	public void deleteSongAt(int index){
 		songs.RemoveAt(index);
 		save();
 		
-		onPlaylistDetailsUpdate?.Invoke(this);
+		onPlaylistDetailsUpdate?.Invoke(this.id);
+	}
+	
+	public bool deleteSongs(IEnumerable<int> sids){
+		int r = songs.RemoveAll(id => sids.Contains(id));
+		if(r > 0){
+			save();
+			
+			onPlaylistDetailsUpdate?.Invoke(this.id);
+			return true;
+		}
+		return false;
 	}
 	
 	public void moveSong(int index, int newIndex){
@@ -80,7 +98,7 @@ public class Playlist : IDisposable, INotes{
 		songs.Insert(newIndex, t);
 		save();
 		
-		onPlaylistDetailsUpdate?.Invoke(this);
+		onPlaylistDetailsUpdate?.Invoke(this.id);
 	}
 	
 	void save(){
@@ -109,9 +127,9 @@ public class Playlist : IDisposable, INotes{
 	static List<Playlist> playlists;
 	
 	public static event Action onPlaylistsUpdate; //Created, deleted
-	public static event Action<Playlist> onPlaylistDeleted; //deleted
-	public static event Action<Playlist> onPlaylistDetailsUpdate; //Deletion, Name change, song contents
-	public static event Action<Playlist> onPlaylistTitleUpdate; //Name change
+	public static event Action<int> onPlaylistDeleted; //deleted
+	public static event Action<int> onPlaylistDetailsUpdate; //Deletion, Name change, song contents
+	public static event Action<int> onPlaylistTitleUpdate; //Name change
 	
 	public static void init(){
 		init(Radio.data.GetValue<int>("playlists.latestId"));
@@ -196,8 +214,8 @@ public class Playlist : IDisposable, INotes{
 		playlists[id] = null;
 		
 		onPlaylistsUpdate?.Invoke();
-		onPlaylistDeleted?.Invoke(p);
-		onPlaylistDetailsUpdate?.Invoke(p);
+		onPlaylistDeleted?.Invoke(id);
+		onPlaylistDetailsUpdate?.Invoke(p.id);
 	}
 	
 	public static List<Playlist> getAllPlaylists(){

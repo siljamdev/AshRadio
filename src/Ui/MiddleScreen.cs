@@ -116,6 +116,8 @@ public partial class Screens{
 		}
 		
 		if(currentMiddleScreen == sc){
+			bool focused = master?.SelectedScreen == sc.interactive;
+			
 			master.ScreenList.Remove(sc.interactive);
 			master.ScreenList.Add(up.interactive);
 			
@@ -129,7 +131,9 @@ public partial class Screens{
 			
 			master.Xsize = master.Xsize; //Triggers a resize to make sure the middle screen is the correct size
 			
-			setSelectedScreen(currentMiddleScreen);
+			if(focused){
+				setSelectedScreen(currentMiddleScreen);
+			}
 		}else{
 			int index = middle.IndexOf(sc);
 			if(index != -1){

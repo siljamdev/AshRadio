@@ -37,6 +37,24 @@ public static class Palette{
 		);
 	}
 	
+	public static void attemptMigration(){
+		string[] keys = getPaletteModel().instances.Select(i => i.name).ToArray();
+		
+		foreach(string k in keys){
+			if(Radio.config.TryGetValue(k, out Color3 c)){
+				Radio.config.Set(k, new byte[]{c.R, c.G, c.B});
+			}else if(Radio.config.TryGetValue(k, out Color3[] ca)){
+				if(ca.Length == 1){
+					Radio.config.Set(k, new byte[]{0, ca[0].R, ca[0].G, ca[0].B});
+				}else if(ca.Length == 2){
+					Radio.config.Set(k, new byte[]{ca[0].R, ca[0].G, ca[0].B, ca[1].R, ca[1].G, ca[1].B});
+				}else{
+					Radio.config.Set(k, new byte[0]);
+				}
+			}
+		}
+	}
+	
 	public static void init(){
 		if((!FormatString.usesColors) || (Radio.config.TryGetValue("ui.useColors", out bool b) && !b)){
 			AshConsoleGraphics.Buffer.NoFormat = true; //Its (no longer) broken :)
@@ -64,13 +82,13 @@ public static class Palette{
 	
 	//Helper method to load colors
 	static CharFormat? loadColor(string colorName){
-		if(Radio.config.TryGetValue("ui.palette." + colorName, out Color3 c)){
-			return new CharFormat(c);
-		}else if(Radio.config.TryGetValue("ui.palette." + colorName, out Color3[] ca)){
-			if(ca.Length == 1){
-				return new CharFormat(null, ca[0]);
-			}else if(ca.Length == 2){
-				return new CharFormat(ca[0], ca[1]);
+		if(Radio.config.TryGetValue("ui.palette." + colorName, out byte[] ca)){
+			if(ca.Length == 3){
+				return new CharFormat(new Color3(ca[0], ca[1], ca[2]), null);
+			}else if(ca.Length == 4){
+				return new CharFormat(null, new Color3(ca[1], ca[2], ca[3]));
+			}else if(ca.Length == 6){
+				return new CharFormat(new Color3(ca[0], ca[1], ca[2]), new Color3(ca[3], ca[4], ca[5]));
 			}else{
 				return null;
 			}
@@ -80,18 +98,22 @@ public static class Palette{
 		}
 	}
 	
-	static object toArray(Color3? fg, Color3? bg){
+	static byte[] toArray(Color3? fg, Color3? bg){
 		if(fg == null){
 			if(bg == null){
-				return new Color3[0];
+				return new byte[0];
 			}else{
-				return new Color3[]{(Color3) bg};
+				Color3 b = (Color3) bg;
+				return new byte[]{0, b.R, b.G, b.B};
 			}
 		}else{
 			if(bg == null){
-				return (Color3) fg;
+				Color3 f = (Color3) fg;
+				return new byte[]{f.R, f.G, f.B};
 			}else{
-				return new Color3[]{(Color3) fg, (Color3) bg};
+				Color3 f = (Color3) fg;
+				Color3 b = (Color3) bg;
+				return new byte[]{f.R, f.G, f.B, b.R, b.G, b.B};
 			}
 		}
 	}
@@ -100,6 +122,31 @@ public static class Palette{
 		AshFileModel m = new AshFileModel(getPaletteModel().instances.Select(h => new ModelInstance(ModelInstanceOperation.Value, h.name, h.value)).ToArray());
 		
 		Radio.config.ApplyModel(m);
+		Radio.config.Save();
+	}
+	
+	public static AshFile export(){
+		AshFile exp = AshFile.Clone(Radio.config);
+		
+		AshFileModel m = getPaletteModel();
+		m.deleteNotMentioned = true;
+		
+		exp.ApplyModel(m);
+		exp.path = null;
+		
+		return exp;
+	}
+	
+	public static void import(AshFile source){
+		AshFileModel m = getPaletteModel();
+		m.deleteNotMentioned = true;
+		
+		source.ApplyModel(m);
+		
+		foreach(KeyValuePair<string, object> kvp in source){
+			Radio.config.Set(kvp.Key, (Color3[]) kvp.Value);
+		}
+		
 		Radio.config.Save();
 	}
 	

@@ -110,6 +110,12 @@ public partial class Screens{
 					Palette.setLight();
 					reinitScreens();
 				}),
+				("Export palette", (s, ck) => {
+					setExportPalette();
+				}),
+				("Import palette", (s, ck) => {
+					setImportPalette();
+				}),
 			},
 			() => {
 				reinitScreens();
@@ -265,11 +271,11 @@ public partial class Screens{
 	MiddleScreen generateConfigScreen(string title, int fieldsize, (string, ConfigType, string, int)[] configs, (string, Action<TuiSelectable, ConsoleKeyInfo>)[] actions, Action onSave, bool renderFocused = false){
 		//Helper method
 		string getColorFgString(string key){
-			if(Radio.config.TryGetValue(key, out Color3 cf)){
-				return cf.ToString();
-			}else if(Radio.config.TryGetValue(key, out Color3[] ca)){
-				if(ca.Length == 2){
-					return ca[0].ToString();
+			if(Radio.config.TryGetValue(key, out byte[] ca)){
+				if(ca.Length == 3){
+					return new Color3(ca[0], ca[1], ca[2]).ToString();
+				}else if(ca.Length == 6){
+					return new Color3(ca[0], ca[1], ca[2]).ToString();
 				}
 			}
 			return "";
@@ -277,11 +283,11 @@ public partial class Screens{
 		
 		//Helper method
 		string getColorBgString(string key){
-			if(Radio.config.TryGetValue(key, out Color3[] ca)){
-				if(ca.Length == 2){
-					return ca[1].ToString();
-				}else if(ca.Length == 1){
-					return ca[0].ToString();
+			if(Radio.config.TryGetValue(key, out byte[] ca)){
+				if(ca.Length == 4){
+					return new Color3(ca[1], ca[2], ca[3]).ToString();
+				}else if(ca.Length == 6){
+					return new Color3(ca[3], ca[4], ca[5]).ToString();
 				}
 			}
 			return "";
@@ -433,15 +439,19 @@ public partial class Screens{
 						
 						if(fg == null){
 							if(bg == null){
-								results[i] = new Color3[0];
+								results[i] = new byte[0];
 							}else{
-								results[i] = new Color3[]{(Color3) bg};
+								Color3 b = (Color3) bg;
+								results[i] = new byte[]{0, b.R, b.G, b.B};
 							}
 						}else{
 							if(bg == null){
-								results[i] = (Color3) fg;
+								Color3 f2 = (Color3) fg;
+								results[i] = new byte[]{f2.R, f2.G, f2.B};
 							}else{
-								results[i] = new Color3[]{(Color3) fg, (Color3) bg};
+								Color3 f2 = (Color3) fg;
+								Color3 b = (Color3) bg;
+								results[i] = new byte[]{f2.R, f2.G, f2.B, b.R, b.G, b.B};
 							}
 						}
 						break;
@@ -710,6 +720,158 @@ public partial class Screens{
 		l.Elements.Add(content);
 		
 		setMiddleScreen(l3);
+	}
+	
+	void setExportPalette(){
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox(Radio.session.GetValue<string>("preferences.exportPath"), 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		
+		path.OnParentResize += (s, a) => {
+			path.BoxXsize = Math.Max(0, a.X - 4);
+		};
+		
+		TuiScreenInteractive l = null;
+		
+		List<TuiLabel> error = new();
+		
+		TuiButton export = new TuiButton("Export", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
+			foreach(TuiLabel a in error){
+				l.Elements.Remove(a);
+			}
+			error.Clear();
+			
+			Radio.session.Set("preferences.exportPath", removeQuotesSingle(path.Text));
+			
+			try{
+				Palette.export().Save(removeQuotesSingle(path.Text) + "/ashradio_palette.ash");
+				closeMiddleScreen();
+			}catch(Exception e){
+				int j = 10;
+				
+				string[] r = e.ToString().Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
+				
+				foreach(string e2 in r){
+					TuiLabel a = new TuiLabel(e2, Placement.TopLeft, 3, j, Palette.error);
+					j++;
+					l.Elements.Insert(0, a);
+					error.Add(a);
+				}
+			}
+		});
+		
+		#if WINDOWS
+			TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				Thread thread = new Thread(() => {
+				using(FolderBrowserDialog openFileDialog = new FolderBrowserDialog()){
+					openFileDialog.Description = "Select a folder";
+					openFileDialog.ShowNewFolderButton  = true;
+					
+					if(openFileDialog.ShowDialog() == DialogResult.OK){
+						path.Text = openFileDialog.SelectedPath;
+					}
+				}});
+				
+				thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+				thread.Start();
+			});
+			
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				path
+			},{
+				search
+			},{
+				export
+			}};
+		#else
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				path
+			},{
+				export
+			}};
+		#endif
+		
+		l = generateMiddleInteractive(t);
+		
+		l.Elements.Add(new TuiLabel("Export palette", Placement.TopCenter, 0, 1, Palette.main));
+		
+		l.Elements.Add(new TuiLabel("Folder path:", Placement.TopLeft, 2, 4));
+		
+		setMiddleScreen(new MiddleScreen(l));
+	}
+	
+	void setImportPalette(){
+		TuiFramedScrollingTextBox path = new TuiFramedScrollingTextBox("", 256, 34, Placement.TopCenter, 0, 5, null, null, null, Palette.writing, Palette.user, Palette.user);
+		
+		path.OnParentResize += (s, a) => {
+			path.BoxXsize = Math.Max(0, a.X - 4);
+		};
+		
+		TuiScreenInteractive l = null;
+		
+		List<TuiLabel> error = new();
+		
+		TuiButton import = new TuiButton("Import", Placement.BottomCenter, 0, 2, Palette.info, Palette.user).SetAction((s2, ck) => {
+			foreach(TuiLabel a in error){
+				l.Elements.Remove(a);
+			}
+			error.Clear();
+			
+			try{
+				AshFile pal = new AshFile(removeQuotesSingle(path.Text));
+				Palette.import(pal);
+				reinitScreens();
+				closeMiddleScreen();
+			}catch(Exception e){
+				int j = 10;
+				
+				string[] r = e.ToString().Split(new string[]{"\r\n", "\n", "\r"}, StringSplitOptions.None);
+				
+				foreach(string e2 in r){
+					TuiLabel a = new TuiLabel(e2, Placement.TopLeft, 3, j, Palette.error);
+					j++;
+					l.Elements.Insert(0, a);
+					error.Add(a);
+				}
+			}
+		});
+		
+		#if WINDOWS
+			TuiButton search = new TuiButton("Search folder", Placement.TopCenter, 0, 8, null, Palette.user).SetAction((s, ck) => {
+				Thread thread = new Thread(() => {
+				using(OpenFileDialog openFileDialog = new OpenFileDialog()){
+					openFileDialog.Title = "Select a file";
+					openFileDialog.Filter = "AshFiles|*.ash";
+					
+					if(openFileDialog.ShowDialog() == DialogResult.OK){
+						path.Text = openFileDialog.FileName;
+					}
+				}});
+				
+				thread.SetApartmentState(ApartmentState.STA); // Required for OpenFileDialog
+				thread.Start();
+			});
+			
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				path
+			},{
+				search
+			},{
+				import
+			}};
+		#else
+			TuiSelectable[,] t = new TuiSelectable[,]{{
+				path
+			},{
+				import
+			}};
+		#endif
+		
+		l = generateMiddleInteractive(t);
+		
+		l.Elements.Add(new TuiLabel("Import palette", Placement.TopCenter, 0, 1, Palette.main));
+		
+		l.Elements.Add(new TuiLabel("File path:", Placement.TopLeft, 2, 4));
+		
+		setMiddleScreen(new MiddleScreen(l));
 	}
 	
 	//Prepare textbox

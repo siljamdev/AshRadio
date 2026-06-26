@@ -22,12 +22,12 @@ public class Song : IDisposable, INotes{
 	}
 	
 	//used to delete deleted authors
-	void onAuthorsChange(Author a){
-		if(authors.Contains(a.id)){
+	void onAuthorsChange(int a){
+		if(authors.Contains(a)){
 			authors = authors.Where(id => Author.exists(id)).ToArray();
 			save();
 			
-			onSongDetailsUpdate?.Invoke(this);
+			onSongDetailsUpdate?.Invoke(this.id);
 		}
 	}
 	
@@ -35,8 +35,8 @@ public class Song : IDisposable, INotes{
 		title = t?.Trim() ?? nullTitle;
 		save();
 		
-		onSongDetailsUpdate?.Invoke(this);
-		onSongTitleUpdate?.Invoke(this);
+		onSongDetailsUpdate?.Invoke(this.id);
+		onSongTitleUpdate?.Invoke(this.id);
 	}
 	
 	public void setAuthors(int[] auth){
@@ -45,7 +45,7 @@ public class Song : IDisposable, INotes{
 		authors = auth;
 		save();
 		
-		onSongDetailsUpdate?.Invoke(this);
+		onSongDetailsUpdate?.Invoke(this.id);
 		
 		foreach(int aid in p.Union(authors)){
 			Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)
@@ -122,9 +122,9 @@ public class Song : IDisposable, INotes{
 	
 	//In order of being called
 	public static event Action onLibraryUpdate; //Song added or deleted
-	public static event Action<Song> onSongDeleted; //Song title change
-	public static event Action<Song> onSongDetailsUpdate; //Song title or song authors change or song deleted
-	public static event Action<Song> onSongTitleUpdate; //Song title change
+	public static event Action<int> onSongDeleted; //Song title change
+	public static event Action<int> onSongDetailsUpdate; //Song title or song authors change or song deleted
+	public static event Action<int> onSongTitleUpdate; //Song title change
 	
 	static List<Song> library;
 	
@@ -263,8 +263,8 @@ public class Song : IDisposable, INotes{
 		library[id] = null;
 		
 		onLibraryUpdate?.Invoke();
-		onSongDeleted?.Invoke(s);
-		onSongDetailsUpdate?.Invoke(s);
+		onSongDeleted?.Invoke(id);
+		onSongDetailsUpdate?.Invoke(s.id);
 		
 		foreach(int aid in s.authors){
 			Author.get(aid)?.songsChanged(); //Notify authors their songs changed (send event)

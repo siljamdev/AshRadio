@@ -50,6 +50,7 @@ public static class Keybinds{
 	public static Keybind library {get; private set;}
 	public static Keybind authors {get; private set;}
 	public static Keybind playlists {get; private set;}
+	public static Keybind selected {get; private set;}
 	public static Keybind import {get; private set;}
 	public static Keybind stats {get; private set;}
 	public static Keybind errlog {get; private set;}
@@ -59,7 +60,16 @@ public static class Keybinds{
 	public static Keybind seeSource {get; private set;}
 	public static Keybind seePlaying {get; private set;}
 	public static Keybind toggleQueueEmpties {get; private set;}
+	public static Keybind clearQueue {get; private set;}
 	public static Keybind changeDevice {get; private set;}
+	
+	//Selection
+	public static Keybind select {get; private set;}
+	public static Keybind selectAll {get; private set;}
+	public static Keybind selectionClear {get; private set;}
+	public static Keybind selectionAddToQueue {get; private set;}
+	public static Keybind selectionAddToPlaylist {get; private set;}
+	public static Keybind selectionExport {get; private set;}
 	
 	public static Keybind exit {get; private set;}
 	
@@ -130,6 +140,7 @@ public static class Keybinds{
 		library,
 		authors,
 		playlists,
+		selected,
 		import,
 		stats,
 		
@@ -138,7 +149,16 @@ public static class Keybinds{
 		seeSource,
 		seePlaying,
 		toggleQueueEmpties,
+		clearQueue,
 		changeDevice,
+		
+		//Selection
+		select,
+		selectAll,
+		selectionClear,
+		selectionAddToQueue,
+		selectionAddToPlaylist,
+		selectionExport,
 		
 		errlog,
 		exit
@@ -187,6 +207,7 @@ public static class Keybinds{
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.library", toArray(ConsoleKey.L, ConsoleModifiers.Control)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.authors", toArray(ConsoleKey.U, ConsoleModifiers.Control)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.playlists", toArray(ConsoleKey.P, ConsoleModifiers.Control)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selected", toArray(ConsoleKey.H, ConsoleModifiers.Control)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.import", toArray()),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.stats", toArray()),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.errlog", toArray()),
@@ -195,7 +216,15 @@ public static class Keybinds{
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.seeSource", toArray(ConsoleKey.S, ConsoleModifiers.Shift)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.seePlaying", toArray(ConsoleKey.Spacebar, ConsoleModifiers.Shift)),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.toggleQueueEmpties", toArray(ConsoleKey.Q, ConsoleModifiers.Shift)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.clearQueue", toArray()),
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.changeDevice", toArray()),
+			
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.select", toArray(ConsoleKey.H, ConsoleModifiers.None, ConsoleKey.H, ConsoleModifiers.Alt)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.selectAll", toArray(ConsoleKey.H, ConsoleModifiers.Shift)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.clear", toArray(ConsoleKey.R, ConsoleModifiers.Alt)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.addToQueue", toArray(ConsoleKey.Q, ConsoleModifiers.Alt)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.addToPlaylist", toArray(ConsoleKey.A, ConsoleModifiers.Alt)),
+			new ModelInstance(ModelInstanceOperation.Type, "keybinds.selection.export", toArray()),
 			
 			new ModelInstance(ModelInstanceOperation.Type, "keybinds.exit", toArray(ConsoleKey.Escape, ConsoleModifiers.Shift))
 		);
@@ -243,6 +272,7 @@ public static class Keybinds{
 		library = loadKeybind("library", "Open library");
 		authors = loadKeybind("authors", "Open authors");
 		playlists = loadKeybind("playlists", "Open playlists");
+		selected = loadKeybind("selected", "Open selected menu");
 		import = loadKeybind("import", "Open import menu");
 		stats = loadKeybind("stats", "Open stats");
 		errlog = loadKeybind("errlog", "Open error log");
@@ -251,7 +281,15 @@ public static class Keybinds{
 		seeSource = loadKeybind("seeSource", "See source");
 		seePlaying = loadKeybind("seePlaying", "See playing song");
 		toggleQueueEmpties = loadKeybind("toggleQueueEmpties", "Toggle queue empties");
+		clearQueue = loadKeybind("clearQueue", "Clear queue");
 		changeDevice = loadKeybind("changeDevice", "Change device");
+		
+		select = loadKeybind("selection.select", "Select/Unselect song");
+		selectAll = loadKeybind("selection.selectAll", "Select all songs on a list");
+		selectionClear = loadKeybind("selection.clear", "Clear song selection");
+		selectionAddToQueue = loadKeybind("selection.addToQueue", "Add selection to queue");
+		selectionAddToPlaylist = loadKeybind("selection.addToPlaylist", "Add selection to playlist");
+		selectionExport = loadKeybind("selection.export", "Export song selection");
 		
 		exit = loadKeybind("exit", "Exit instantly");
 	}
