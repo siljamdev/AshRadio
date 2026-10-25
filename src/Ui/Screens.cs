@@ -18,6 +18,9 @@ public partial class Screens{
 			if(ind != null){
 				ind.screen.DefFormat = null;
 			}else{
+				if(master.SelectedScreen == queueScreen){
+					queueScreen.ScrollY = 0; //Go back to top
+				}
 				master.SelectedScreen.DefFormat = null;
 			}
 		}
@@ -39,6 +42,9 @@ public partial class Screens{
 			if(ind != null){
 				ind.screen.DefFormat = null;
 			}else{
+				if(s != queueScreen && master.SelectedScreen == queueScreen){
+					queueScreen.ScrollY = 0; //Go back to top
+				}
 				master.SelectedScreen.DefFormat = null;
 			}
 		}
@@ -62,6 +68,32 @@ public partial class Screens{
 			Keybinds.scrollUp.subEvent(t, TuiScrollingScreenInteractive.ScrollUp);
 			Keybinds.scrollDown.subEvent(t, TuiScrollingScreenInteractive.ScrollDown);
 		}
+	}
+	
+	//For queue screen
+	void prepareScreenOnlyScrollY(TuiScrollingScreenInteractive t){
+		t.DeleteAllKeyEvents();
+		
+		Keybinds.up.subEvent(t, (s, ck) => {
+			TuiScreenInteractive.MoveUp(s, ck);
+			((TuiScrollingScreenInteractive) s).ScrollX = 0;
+		});
+		Keybinds.down.subEvent(t, (s, ck) => {
+			TuiScreenInteractive.MoveDown(s, ck);
+			((TuiScrollingScreenInteractive) s).ScrollX = 0;
+		});
+		Keybinds.left.subEvent(t, (s, ck) => {
+			TuiScreenInteractive.MoveLeft(s, ck);
+			((TuiScrollingScreenInteractive) s).ScrollX = 0;
+		});
+		Keybinds.right.subEvent(t, (s, ck) => {
+			TuiScreenInteractive.MoveRight(s, ck);
+			((TuiScrollingScreenInteractive) s).ScrollX = 0;
+		});
+		
+		//Only ScrollY changes here
+		Keybinds.scrollUp.subEvent(t, TuiScrollingScreenInteractive.ScrollUp);
+		Keybinds.scrollDown.subEvent(t, TuiScrollingScreenInteractive.ScrollDown);
 	}
 	
 	//Generic screens

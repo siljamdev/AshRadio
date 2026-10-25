@@ -94,6 +94,10 @@ public class Author : INotes{
 	static void loadAuthors(){
 		authors = new List<Author>(authorsFile.Count);
 		
+		if(authorsFile.ContainsKey("migrated")){
+			authorsFile.Remove("migrated");
+		}
+		
 		//MIGRATE
 		if(!authorsFile.TryGetValue("migrated", out bool b) || !b){
 			foreach(string k in authorsFile.Keys.ToList()){
@@ -122,6 +126,9 @@ public class Author : INotes{
 				notes = nts,
 				id = id2
 			};
+		}else if(authorsFile.TryGetValue(id2.ToString(), out string _)){ //Migrate
+			authorsFile.Rename(id2.ToString(), id2 + ".t");
+			return load(id2);
 		}
 		return null;
 	}

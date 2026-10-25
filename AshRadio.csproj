@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 	<LangVersion>preview</LangVersion>
     
-    <Version>1.7.0</Version>
+    <Version>1.7.1</Version>
     <Authors>siljam</Authors>
     <Company>AshProject</Company>
     <PackageDescription>Lightweight music player in your terminal</PackageDescription>
@@ -116,8 +116,21 @@
     </None>
   </ItemGroup>
   
-  <!-- BuildInfo -->
-  <Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile" Inputs="$(MSBuildProjectFile)" Outputs="$(IntermediateOutputPath)BuildInfo.g.cs">
+  <!-- BuildInfo Debug -->
+  <Target Name="GenerateBuildInfoDebug" BeforeTargets="CoreCompile" Condition="'$(Configuration)' == 'Debug'" Inputs="$(MSBuildProjectFile)" Outputs="$(IntermediateOutputPath)BuildInfo.g.cs">
+    <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="
+public static class BuildInfo{
+    public const string Version = &quot;$(Version)&quot;%3B
+	public const string BuildDate = &quot;$(BuildDate)&quot;%3B
+}" Overwrite="true" />
+	
+	<ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)BuildInfo.g.cs" />
+    </ItemGroup>
+  </Target>
+  
+  <!-- BuildInfo Release -->
+  <Target Name="GenerateBuildInfoRelease" BeforeTargets="CoreCompile" Condition="'$(Configuration)' == 'Release'">
     <WriteLinesToFile File="$(IntermediateOutputPath)BuildInfo.g.cs" Lines="
 public static class BuildInfo{
     public const string Version = &quot;$(Version)&quot;%3B

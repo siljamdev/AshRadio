@@ -90,7 +90,7 @@ public partial class Screens{
 				
 				content.AppendLine("AshRadio is a lightweight music player with a terminal-based UI.", null);
 				content.AppendLine("It stores songs locally in an internal folder, and does not require internet to work.", null);
-				content.AppendLine("You can import songs from local files or from YouTube.", null);
+				content.AppendLine("You can import songs from local files or from youtube.", null);
 				content.AppendLine("The UI and keybinds to control it is super customizable.", null);
 				break;
 			case 1:

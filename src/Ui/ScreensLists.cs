@@ -59,7 +59,7 @@ public partial class Screens{
 			setExport(new int[]{s.id}, "", null);
 		});
 		
-		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 5, 16, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 5, 16, s.notes != null ? Palette.notes : null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -410,7 +410,7 @@ public partial class Screens{
 			setExport(songs.Select(s => s.id).ToArray(), s.name, Palette.author);
 		});
 		
-		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 6, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 6, s.notes != null ? Palette.notes : null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}
@@ -713,7 +713,7 @@ public partial class Screens{
 			setExport(songs.Select(s => s.id).ToArray(), s.title, Palette.playlist);
 		});
 		
-		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 8, null, Palette.user).SetAction((s2, ck) => {
+		TuiButton notes = new TuiButton("Edit notes", Placement.TopRight, 2, 8, s.notes != null ? Palette.notes : null, Palette.user).SetAction((s2, ck) => {
 			if(s == null){
 				return;
 			}

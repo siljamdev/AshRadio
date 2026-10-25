@@ -87,6 +87,7 @@ public partial class Screens{
 				("ui.palette.playlist", ConfigType.Color, "Playlist color", 0),
 				("ui.palette.info", ConfigType.Color, "Info color", 0),
 				("ui.palette.hint", ConfigType.Color, "Hint color", 0),
+				("ui.palette.notes", ConfigType.Color, "Notes color", 0),
 				("ui.palette.delimiter", ConfigType.Color, "Delimiter color", 0),
 				("ui.palette.error", ConfigType.Color, "Error color", 0),
 				

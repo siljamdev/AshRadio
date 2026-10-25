@@ -646,6 +646,7 @@ public partial class Screens{
 					Keybinds.listUp.subEvent(t2, (s, ck) => {
 						if(myIndex != 0){
 							TuiScreenInteractive.MoveUp(queueScreen, ck); //Align properly with the change
+							queueScreen.ScrollX = 0;
 							Session.moveInQueue(myIndex, myIndex - 1);
 						}
 					});
@@ -653,6 +654,7 @@ public partial class Screens{
 					Keybinds.listDown.subEvent(t2, (s, ck) => {
 						if(myIndex != queueScreen.Elements.Count - 1){
 							TuiScreenInteractive.MoveDown(queueScreen, ck); //Align properly with the change
+							queueScreen.ScrollX = 0;
 							Session.moveInQueue(myIndex, myIndex + 1);
 						}
 					});
@@ -663,7 +665,7 @@ public partial class Screens{
 			
 			queueScreen = new TuiScrollingScreenInteractive(Math.Max(0, session.Xsize - 4), Math.Max(0, session.Ysize - 15), temp, 0, (uint) n, Placement.TopLeft, 2, 8, null);
 			
-			prepareScreen(queueScreen);
+			prepareScreenOnlyScrollY(queueScreen);
 			
 			if(queue.Count == 0){
 				queueScreen.Elements.Add(new TuiLabel("Empty", Placement.TopCenter, 0, 0, Palette.info));
@@ -677,6 +679,9 @@ public partial class Screens{
 			Keybinds.escape.subEvent(queueScreen, (s, ck) => {
 				setSelectedScreen(session);
 			});
+			
+			//Reset initial
+			queueScreen.ScrollX = 0;
 			
 			session.Elements.Add(queueScreen);
 			master?.ScreenList.Add(queueScreen);

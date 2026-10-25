@@ -14,6 +14,7 @@ public static class Palette{
 	public static CharFormat? info {get; private set;}
 	public static CharFormat? error {get; private set;}
 	public static CharFormat? writing {get; private set;}
+	public static CharFormat? notes {get; private set;}
 	
 	public static CharFormat? selectedPanel {get; private set;}
 	public static CharFormat? defaultPanel {get; private set;}
@@ -31,6 +32,7 @@ public static class Palette{
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.info", toArray(new Color3("849DD6"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.error", toArray(new Color3("D83F3C"), null)),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.writing", toArray(new Color3("FFFF66"), null)),
+			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.notes", toArray(new Color3("F3D042"), null)),
 			
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.selectedDefault", toArray(null, new Color3("131313"))),
 			new ModelInstance(ModelInstanceOperation.Exists, "ui.palette.default", toArray(null, null))
@@ -73,6 +75,7 @@ public static class Palette{
 		info = loadColor("info");
 		error = loadColor("error");
 		writing = loadColor("writing");
+		notes = loadColor("notes");
 		
 		selectedPanel = loadColor("selectedDefault");
 		defaultPanel = loadColor("default");
@@ -144,7 +147,7 @@ public static class Palette{
 		source.ApplyModel(m);
 		
 		foreach(KeyValuePair<string, object> kvp in source){
-			Radio.config.Set(kvp.Key, (Color3[]) kvp.Value);
+			Radio.config.Set(kvp.Key, (byte[]) kvp.Value);
 		}
 		
 		Radio.config.Save();
@@ -162,6 +165,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.info", toArray(new Color3("CC7651"), null));
 		Radio.config.Set("ui.palette.error", toArray(new Color3("D83F3C"), null));
 		Radio.config.Set("ui.palette.writing", toArray(new Color3("FFFF66"), null));
+		Radio.config.Set("ui.palette.notes", toArray(new Color3("F3D042"), null));
 		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("131313")));
 		Radio.config.Set("ui.palette.default", toArray(null, null));
 		
@@ -180,6 +184,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.info", toArray(new Color3("33CCFF"), null));
 		Radio.config.Set("ui.palette.error", toArray(new Color3("FF0033"), null));
 		Radio.config.Set("ui.palette.writing", toArray(new Color3("96FF82"), null));
+		Radio.config.Set("ui.palette.notes", toArray(new Color3("FFC800"), null));
 		
 		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("101010")));
 		Radio.config.Set("ui.palette.default", toArray(null, null));
@@ -199,6 +204,7 @@ public static class Palette{
 		Radio.config.Set("ui.palette.info", toArray(new Color3("4A608C"), null));
 		Radio.config.Set("ui.palette.error", toArray(new Color3("D83F3C"), null));
 		Radio.config.Set("ui.palette.writing", toArray(new Color3("F99C4A"), null));
+		Radio.config.Set("ui.palette.notes", toArray(new Color3("F3D042"), null));
 		
 		Radio.config.Set("ui.palette.selectedDefault", toArray(null, new Color3("D0D0D0")));
 		Radio.config.Set("ui.palette.default", toArray(new Color3("0C0C0C"), new Color3("E0E0E0")));
